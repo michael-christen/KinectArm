@@ -23,6 +23,7 @@
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 0
+#define NUM_SERVOS 6
 
 //////////////
 // STRUCTS
@@ -65,7 +66,7 @@ struct state_t {
     pthread_mutex_t lcm_mutex;
 
     pthread_t lcm_handle_thread;
-
+    pthread_t arm_commander_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
     pthread_t gui_thread;
@@ -76,5 +77,13 @@ struct state_t {
     zhash_t *layer_map; // <display, layer>
 
     pthread_t dmon_thread;
+
+    double target_servo_angles[NUM_SERVOS];
+    double gui_servo_angles[NUM_SERVOS];
+    int update_arm_cont, update_arm;
+    const char *arm_command_channel;
 };
+
+
+void* arm_commander(void *data);
 #endif

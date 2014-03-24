@@ -1,10 +1,24 @@
+// General Includes
+#include <sys/time.h>
 #include <signal.h>
+
+// LCM
+#include "lcmtypes/dynamixel_command_list_t.h"
+#include "lcmtypes/dynamixel_command_t.h"
+#include "lcmtypes/dynamixel_status_list_t.h"
+#include "lcmtypes/dynamixel_status_t.h"
 
 // Local Includes
 #include "state.h"
 #include "eecs467_util.h"
 #include "gui.h"
 
+static int64_t utime_now()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (int64_t) tv.tv_sec * 1000000 + tv.tv_usec;
+}
 
 static state_t * global_state;
 static void terminal_signal_handler(int signum)
@@ -41,6 +55,36 @@ void* lcm_handle_loop(void *data) {
 	return NULL;
 }
 
+void* arm_commander(void *data) {
+	int hz = 30;
+	state_t *state = data;
+
+	dynamixel_command_list_t cmds;
+    cmds.len = NUM_SERVOS;
+    cmds.commands = malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
+
+    while (state->running) {
+    	if (state->update_arm) {
+    		state->update_arm = 0;
+		    for (int id = 0; id < NUM_SERVOS; id++) {
+				cmds.commands[id].utime = utime_now();
+				cmds.commands[id].position_radians = state->target_servo_angles[id];
+				cmds.commands[id].speed = 0.5;
+				cmds.commands[id].max_torque = 0.7;
+		    }
+
+		    pthread_mutex_lock(&state->lcm_mutex);
+		    dynamixel_command_list_t_publish(state->lcm, state->arm_command_channel, &cmds);
+		    pthread_mutex_unlock(&state->lcm_mutex);
+	    }
+	    usleep(1000000/hz);
+	}
+
+	free(cmds.commands);
+
+	return NULL;
+}
+
 int main(int argc, char ** argv)
 {
 	eecs467_init(argc, argv);
@@ -51,6 +95,9 @@ int main(int argc, char ** argv)
 	state->app.display_finished = display_finished;
 	state->app.display_started = display_started;
 	state->app.impl = state;
+	state->update_arm_cont = 0;
+	state->update_arm = 0;
+	state->arm_command_channel = "ARM_COMMAND";
 
 	state->running = 1;
 
@@ -78,7 +125,7 @@ int main(int argc, char ** argv)
 
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
 	pthread_create(&state->gui_thread,  NULL, gui_create, state);
-
+	pthread_create(&state->arm_commander_thread, NULL, arm_commander, state);
 	pthread_join(state->gui_thread, NULL);
 
 	// clean up
