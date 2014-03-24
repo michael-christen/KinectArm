@@ -4,3 +4,6 @@
 [submodule "Skeltrack"]
 	path = Skeltrack
 	url = git@github.com:joaquimrocha/Skeltrack.git
+[submodule "gfreenect"]
+	path = gfreenect
+	url = git://gitorious.org/gfreenect/gfreenect.git
