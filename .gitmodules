@@ -1,0 +1,6 @@
+[submodule "libfreenect"]
+	path = libfreenect
+	url = https://github.com/OpenKinect/libfreenect
+[submodule "Skeltrack"]
+	path = Skeltrack
+	url = git@github.com:joaquimrocha/Skeltrack.git
