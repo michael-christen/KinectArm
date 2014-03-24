@@ -36,14 +36,41 @@ int displayCount;
 
 void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char *name)
 {
-    if (!strcmp("sl1", name)) {
-        printf("sl1 = %f\n", pg_gd(pg, name));
-    } else if (!strcmp("sl2", name)) {
-        printf("sl2 = %d\n", pg_gi(pg, name));
-    } else if (!strcmp("cb1", name) | !strcmp("cb2", name)) {
-        printf("%s = %d\n", name, pg_gb(pg, name));
-    } else {
-        printf("%s changed\n", name);
+	state_t *state = pl->impl;
+	int i;
+	int updateServoAngles = 0;
+    if (!strcmp("s0", name)) {
+		state->gui_servo_angles[0] = pg_gd(pg, name);
+    } else if (!strcmp("s1", name)) {
+    	state->gui_servo_angles[1] = pg_gd(pg, name);
+    } else if (!strcmp("s2", name)) {
+       	state->gui_servo_angles[2] = pg_gd(pg, name);
+    } else if (!strcmp("s3", name)) {
+    	state->gui_servo_angles[3] = pg_gd(pg, name);
+    } else if (!strcmp("s4", name)) {
+    	state->gui_servo_angles[4] = pg_gd(pg, name);
+    } else if (!strcmp("s5", name)) {
+    	state->gui_servo_angles[5] = pg_gd(pg, name);
+    } else if (!strcmp("but1", name)) {
+    	updateServoAngles = 1;
+    } else if (!strcmp("but2", name)) {
+    	if (!state->update_arm_cont) {
+	    	for (i = 0; i < NUM_SERVOS; i++) {
+				state->target_servo_angles[i] = 0;
+			}
+	    	state->update_arm = 1;
+	    } else {
+    		printf("Uncheck \"Update Arm Continuously\" first\n");
+	    }
+    } else if (!strcmp("cb1", name)) {
+        state->update_arm_cont = pg_gb(pg, name);
+    }
+
+    if (state->update_arm_cont || updateServoAngles) {
+    	state->update_arm = 1;
+		for (i = 0; i < NUM_SERVOS; i++) {
+			state->target_servo_angles[i] = state->gui_servo_angles[i];
+		}
     }
 }
 
@@ -402,20 +429,17 @@ void* gui_create(void *data) {
 
 	// Handles layer init, rendering, and destruction
 	parameter_gui_t *pg = pg_create();
-    pg_add_double_slider(pg, "sl1", "Slider 1", 0, 100, 50);
-    pg_add_int_slider(pg, "sl2", "Slider 2", 0, 100, 25);
-    pg_add_check_boxes(pg,
-                       "cb1", "Check Box 1", 0,
-                       "cb2", "Check Box 2", 1,
-                       NULL);
-    pg_add_buttons(pg,
-                   "but1", "Button 1",
-                   "but2", "Button 2",
-                   "but3", "Button 3",
-                   NULL);
+    pg_add_double_slider(pg, "s0", "S0 (Shoulder Rotation)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s1", "S1 (Shoulder Bend)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s2", "S2 (Elbow)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);
+    pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
+    pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
 
     parameter_listener_t *my_listener = calloc(1,sizeof(parameter_listener_t*));
-    my_listener->impl = NULL;
+    my_listener->impl = state;
     my_listener->param_changed = my_param_changed;
     pg_add_listener(pg, my_listener);
 
