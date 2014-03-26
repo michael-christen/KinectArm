@@ -10,7 +10,7 @@ all: $(BINARIES)
 
 drive_test: ../../bin/drive_test
 
-../../bin/kinectarm_app: kinectarm_app.o gui.o disjoint.o blob_detection.o \
+../../bin/kinectarm_app: kinectarm_app.o gui.o disjoint.o blob_detection.o body.o\
 	pid_ctrl.o image.o pixel.o eecs467_util.o
 	@echo "\t$@"
 	@$(CC) -o $@ $^ $(LDFLAGS)
