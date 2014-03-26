@@ -12,6 +12,7 @@
 #include "state.h"
 #include "eecs467_util.h"
 #include "gui.h"
+#include "body.h"
 
 static int64_t utime_now()
 {
