@@ -86,4 +86,5 @@ void eecs467_gui_run(vx_application_t *app, parameter_gui_t *pg, int w, int h)
     gdk_threads_leave();
 
     vx_gtk_display_source_destroy(appwrap);
+    printf("after disp destroy leave\n");
 }

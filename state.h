@@ -22,8 +22,11 @@
 //////////////
 // CONSTANTS
 //////////////
-#define NUM_LAYERS 0
+#define NUM_LAYERS 1
 #define NUM_SERVOS 6
+
+#define ARM_STATUS_CHANNEL "ARM_STATUS"
+#define ARM_COMMAND_CHANNEL "ARM_COMMAND"
 
 //////////////
 // STRUCTS
@@ -69,6 +72,7 @@ struct state_t {
     pthread_t arm_commander_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
+    pthread_mutex_t servo_angles_mutex;
     pthread_t gui_thread;
 
     int layerCount;
@@ -78,10 +82,10 @@ struct state_t {
 
     pthread_t dmon_thread;
 
+    double current_servo_angles[NUM_SERVOS];
     double target_servo_angles[NUM_SERVOS];
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
-    const char *arm_command_channel;
 };
 
 
