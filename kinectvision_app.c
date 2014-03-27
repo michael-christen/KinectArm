@@ -11,7 +11,7 @@
 // Local Includes
 #include "state.h"
 #include "eecs467_util.h"
-#include "arm_gui.h"
+#include "vision_gui.h"
 #include "body.h"
 
 static int64_t utime_now()

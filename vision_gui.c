@@ -28,7 +28,7 @@
 #include "imagesource/image_convert.h"
 
 // Local Includes
-#include "gui.h"
+#include "vision_gui.h"
 #include "state.h"
 #include "eecs467_util.h"
 
