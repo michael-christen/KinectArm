@@ -10,7 +10,7 @@ struct eecs467_default_implementation
 
 eecs467_default_implementation_t *eecs467_default_implementation_create(vx_world_t *world, zhash_t *layers)
 {
-    eecs467_default_implementation_t *impl = calloc(1, sizeof(eecs467_default_implementation_t));
+    eecs467_default_implementation_t *impl = (eecs467_default_implementation_t*) calloc(1, sizeof(eecs467_default_implementation_t));
     impl->world = world;
 	impl->layers = layers;
 
@@ -21,7 +21,7 @@ eecs467_default_implementation_t *eecs467_default_implementation_create(vx_world
 
 void eecs467_default_display_started(vx_application_t *app, vx_display_t *disp)
 {
-    eecs467_default_implementation_t *impl = app->impl;
+    eecs467_default_implementation_t *impl = (eecs467_default_implementation_t*) app->impl;
 
     vx_layer_t *layer = vx_layer_create(impl->world);
     vx_layer_set_display(layer, disp);
@@ -35,7 +35,7 @@ void eecs467_default_display_started(vx_application_t *app, vx_display_t *disp)
 
 void eecs467_default_display_finished(vx_application_t *app, vx_display_t *disp)
 {
-    eecs467_default_implementation_t *impl = app->impl;
+    eecs467_default_implementation_t *impl = (eecs467_default_implementation_t*) app->impl;
     pthread_mutex_lock(&impl->mutex);
 
     vx_layer_t *layer = NULL;

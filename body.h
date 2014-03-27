@@ -1,8 +1,6 @@
 #ifndef BODY_H
 #define BODY_H
 
-#include "state.h"
-
 typedef struct Body body_t;
 typedef struct Joint joint_t;
 
@@ -24,6 +22,6 @@ struct Body{
 	int use_right; //1 if right, 0 if left
 };
 
-void getServoAnglesFromBody(body_t* body, double servoAngles[NUM_SERVOS]);
+void getServoAnglesFromBody(body_t* body, double servoAngles[]);
 
 #endif

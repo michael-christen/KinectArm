@@ -1,6 +1,7 @@
 // General Includes
 #include <sys/time.h>
 #include <signal.h>
+#include <stdlib.h>
 
 // LCM
 #include "lcmtypes/dynamixel_command_list_t.h"
@@ -9,7 +10,7 @@
 #include "lcmtypes/dynamixel_status_t.h"
 
 // Local Includes
-#include "state.h"
+#include "arm_state.h"
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
@@ -43,7 +44,7 @@ static void arm_status_handler( const lcm_recv_buf_t *rbuf,
                            const dynamixel_status_list_t *msg,
                            void *user) {
 	int i;
-	state_t *state = user;
+	state_t *state = (state_t*) user;
 
 	for (i = 0; i < msg->len; i++) {
 		state->current_servo_angles[i] = msg->statuses[i].position_radians;
@@ -55,7 +56,7 @@ int angles_valid(double angles[]) {
 }
 
 void* lcm_handle_loop(void *data) {
-	state_t *state = data;
+	state_t *state = (state_t*) data;
 
 	// ..._subscribe(...)
 	dynamixel_status_list_t_subscription_t *arm_sub = dynamixel_status_list_t_subscribe(state->lcm,
@@ -80,11 +81,11 @@ void* lcm_handle_loop(void *data) {
 void* arm_commander(void *data) {
 	int hz = 30;
 	int valid_angles;
-	state_t *state = data;
+	state_t *state = (state_t*) data;
 
 	dynamixel_command_list_t cmds;
     cmds.len = NUM_SERVOS;
-    cmds.commands = malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
+    cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
     	pthread_mutex_lock(&state->servo_angles_mutex);
@@ -117,7 +118,7 @@ int main(int argc, char ** argv)
 {
 	eecs467_init(argc, argv);
 
-	state_t * state = calloc(1, sizeof(state_t));
+	state_t * state = (state_t*) calloc(1, sizeof(state_t));
 	global_state = state;
 	state->gopt = getopt_create();
 	state->app.display_finished = display_finished;

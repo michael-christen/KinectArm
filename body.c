@@ -2,7 +2,7 @@
 #include "../common/matd.h"
 #include "math.h"
 
-void getServoAnglesFromBody(body_t* body, double servoAngles[NUM_SERVOS]){
+void getServoAnglesFromBody(body_t* body, double servoAngles[]){
 	matd_t* floor_shoulder;
 	matd_t* shoulder_elbow;
 	matd_t* shoulder_elbow0;

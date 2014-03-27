@@ -29,7 +29,7 @@
 
 // Local Includes
 #include "arm_gui.h"
-#include "state.h"
+#include "arm_state.h"
 #include "eecs467_util.h"
 
 int displayCount;
@@ -40,7 +40,7 @@ double arm_segment_depth = 2.5;
 
 void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char *name)
 {
-	state_t *state = pl->impl;
+	state_t *state = (state_t*) pl->impl;
 	int i;
 	int updateServoAngles = 0;
     if (!strcmp("s0", name)) {
@@ -87,7 +87,7 @@ void display_finished(vx_application_t * app, vx_display_t * disp)
 	uint64_t i;
 	vx_layer_t *value;
 
-	state_t * state = app->impl;
+	state_t * state = (state_t*) app->impl;
 
 	//printf("disp end: %d\n", disp);
 
@@ -115,7 +115,7 @@ void display_started(vx_application_t * app, vx_display_t * disp)
 {
 	uint64_t i;
 
-	state_t * state = app->impl;
+	state_t * state = (state_t*) app->impl;
 
 	//printf("disp start: %d\n", disp);
 
@@ -290,7 +290,7 @@ int destroyDebugLayer(state_t *state, layer_data_t *layerData) {
 }
 
 void* renderLayers(void *data) {
-	state_t * state = data;
+	state_t * state = (state_t*) data;
 	int i;
 	printf("Entering render loop\n");
 	// Render Loop
@@ -377,7 +377,7 @@ void gui_create(state_t *state) {
     pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
     pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
 
-    parameter_listener_t *my_listener = calloc(1,sizeof(parameter_listener_t*));
+    parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
     my_listener->impl = state;
     my_listener->param_changed = my_param_changed;
     pg_add_listener(pg, my_listener);
