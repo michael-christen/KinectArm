@@ -1,0 +1,8 @@
+struct skeleton_joint_t
+{
+	int32 x;
+	int32 y;
+	int32 z;
+	int32 screen_x;
+	int32 screen_y;
+}
