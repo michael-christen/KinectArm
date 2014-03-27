@@ -10,6 +10,11 @@ uint8_t get_blue(uint32_t px) {
     return (px >> 16) & 0XFF;
 }
 
+uint32_t get_px(uint8_t r, uint8_t g, uint8_t b, uint8_t a=0xFF) {
+	uint32_t px = (a << 24) | (b << 16) | (g << 8) | r;
+	return px;
+}
+
 double MIN(double a, double b, double c) {
     double min = a;
     if(b < min) min = b;

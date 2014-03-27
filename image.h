@@ -7,6 +7,7 @@
 uint8_t get_red(uint32_t px);
 uint8_t get_green(uint32_t px);
 uint8_t get_blue(uint32_t px);
+uint32_t get_px(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 double color_dist(uint32_t p1, uint32_t p2);
 
