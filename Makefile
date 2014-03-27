@@ -2,6 +2,9 @@ include ../common.mk
 
 CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_LCMTYPES) $(CFLAGS_LCM) $(CFLAGS_VX) -fPIC -O2
 LDFLAGS =  $(LDFLAGS_VX_GTK) $(LDFLAGS_VX) $(LDFLAGS_GTK) $(LDFLAGS_IMAGESOURCE) $(LDFLAGS_COMMON) $(LDFLAGS_LCMTYPES) $(LDFLAGS_LCM) $(LDFLAGS_STD)
+CXXFLAGS_STD := -g -D FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D REENTRANT \
+	-Wall -Wno-unused-parameter -pthread -Wno-write-strings -Wno-error=switch
+CFLAGS_CXX = $(CXXFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) -fPIC -O2 -std=c++0x
 
 BINARIES = ../../bin/kinectarm_app ../../bin/kinectvision_app
 LIB = ../../lib

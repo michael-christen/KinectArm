@@ -24,6 +24,11 @@
 #include "common/pg.h"
 #include "common/zarray.h"
 
+//magic c/c++ linkage fix
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // imagesource
 #include "imagesource/image_source.h"
 #include "imagesource/image_convert.h"
@@ -37,5 +42,9 @@ void eecs467_default_display_finished(vx_application_t *app, vx_display_t *disp)
 
 void eecs467_init(int argc, char **argv);
 void eecs467_gui_run(vx_application_t *app, parameter_gui_t *pg, int w, int h);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
