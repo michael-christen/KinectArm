@@ -14,8 +14,14 @@
 #include "eecs467_util.h"
 #include "vision_gui.h"
 #include "body.h"
+#include "kinect_handle.h"
+
+//Kinect
+#include <libfreenect.hpp>
 
 static state_t * global_state;
+Freenect::Freenect freenect;
+
 static void terminal_signal_handler(int signum)
 {
 	switch (signum)
@@ -51,6 +57,55 @@ void* lcm_handle_loop(void *data) {
 	return NULL;
 }
 
+void kinect_init(state_t* state) {
+	//Initialize kinect
+	state->kinect = &freenect.createDevice<MyFreenectDevice>(0);
+	state->kinect->startVideo();
+	state->kinect->startDepth();
+}
+
+void kinect_destroy(state_t* state) {
+	state->kinect->stopVideo();
+	state->kinect->stopDepth();
+}
+
+void update_kinect(state_t* state) {
+	static std::vector<uint8_t> depth(640*480*4);
+	static std::vector<uint8_t> rgb(640*480*4);
+
+	pthread_mutex_lock(&state->kinect_mutex);
+	{
+		state->kinect->updateState();
+		state->kinect->getDepth(depth);
+		state->kinect->getRGB(rgb);
+		update_im_from_vect(rgb, state->im);
+		update_im_from_vect(depth, state->depth);
+	}
+	pthread_mutex_unlock(&state->kinect_mutex);
+}
+
+void kinect_process(state_t* state){
+	update_kinect(state);
+	pthread_mutex_lock(&state->kinect_mutex);
+	{
+		//Do cool processing
+	}
+	pthread_mutex_unlock(&state->kinect_mutex);
+}
+
+void * kinect_analyze(void * data){
+	state_t * state = (state_t *) data;
+	kinect_init(state);
+
+	while(state->running){
+		kinect_process(state);
+		usleep(10000);
+	}
+
+	//camera_destroy(state);
+	return NULL;
+}
+
 
 int main(int argc, char ** argv)
 {
@@ -68,11 +123,15 @@ int main(int argc, char ** argv)
 	lcm_t * lcm = lcm_create (NULL);
 	state->lcm = lcm;
 
+	state->im    = image_u32_create(640, 480);
+	state->depth = image_u32_create(640, 480);
+
 	//signal(SIGINT, terminal_signal_handler);
 
 	pthread_mutex_init(&state->layer_mutex, NULL);
 	pthread_mutex_init(&state->lcm_mutex, NULL);
 	pthread_mutex_init(&state->running_mutex, NULL);
+	pthread_mutex_init(&state->kinect_mutex, NULL);
 
 	state->layer_map = zhash_create(sizeof(vx_display_t*), sizeof(vx_layer_t*), zhash_uint64_hash, zhash_uint64_equals);
 
@@ -88,6 +147,7 @@ int main(int argc, char ** argv)
 	}
 
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
+	pthread_create(&state->kinect_thread, NULL, kinect_analyze, state);
 	gui_create(state);
 	printf("after gui_create\n");
 

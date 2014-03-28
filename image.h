@@ -4,6 +4,8 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
+#include <inttypes.h>
+#include <stdint.h>
 uint8_t get_red(uint32_t px);
 uint8_t get_green(uint32_t px);
 uint8_t get_blue(uint32_t px);

@@ -9,11 +9,13 @@
 #include "lcmtypes/dynamixel_status_list_t.h"
 #include "lcmtypes/dynamixel_status_t.h"
 
+
 // Local Includes
 #include "arm_state.h"
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
+#include "image.h"
 
 static int64_t utime_now()
 {
@@ -166,3 +168,5 @@ int main(int argc, char ** argv)
     printf("Exited Cleanly!\n");
     return 0;
 }
+
+

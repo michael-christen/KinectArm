@@ -6,7 +6,7 @@
 
    * Creation Date : 23-04-2013
 
-   * Last Modified : Mon 27 Jan 2014 09:50:51 AM EST
+   * Last Modified : Fri 28 Mar 2014 05:45:06 PM EDT
 
    * Created By : Michael Christen
 
@@ -21,7 +21,7 @@ void set_union(Set *a, Set *b)
 }
 
 Set * set_init(int x) {
-    Set * newSet = malloc(sizeof(Set));
+    Set * newSet = (Set *) malloc(sizeof(Set));
     newSet->parent = newSet;
     newSet->val = x;
     newSet->rank = 0;

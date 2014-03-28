@@ -40,8 +40,7 @@ double arm_segment_depth = 2.5;
 
 void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char *name)
 {
-	state_t *state = (state_t*) pl->impl;
-	int i;
+	//state_t *state = (state_t*) pl->impl;
     if (!strcmp("s0", name)) {
 		printf("s0 changed\n");
     } else if (!strcmp("but1", name)) {
@@ -129,16 +128,20 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 }
 
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
-	/*vx_object_t * vo = vxo_image_from_u32(im, VXO_IMAGE_FLIPY,
+	//Visual map
+	vx_object_t * vo = vxo_image_from_u32(state->im, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-
-	vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "image");
-
+	vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 	vx_buffer_add_back(vb, vo);
 	vx_buffer_swap(vb);
-
-	//Swap buffers
-	vx_buffer_swap(imageBuff);*/
+	//Depth map
+	/*
+	vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
+				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+	vb = vx_world_get_buffer(layerData->world, "depth-image");
+	vx_buffer_add_back(vb, vo);
+	vx_buffer_swap(vb);
+	*/
 	return 1;
 }
 
