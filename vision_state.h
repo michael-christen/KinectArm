@@ -117,6 +117,10 @@ public:
 		for( unsigned int i = 0 ; i < 640*480 ; i++) {
 			int pval = m_gamma[depth[i]];
 			int lb = pval & 0xff;
+			m_buffer_depth[3*i+0] = pval & 0xff;
+			m_buffer_depth[3*i+1] = (pval & 0xff00) >> 8;
+			m_buffer_depth[3*i+2] = 255;
+			/*
 			switch (pval>>8) {
 			case 0:
 				m_buffer_depth[3*i+0] = 255;
@@ -154,6 +158,7 @@ public:
 				m_buffer_depth[3*i+2] = 0;
 				break;
 			}
+			*/
 		}
 		m_new_depth_frame = true;
 	}

@@ -1,4 +1,5 @@
 #include "vision_state.h"
+#include "kinect_handle.h"
 #define CM_TO_VX 1
 
 // Functions

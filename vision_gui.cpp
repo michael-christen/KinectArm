@@ -129,19 +129,22 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	//Visual map
-	vx_object_t * vo = vxo_image_from_u32(state->im, VXO_IMAGE_FLIPY,
+	pthread_mutex_lock(&state->kinect_mutex);
+	{
+		vx_object_t * vo = vxo_image_from_u32(state->im, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-	vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
-	vx_buffer_add_back(vb, vo);
-	vx_buffer_swap(vb);
-	//Depth map
-	/*
-	vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
+		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
+		vx_buffer_add_back(vb, vo);
+		vx_buffer_swap(vb);
+		//Depth map
+		make_depth_viewable(state->depth);
+		vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-	vb = vx_world_get_buffer(layerData->world, "depth-image");
-	vx_buffer_add_back(vb, vo);
-	vx_buffer_swap(vb);
-	*/
+		vb = vx_world_get_buffer(layerData->world, "depth-image");
+		vx_buffer_add_back(vb, vo);
+		vx_buffer_swap(vb);
+	}
+	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
 }
 
