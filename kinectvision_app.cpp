@@ -82,8 +82,7 @@ void update_kinect(state_t* state) {
 		state->kinect->getRGB(rgb);
 		update_im_from_vect(rgb, state->im);
 		update_im_from_vect(depth, state->depth);
-		printf("Dist: %x\n",state->depth->buf[state->depth->stride*240
-				+ 320]);
+		//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 }

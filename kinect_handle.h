@@ -18,6 +18,11 @@ void make_depth_viewable(image_u32_t *im);
 
 uint16_t get_px_depth(uint32_t px);
 
+struct DepthPoint {
+	uint16_t mm;
+	int x, y; 
+};
+
 class Mutex {
 public:
 	Mutex() {

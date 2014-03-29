@@ -31,6 +31,7 @@
 #include "vision_gui.h"
 #include "vision_state.h"
 #include "eecs467_util.h"
+#include "filter.h"
 
 int displayCount;
 
@@ -137,7 +138,9 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 		vx_buffer_add_back(vb, vo);
 		vx_buffer_swap(vb);
 		//Depth map
+		filter_front(state->depth);
 		make_depth_viewable(state->depth);
+
 		vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vb = vx_world_get_buffer(layerData->world, "depth-image");

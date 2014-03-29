@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sat 29 Mar 2014 12:35:52 AM EDT
+	       * Last Modified : Sat 29 Mar 2014 03:08:58 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -43,7 +43,8 @@ void make_depth_viewable(image_u32_t *im) {
 	uint16_t val;
 	uint8_t  scaled_down;
 	double   tmp;
-	uint16_t MAX_DEPTH_VAL = 0x0fff;
+	//Not sure how to fix?
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	int      id;
 	for(int y = 0; y < im->height; ++y) {
 		for(int x = 0; x < im->width; ++x) {

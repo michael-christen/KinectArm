@@ -296,3 +296,4 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 	}
 	return final_num_balls;
 }
+
