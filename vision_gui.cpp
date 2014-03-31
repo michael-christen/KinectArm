@@ -119,6 +119,11 @@ int initKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	return 1;
 }
 
+int initKinectDepthLayer(state_t *state, layer_data_t *layerData) {
+	layerData->world = vx_world_create();
+	return 1;
+}
+
 int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	float lowLeft[2] = {0, 0};
 	float upRight[2] = {640, 480};
@@ -128,22 +133,38 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	return 1;
 }
 
+int displayInitKinectDepthLayer(state_t *state, layer_data_t *layerData) {
+	float lowLeft[2] = {0, 0};
+	float upRight[2] = {640, 480};
+
+	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
+	return 1;
+}
+
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
-	//Visual map
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
+		//Visual map
 		vx_object_t * vo = vxo_image_from_u32(state->im, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
 		vx_buffer_swap(vb);
+	}
+	pthread_mutex_unlock(&state->kinect_mutex);
+	return 1;
+}
+
+int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
+	pthread_mutex_lock(&state->kinect_mutex);
+	{
 		//Depth map
 		filter_front(state->depth);
 		make_depth_viewable(state->depth);
-
-		vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
+		vx_object_t * vo = vxo_image_from_u32(state->depth, VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-		vb = vx_world_get_buffer(layerData->world, "depth-image");
+		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
 		vx_buffer_swap(vb);
 	}
@@ -152,6 +173,11 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 }
 
 int destroyKinectImageLayer(state_t *state, layer_data_t *layerData) {
+	vx_world_destroy(layerData->world);
+	return 1;
+}
+
+int destroyKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	vx_world_destroy(layerData->world);
 	return 1;
 }
@@ -213,12 +239,23 @@ void gui_create(state_t *state) {
 	state->layers[0].name = "KinectImage";
 	state->layers[0].position[0] = 0.0f;
 	state->layers[0].position[1] = 0.0f;
-	state->layers[0].position[2] = 1.0f;
+	state->layers[0].position[2] = 0.5f;
 	state->layers[0].position[3] = 1.0f;
 	state->layers[0].init = initKinectImageLayer;
 	state->layers[0].displayInit = displayInitKinectImageLayer;
 	state->layers[0].render = renderKinectImageLayer;
 	state->layers[0].destroy = destroyKinectImageLayer;
+	// Init layer data structs
+	state->layers[1].enable = 1;
+	state->layers[1].name = "KinectDepth";
+	state->layers[1].position[0] = 0.5f;
+	state->layers[1].position[1] = 0.0f;
+	state->layers[1].position[2] = 0.5f;
+	state->layers[1].position[3] = 1.0f;
+	state->layers[1].init = initKinectDepthLayer;
+	state->layers[1].displayInit = displayInitKinectDepthLayer;
+	state->layers[1].render = renderKinectDepthLayer;
+	state->layers[1].destroy = destroyKinectDepthLayer;
 
 	vx_remote_display_source_t * remote = vx_remote_display_source_create_attr(&state->app, &remote_attr);
 
