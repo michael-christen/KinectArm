@@ -6,6 +6,13 @@
 #include <glib-object.h>
 #include <clutter/clutter.h>
 #include <clutter/clutter-keysyms.h>
+#include <pthread.h>
+
+// LCM
+#include <lcm/lcm.h>
+#include "skeleton_joint_t.h"
+#include "skeleton_joint_list_t.h"
+
 
 static SkeltrackSkeleton *skeleton = NULL;
 static GFreenectDevice *kinect = NULL;
@@ -33,6 +40,26 @@ typedef struct
   gint reduced_width;
   gint reduced_height;
 } BufferInfo;
+
+typedef struct state_t state_t;
+
+struct state_t {
+  volatile int running;
+  lcm_t *lcm;
+};
+
+void* lcm_handle_loop(void *data) {
+  state_t *state = (state_t*) data;
+
+  while (state->running) {
+    // Set up the LCM file descriptor for waiting. This lets us monitor it
+    // until somethign is "ready" to happen. In this case, we are ready to
+    // receive a message.
+    lcm_handle(state->lcm);
+  }
+
+  return NULL;
+}
 
 static void
 on_track_joints (GObject      *obj,
@@ -330,6 +357,8 @@ on_skeleton_draw (ClutterCanvas *canvas,
   if (list == NULL)
     return FALSE;
 
+  state_t *state = (state_t*) user_data;
+
   head = skeltrack_joint_list_get_joint (list,
                                          SKELTRACK_JOINT_ID_HEAD);
   left_hand = skeltrack_joint_list_get_joint (list,
@@ -344,6 +373,87 @@ on_skeleton_draw (ClutterCanvas *canvas,
                                                SKELTRACK_JOINT_ID_LEFT_ELBOW);
   right_elbow = skeltrack_joint_list_get_joint (list,
                                                 SKELTRACK_JOINT_ID_RIGHT_ELBOW);
+
+
+  /* SEND LCM - ADDED BY BRIAN */
+
+  // First make sure all of the joints that we care about are present
+
+  skeleton_joint_list_t lcm_skeleton;
+  lcm_skeleton.len = SKELTRACK_JOINT_MAX_JOINTS;
+  lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
+
+  int i;
+  for (i = 0; i < lcm_skeleton.len; i++) {
+      lcm_skeleton.joints[0].x = 0;
+      lcm_skeleton.joints[0].y = 0;
+      lcm_skeleton.joints[0].z = 0;
+      lcm_skeleton.joints[0].screen_x = 0;
+      lcm_skeleton.joints[0].screen_y = 0;
+  }
+
+  if (head) {
+      lcm_skeleton.joints[0].x = head->x;
+      lcm_skeleton.joints[0].y = head->y;
+      lcm_skeleton.joints[0].z = head->z;
+      lcm_skeleton.joints[0].screen_x = head->screen_x;
+      lcm_skeleton.joints[0].screen_y = head->screen_y;
+  }
+      
+  if (right_shoulder) {
+      lcm_skeleton.joints[1].x = right_shoulder->x;
+      lcm_skeleton.joints[1].y = right_shoulder->y;
+      lcm_skeleton.joints[1].z = right_shoulder->z;
+      lcm_skeleton.joints[1].screen_x = right_shoulder->screen_x;
+      lcm_skeleton.joints[1].screen_y = right_shoulder->screen_y;
+  }
+
+  if (right_elbow) {
+      lcm_skeleton.joints[2].x = right_elbow->x;
+      lcm_skeleton.joints[2].y = right_elbow->y;
+      lcm_skeleton.joints[2].z = right_elbow->z;
+      lcm_skeleton.joints[2].screen_x = right_elbow->screen_x;
+      lcm_skeleton.joints[2].screen_y = right_elbow->screen_y;
+  }
+
+      
+  if (right_hand) {
+      lcm_skeleton.joints[3].x = right_hand->x;
+      lcm_skeleton.joints[3].y = right_hand->y;
+      lcm_skeleton.joints[3].z = right_hand->z;
+      lcm_skeleton.joints[3].screen_x = right_hand->screen_x;
+      lcm_skeleton.joints[3].screen_y = right_hand->screen_y;
+  }
+
+  if (left_shoulder) {
+      lcm_skeleton.joints[4].x = left_shoulder->x;
+      lcm_skeleton.joints[4].y = left_shoulder->y;
+      lcm_skeleton.joints[4].z = left_shoulder->z;
+      lcm_skeleton.joints[4].screen_x = left_shoulder->screen_x;
+      lcm_skeleton.joints[4].screen_y = left_shoulder->screen_y;
+  }
+
+  if (left_elbow) {
+      lcm_skeleton.joints[5].x = left_elbow->x;
+      lcm_skeleton.joints[5].y = left_elbow->y;
+      lcm_skeleton.joints[5].z = left_elbow->z;
+      lcm_skeleton.joints[5].screen_x = left_elbow->screen_x;
+      lcm_skeleton.joints[5].screen_y = left_elbow->screen_y;
+  }
+
+  if (left_hand) {
+      lcm_skeleton.joints[6].x = left_hand->x;
+      lcm_skeleton.joints[6].y = left_hand->y;
+      lcm_skeleton.joints[6].z = left_hand->z;
+      lcm_skeleton.joints[6].screen_x = left_hand->screen_x;
+      lcm_skeleton.joints[6].screen_y = left_hand->screen_y;
+  }
+
+  skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
+  free(lcm_skeleton.joints);
+
+  /* END LCM - ADDED BY BRIAN */
+
 
   /* Paint it white */
   color = clutter_color_new (255, 255, 255, 255);
@@ -588,7 +698,7 @@ on_new_kinect_device (GObject      *obj,
   g_signal_connect (depth_canvas,
                     "draw",
                     G_CALLBACK (on_skeleton_draw),
-                    NULL);
+                    user_data);
 
   gfreenect_device_set_tilt_angle (kinect, 0, NULL, NULL, NULL);
 
@@ -614,18 +724,28 @@ quit (gint signale)
 int
 main (int argc, char *argv[])
 {
+  pthread_t lcm_handle_thread;
+
   if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
     return -1;
+
+  state_t state;
+  state.lcm = lcm_create(NULL);
+  state.running = 1;
+
+  pthread_create(&lcm_handle_thread, NULL, lcm_handle_loop, &state);
 
   gfreenect_device_new (0,
                         GFREENECT_SUBDEVICE_CAMERA,
                         NULL,
                         on_new_kinect_device,
-                        NULL);
+                        &state);
 
   signal (SIGINT, quit);
-
   clutter_main ();
+
+  state.running = 0;
+  pthread_join(lcm_handle_thread, NULL);
 
   if (kinect != NULL)
     g_object_unref (kinect);

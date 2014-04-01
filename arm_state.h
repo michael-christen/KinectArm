@@ -18,6 +18,7 @@
 #include <lcm/lcm.h>
 
 // Local Includes
+#include "body.h"
 
 //////////////
 // CONSTANTS
@@ -27,6 +28,7 @@
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
+#define SKELETON_DATA_CHANNEL "KA_SKELETON"
 
 //////////////
 // STRUCTS
@@ -86,6 +88,8 @@ struct state_t {
     double target_servo_angles[NUM_SERVOS];
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
+
+    Body current_body, last_body;
 };
 
 

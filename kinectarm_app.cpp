@@ -8,6 +8,8 @@
 #include "lcmtypes/dynamixel_command_t.h"
 #include "lcmtypes/dynamixel_status_list_t.h"
 #include "lcmtypes/dynamixel_status_t.h"
+#include "skeleton_joint_t.h"
+#include "skeleton_joint_list_t.h"
 
 
 // Local Includes
@@ -53,6 +55,17 @@ static void arm_status_handler( const lcm_recv_buf_t *rbuf,
 	}
 }
 
+static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
+                           const char *channel,
+                           const skeleton_joint_list_t *msg,
+                           void *user) {
+	state_t *state = (state_t*) user;
+
+	state->last_body = state->current_body;
+	state->current_body = Body(msg);
+	state->current_body.getServoAngles(state->target_servo_angles, true);
+}
+
 int angles_valid(double angles[]) {
 	return 1;
 }
@@ -66,6 +79,11 @@ void* lcm_handle_loop(void *data) {
                                       arm_status_handler,
                                       state);
 
+	skeleton_joint_list_t_subscription_t *skeleton_sub = skeleton_joint_list_t_subscribe(state->lcm,
+                                      SKELETON_DATA_CHANNEL,
+                                      skeleton_data_handler,
+                                      state);
+
 	while (state->running) {
 		// Set up the LCM file descriptor for waiting. This lets us monitor it
 		// until somethign is "ready" to happen. In this case, we are ready to
@@ -76,6 +94,7 @@ void* lcm_handle_loop(void *data) {
 	//clean up
 	// ..._unsubscribe(...)
 	dynamixel_status_list_t_unsubscribe(state->lcm, arm_sub);
+	skeleton_joint_list_t_unsubscribe(state->lcm, skeleton_sub);
 
 	return NULL;
 }

@@ -1,8 +1,31 @@
 #include "body.h"
 #include "../common/matd.h"
 #include "math.h"
+#include "skeleton_joint_list_t.h"
+#include "skeleton_joint_t.h"
 
-void getServoAnglesFromBody(body_t* body, double servoAngles[]){
+Body::Body(const skeleton_joint_list_t *msg) {
+	joint_t *joint;
+	for (int i = 0; i < msg->len; i++) {
+		switch (i) {
+			case 0: joint = &(this->head); break;
+			case 1: joint = &(this->right_shoulder); break;
+			case 2: joint = &(this->right_elbow); break;
+			case 3: joint = &(this->right_wrist); break;
+			case 4: joint = &(this->left_shoulder); break;
+			case 5: joint = &(this->left_elbow); break;
+			default: joint = &(this->left_wrist); break;
+		}
+
+		joint->x = (double) msg->joints[i].x;
+		joint->y = (double) msg->joints[i].y;
+		joint->z = (double) msg->joints[i].z;
+		joint->screen_x = (double) msg->joints[i].screen_x;
+		joint->screen_y = (double) msg->joints[i].screen_y;
+	}
+}
+
+void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_t* floor_shoulder;
 	matd_t* shoulder_elbow;
 	matd_t* shoulder_elbow0;
@@ -10,16 +33,16 @@ void getServoAnglesFromBody(body_t* body, double servoAngles[]){
 	matd_t* elbow_wrist;
 	joint_t shoulder, elbow, wrist;
 
-	if(body->use_right){
+	if(right_side){
 		//use right side of body
-		shoulder = body->right_shoulder;
-		elbow = body->right_elbow;
-		wrist = body->right_wrist;
+		shoulder = this->right_shoulder;
+		elbow = this->right_elbow;
+		wrist = this->right_wrist;
 	}else{
 		//use left side of body
-		shoulder = body->left_shoulder;
-		elbow = body->left_elbow;
-		wrist = body->left_wrist;
+		shoulder = this->left_shoulder;
+		elbow = this->left_elbow;
+		wrist = this->left_wrist;
 	}
 
 	double floor_shoulder_data[3] = {
@@ -58,7 +81,7 @@ void getServoAnglesFromBody(body_t* body, double servoAngles[]){
 	double magew = matd_vec_mag(elbow_wrist);
 
 	double shoulderAngle0 = acos(matd_vec_dot_product(floor_shoulder, shoulder_elbow0) / (magfs * magse0));
-	double shoulderAngle1 = acos(matd_vec_dot_product(floor_shoulder, shoulder_elbow1) / (magfs * magse1));
+	double shoulderAngle1 = acos(matd_vec_dot_product(floor_shoulder, shoulder_elbow1) / (magfs * magse1)) - M_PI/2;
 	double elbowAngle = acos(matd_vec_dot_product(shoulder_elbow, elbow_wrist) / (magse * magew));
 
 	servoAngles[0] = shoulderAngle0;
