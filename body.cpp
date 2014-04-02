@@ -1,5 +1,6 @@
 #include "body.h"
 #include "../common/matd.h"
+#include "../common/math_util.h"
 #include "math.h"
 #include "skeleton_joint_list_t.h"
 #include "skeleton_joint_t.h"
@@ -79,10 +80,14 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	double magse0 = matd_vec_mag(shoulder_elbow0);
 	double magse1 = matd_vec_mag(shoulder_elbow1);
 	double magew = matd_vec_mag(elbow_wrist);
+	
+	double shoulderValue0 = matd_vec_dot_product(floor_shoulder, shoulder_elbow0) / (magfs * magse0);
+	double shoulderValue1 = matd_vec_dot_product(floor_shoulder, shoulder_elbow1) / (magfs * magse1);
+	double elbowValue = matd_vec_dot_product(shoulder_elbow, elbow_wrist) / (magse * magew);
 
-	double shoulderAngle0 = acos(matd_vec_dot_product(floor_shoulder, shoulder_elbow0) / (magfs * magse0));
-	double shoulderAngle1 = acos(matd_vec_dot_product(floor_shoulder, shoulder_elbow1) / (magfs * magse1)) - M_PI/2;
-	double elbowAngle = acos(matd_vec_dot_product(shoulder_elbow, elbow_wrist) / (magse * magew));
+	double shoulderAngle0 = sgn(asin(shoulderValue0))*acos(shoulderValue0);
+	double shoulderAngle1 = sgn(asin(shoulderValue1))*(acos(shoulderValue1) - M_PI/2);
+	double elbowAngle = sgn(asin(elbowValue))*acos(elbowValue);
 
 	servoAngles[0] = shoulderAngle0;
 	servoAngles[1] = shoulderAngle1;
