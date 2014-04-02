@@ -18,6 +18,7 @@
 #include "arm_gui.h"
 #include "body.h"
 #include "image.h"
+#include "config_space.h"
 
 static int64_t utime_now()
 {
