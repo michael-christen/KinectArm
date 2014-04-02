@@ -41,7 +41,7 @@ skeltrack: ../../bin/skeltrack_vision
 ../../bin/kinectarm_app: kinectarm_app.o arm_gui.o body.o pid_ctrl.o eecs467_util.o\
 	skeleton_joint_t.o skeleton_joint_list_t.o config_space.o box.o
 	@echo "\t$@"
-	@$(CC) -o $@ $^ $(LDFLAGS)
+	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 ../../bin/kinectvision_app: kinectvision_app.o vision_gui.o disjoint.o blob_detection.o body.o\
 	pixel.o eecs467_util.o kinect_handle.o image.o filter.o

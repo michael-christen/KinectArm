@@ -6,7 +6,7 @@
 
 class ConfigSpace {
 	public:
-		void addBox();
+		void addBox(Box box);
 	private:
 		std::vector<Box> boxes;
 };

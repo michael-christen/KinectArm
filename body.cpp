@@ -85,6 +85,8 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	double shoulderValue1 = matd_vec_dot_product(floor_shoulder, shoulder_elbow1) / (magfs * magse1);
 	double elbowValue = matd_vec_dot_product(shoulder_elbow, elbow_wrist) / (magse * magew);
 
+	printf("s0 - %f, s1 - %f, e - %f\n", shoulderValue0, shoulderValue1, elbowValue);
+
 	double shoulderAngle0 = sgn(asin(shoulderValue0))*acos(shoulderValue0);
 	double shoulderAngle1 = sgn(asin(shoulderValue1 - M_PI/2))*(acos(shoulderValue1) - M_PI/2);
 	double elbowAngle = sgn(asin(elbowValue))*acos(elbowValue);

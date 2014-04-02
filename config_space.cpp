@@ -4,7 +4,6 @@
 #include <vector>
 #include "box.h"
 
-void ConfigSpace::addBox() {
-	Box box = Box(0, 0, 0, 0, 0, 0);
-	//boxes.push_back(box);
+void ConfigSpace::addBox(Box box) {
+	this->boxes.push_back(box);
 }
