@@ -169,7 +169,7 @@ std::vector<blob_t> blob_detection(Image<uint32_t> &im,
 
 	//Filter out 
 	//int err = 2;
-	int largest_idx = -1;
+	//int largest_idx = -1;
 	int most_px    = 0;
 	//printf("%d possible diamonds\n",label_num);
 	int final_num_blobs = 0;
@@ -181,7 +181,7 @@ std::vector<blob_t> blob_detection(Image<uint32_t> &im,
 		if(right_num_pxs) {
 			if(blobs[i].num_px > most_px) {
 				most_px = blobs[i].num_px;
-				largest_idx = final_num_blobs;
+				//largest_idx = final_num_blobs;
 			}
 
 			temp_blobs.push_back(blobs[i]);
@@ -205,11 +205,11 @@ std::vector<blob_t> blob_detection(Image<uint32_t> &im,
 	//Mark objects
 	for(size_t i = 0; i < im.size(); ++i) {
 		int t_label = labels[i];
-		bool set = false;
+		//bool set = false;
 		if(color_fit(color_threshold,template_hue,im.get(i))) {
 			for(int z = 0; z < final_num_blobs; ++z) {
 				if(t_label == final_labels[z]) {
-					set = true;
+					//set = true;
 					im.set(i,show_px);
 					break;
 				}
@@ -236,7 +236,7 @@ std::vector<blob_t> blob_detection(Image<uint32_t> &im,
 	}
 	*/
 	//Clean up
-	for(int i = 0; i < links.size(); ++i) {
+	for(size_t i = 0; i < links.size(); ++i) {
 		delete links[i];
 	}
 	return temp_blobs;

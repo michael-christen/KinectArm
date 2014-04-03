@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Wed 02 Apr 2014 08:08:45 PM EDT
+	       * Last Modified : Thu 03 Apr 2014 01:54:32 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -41,7 +41,7 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	return im;
 };
 
-uint32_t depthToIm(uint16_t depth, bool valid) {
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
 	uint8_t  scaled_down;
 	double   tmp;
 	//Not sure how to fix?
@@ -55,7 +55,8 @@ uint32_t depthToIm(uint16_t depth, bool valid) {
 	return 0xFF000000;
 }
 
-uint32_t videoToIm(uint32_t video, bool valid) {
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
+	return video;
 	if(valid) {
 		return video;
 	}

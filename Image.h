@@ -1,6 +1,7 @@
 #ifndef __IMAGE__H__
 #define __IMAGE__H__
 #include "common/image_util.h"
+#include "Gradient.h"
 #include <cassert>
 #include <vector>
 
@@ -21,7 +22,10 @@ class Image {
 		//Returns im, pointer, not really safe, but nice for display
 		//Sets the image and returns it
 		//Comparator takes T and valid bit, if add other things like gradient, this would take those too
-		image_u32_t * getImage(uint32_t(*tToPX)(T, bool));
+		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient));
+
+		//Computes the gradient for the image
+		void computeGradient();
 
 		void invalidate(int x, int y);
 		void invalidate(int i);
@@ -58,6 +62,8 @@ class Image {
 		//Width*height vector containing our data
 		//Access to (x,y) -> x + width*y
 		std::vector<T> data;
+		//Gradient information
+		std::vector<Gradient> gradient;
 		//Valid bits to keep track of validness 
 		image_u32_t * im;
 };
@@ -67,6 +73,7 @@ Image<T>::Image(int w, int h)
 :width(w), height(h) {
 	data.resize(w*h);
 	valid = std::vector<bool>(w*h, true);
+	gradient = std::vector<Gradient>(w*h, Gradient());
 	im = image_u32_create(w, h);
 	/*
 	printf("Im w: %d, h: %d",
@@ -134,17 +141,36 @@ void Image<T>::update(const std::vector<T> & ts) {
 	assert(ts.size() == data.size());
 	data = ts;
 	valid.assign(size(),true);
+	gradient.assign(size(),Gradient());
 }
 
 template <typename T>
-image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool)) {
+image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 	for(int x = 0; x < im->width; ++x) {
 		for(int y = 0; y < im->height; ++y) {
-			im->buf[x+y*im->stride] = tToPX(get(x,y),valid[id(x,y)]);
+			im->buf[x+y*im->stride] = tToPX(
+					get(x,y),
+					valid[id(x,y)],
+					gradient[id(x,y)]
+			);
 		}
 	}
 	return im;
 }
+
+template <typename T>
+void Image<T>::computeGradient() {
+	//Leave far edges of image with gradient = 0, to avoid bounds
+	//checking
+	for(int x = 1; x < width-1; ++x) {
+		for(int y = 1; y < height-1; ++y) {
+			gradient[id(x,y)].x( get(x+1,y) - get(x-1,y) );
+			gradient[id(x,y)].y( get(x,y+1) - get(x,y-1) );
+		}
+	}
+}
+
+
 template <typename T>
 void Image<T>::invalidate(int i) {
 	setValid(i,false);

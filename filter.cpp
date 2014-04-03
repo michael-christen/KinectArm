@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Thu 03 Apr 2014 01:23:47 AM EDT
+	* Last Modified : Thu 03 Apr 2014 12:29:06 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -69,7 +69,7 @@ void filter_front(Image<uint16_t> & im) {
 	}
 	*/
 	//min_id = im->width/2 + im->height/2 * im->stride;
-	//printf("Min depth: %x\n", min_depth);
+	printf("Min depth: %d\n", min_depth);
 	blob_merging(im, min_id);
 }
 
