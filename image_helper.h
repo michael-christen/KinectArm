@@ -25,6 +25,11 @@ void RGBtoHSV( uint32_t rgb,
 void RGBtoHSV( uint32_t r, uint32_t g, uint32_t b,
 	double *h, double *s, double *v);
 
+void HSVtoRGB(double h, double s, double v,
+		uint8_t *r, uint8_t *g, uint8_t *b);
+
+uint32_t HSVtoRGB(double h, double s, double v);
+
 void fill_color(double hue, double thresh, image_u32_t *im);
 
 #endif
