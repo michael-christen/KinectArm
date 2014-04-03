@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sat 29 Mar 2014 03:08:58 PM EDT
+	       * Last Modified : Wed 02 Apr 2014 08:08:45 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -17,6 +17,8 @@ void update_im_from_vect(const std::vector<uint8_t> & k_data,
 		image_u32_t *im) {
 	int v_width = 640;
 	int v_height= 480;
+	printf("i_w: %d,v_w: %d, i_h: %d, v_h: %d\n",
+			im->width, v_width, im->height, v_height);
 	assert(im->width == v_width && im->height == v_height);
 	for(int y = 0; y < v_height; ++y) {
 		for(int x = 0; x < v_width; ++x) {
@@ -30,6 +32,7 @@ void update_im_from_vect(const std::vector<uint8_t> & k_data,
 	}
 }
 
+
 image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	int v_width = 640;
 	int v_height= 480;
@@ -38,6 +41,26 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	return im;
 };
 
+uint32_t depthToIm(uint16_t depth, bool valid) {
+	uint8_t  scaled_down;
+	double   tmp;
+	//Not sure how to fix?
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
+	tmp = (depth+0.0)/(MAX_DEPTH_VAL+0.0);
+	tmp *= 0xff;
+	scaled_down = 0xff - (uint8_t)tmp;
+	if(valid) {
+		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
+	}
+	return 0xFF000000;
+}
+
+uint32_t videoToIm(uint32_t video, bool valid) {
+	if(valid) {
+		return video;
+	}
+	return 0xFF000000;
+}
 
 void make_depth_viewable(image_u32_t *im) {
 	uint16_t val;
@@ -62,4 +85,5 @@ void make_depth_viewable(image_u32_t *im) {
 uint16_t get_px_depth(uint32_t px) {
 	return px & 0xffff;
 }
+	
 

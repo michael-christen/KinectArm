@@ -15,6 +15,8 @@
 #include "vision_gui.h"
 #include "body.h"
 #include "kinect_handle.h"
+#include "filter.h"
+#include "Image.h"
 
 //Kinect
 #include <libfreenect.hpp>
@@ -71,27 +73,29 @@ void kinect_destroy(state_t* state) {
 	state->kinect->stopDepth();
 }
 
+//Must be called with a lock on kinect_mutex
+//to maintain atomicity
 void update_kinect(state_t* state) {
-	static std::vector<uint8_t> depth(640*480*4);
-	static std::vector<uint8_t> rgb(640*480*4);
-
-	pthread_mutex_lock(&state->kinect_mutex);
-	{
-		state->kinect->updateState();
-		state->kinect->getDepth(depth);
-		state->kinect->getRGB(rgb);
-		update_im_from_vect(rgb, state->im);
-		update_im_from_vect(depth, state->depth);
-		//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
-	}
-	pthread_mutex_unlock(&state->kinect_mutex);
+	static std::vector<uint16_t> depth(640*480);
+	static std::vector<uint32_t> rgb(640*480);
+	state->kinect->updateState();
+	state->kinect->getDepth(depth);
+	state->kinect->getRGB(rgb);
+	//update_im_from_vect(rgb, state->im);
+	state->im.update(rgb);
+	state->depth.update(depth);
+	//update_im_from_vect(depth, state->depth);
+	//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 }
 
 void kinect_process(state_t* state){
-	update_kinect(state);
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
+		//Update
+		update_kinect(state);
 		//Do cool processing
+		filter_front(state->depth);
+		//make_depth_viewable(state->depth);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 }
@@ -126,8 +130,12 @@ int main(int argc, char ** argv)
 	lcm_t * lcm = lcm_create (NULL);
 	state->lcm = lcm;
 
-	state->im    = image_u32_create(640, 480);
+	state->im    = Image<uint32_t>(640,480);
+	state->depth = Image<uint16_t>(640,480);
+	//state->im    = image_u32_create(640, 480);
+	/*
 	state->depth = image_u32_create(640, 480);
+	*/
 
 	//signal(SIGINT, terminal_signal_handler);
 
@@ -161,3 +169,5 @@ int main(int argc, char ** argv)
     printf("Exited Cleanly!\n");
     return 0;
 }
+
+

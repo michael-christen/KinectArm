@@ -22,6 +22,7 @@
 #include "kinect_handle.h"
 
 // Local Includes
+#include "Image.h"
 //////////////
 // CONSTANTS
 //////////////
@@ -82,8 +83,12 @@ struct state_t {
 
     zhash_t *layer_map; // <display, layer>
 
-	image_u32_t * im;
+	//Image<uint32_t> im;
+	Image<uint16_t> depth;
+	Image<uint32_t> im;
+	/*
 	image_u32_t * depth;
+	*/
     pthread_t kinect_thread;
     pthread_mutex_t kinect_mutex;
 

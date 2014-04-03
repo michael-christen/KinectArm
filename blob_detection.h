@@ -6,7 +6,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "image.h"
+#include <vector>
+#include "image_helper.h"
 #include "pixel.h"
 
 #define COLOR_THRESHOLD 37.0
@@ -49,8 +50,7 @@ void getNLabels(int n_labels[], int labels[], int neighbors[], int
 int minLabel(int n_labels[], int len_labels);
 
 
-void unionLabels(Set *links[MAX_NUM_BALLS], int n_labels[MAX_NUM_NEIGHBORS],
-	int len_neighbors);
+void unionLabels(std::vector<Set> links, std::vector<int> n_labels);
 
 int blob_detection(image_u32_t *im, ball_t *final_balls,
                    double template_hue, uint32_t show_px,

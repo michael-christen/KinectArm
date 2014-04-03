@@ -56,6 +56,7 @@ int minLabel(int n_labels[], int len_labels) {
 	return minLabel;
 }
 
+/*
 void unionLabels(Set *links[MAX_NUM_BALLS], int n_labels[MAX_NUM_NEIGHBORS],
 				 int len_neighbors) {
 	//Pass over twice
@@ -102,9 +103,6 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 		for(x = 0; x < im->width; ++x) {
 			id = im->stride*y + x;
 			px = im->buf[id];
-			/*
-			   im->buf[id] = dist_to_grey(color_dist(template_px, px));
-			   */
 			if(is_ball(color_threshold,template_hue,px)){
 				len_neighbors = getNeighbors(im, x, y, neighbors,
 											 template_hue, color_threshold);
@@ -230,12 +228,10 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 
 			double density = (balls[i].num_px + 0.0) / (width*height+0.0);
 			int dense_enough  = density > 0.45;
-			/*
 			printf("i: %d, px_size: %d, t&b_in_lr: %d, t_inline_b: %d, w<=h: %d, w/h: %f,, height: %d, width: %d\n",
 			  i, balls[i].num_px, top_and_bot_in_lr,
 			  top_inline_bot, width_lte_height, w_over_h,
 			  height, width);
-			  */
 			if(top_and_bot_in_lr &&
 			   top_inline_bot    &&
 			   width_lte_height  &&
@@ -256,11 +252,9 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 					(temp_balls[final_num_balls].y+0.0)/
 					temp_balls[final_num_balls].num_px;
 				final_labels[final_num_balls] = i;
-				/*
 				   printf("%d passed, x: %f, y: %f\n",i,
 				   final_balls[final_num_balls].x,
 				   final_balls[final_num_balls].y);
-				   */
 				final_num_balls ++;
 			}
 		}
@@ -296,4 +290,5 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 	}
 	return final_num_balls;
 }
+*/
 
