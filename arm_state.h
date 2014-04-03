@@ -19,12 +19,12 @@
 
 // Local Includes
 #include "body.h"
+#include "rexarm.h"
 
 //////////////
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 1
-#define NUM_SERVOS 6
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
@@ -74,7 +74,6 @@ struct state_t {
     pthread_t arm_commander_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
-    pthread_mutex_t servo_angles_mutex;
     pthread_t gui_thread;
 
     int layerCount;
@@ -90,6 +89,7 @@ struct state_t {
     int update_arm_cont, update_arm;
 
     Body current_body, last_body;
+    RexArm arm;
 };
 
 
