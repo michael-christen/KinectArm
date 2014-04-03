@@ -1,4 +1,4 @@
-#include "image.h"
+#include "image_helper.h"
 
 uint8_t get_red(uint32_t px) {
     return px & 0xFF;

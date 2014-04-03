@@ -1,5 +1,5 @@
-#ifndef __IMAGE__H__
-#define __IMAGE__H__
+#ifndef __IMAGE_HELPER__H__
+#define __IMAGE_HELPER__H__
 #include "common/image_util.h"
 #include <math.h>
 #include <assert.h>

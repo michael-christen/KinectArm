@@ -17,8 +17,8 @@
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
-#include "image.h"
 #include "config_space.h"
+#include "image_helper.h"
 
 static int64_t utime_now()
 {
