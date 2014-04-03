@@ -43,6 +43,7 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
 	state_t *state = (state_t*) pl->impl;
 	int i;
 	int updateServoAngles = 0;
+	double angles[NUM_SERVOS];
     if (!strcmp("s0", name)) {
 		state->gui_servo_angles[0] = pg_gd(pg, name);
     } else if (!strcmp("s1", name)) {
@@ -59,11 +60,10 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     	updateServoAngles = 1;
     } else if (!strcmp("but2", name)) {
     	if (!state->update_arm_cont) {
-    		pthread_mutex_lock(&state->servo_angles_mutex);
 	    	for (i = 0; i < NUM_SERVOS; i++) {
-				state->target_servo_angles[i] = 0;
+				angles[i] = 0.0;
 			}
-			pthread_mutex_unlock(&state->servo_angles_mutex);
+			state->arm.setTargetAngles(angles);
 	    } else {
     		printf("Uncheck \"Update Arm Continuously\" first\n");
 	    }
@@ -72,11 +72,7 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     }
 
     if (state->update_arm_cont || updateServoAngles) {
-    	pthread_mutex_lock(&state->servo_angles_mutex);
-		for (i = 0; i < NUM_SERVOS; i++) {
-			state->target_servo_angles[i] = state->gui_servo_angles[i];
-		}
-		pthread_mutex_unlock(&state->servo_angles_mutex);
+		state->arm.setTargetAngles(state->gui_servo_angles);
     }
 }
 
@@ -145,64 +141,6 @@ void display_started(vx_application_t * app, vx_display_t * disp)
 	printf("hash table size after insert: %d\n", zhash_size(state->layer_map));
 }
 
-void draw_arm(vx_buffer_t *buf, double angles[], const float color[]) {
-	vx_object_t *segment = vxo_chain(
-		// Base
-		vxo_mat_rotate_z(angles[0]),
-		vxo_mat_scale3(CM_TO_VX, CM_TO_VX, CM_TO_VX),
-		vxo_mat_translate3(0, 0, arm_segment_length[0]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth, arm_segment_length[0]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 1/arm_segment_depth, 1/arm_segment_length[0]),
-		vxo_mat_translate3(0, 0, arm_segment_length[0]/2),
-		// Upper Arm
-		vxo_mat_rotate_x(angles[1]),
-		vxo_mat_translate3(0, 0, arm_segment_length[1]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth, arm_segment_length[1]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 1/arm_segment_depth, 1/arm_segment_length[1]),
-		vxo_mat_translate3(0, 0, arm_segment_length[1]/2),
-		// Lower Arm
-		vxo_mat_rotate_x(angles[2]),
-		vxo_mat_translate3(0, 0, arm_segment_length[2]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth, arm_segment_length[2]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 1/arm_segment_depth, 1/arm_segment_length[2]),
-		vxo_mat_translate3(0, 0, arm_segment_length[2]/2),
-		// Wrist
-		vxo_mat_rotate_x(angles[3]),
-		vxo_mat_translate3(0, 0, arm_segment_length[3]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth, arm_segment_length[3]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 1/arm_segment_depth, 1/arm_segment_length[3]),
-		vxo_mat_translate3(0, 0, arm_segment_length[3]/2),
-		// Gripper
-		vxo_mat_rotate_z(angles[4] + M_PI/2),
-		// Static Gripper
-		vxo_mat_translate3(0, -arm_segment_depth/2, arm_segment_length[4]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth/2, arm_segment_length[4]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 2/arm_segment_depth, 1/arm_segment_length[4]),
-		vxo_mat_translate3(0, arm_segment_depth, -arm_segment_length[4]/2),
-		// Dynamic Gripper
-		vxo_mat_rotate_x(angles[5] - M_PI/2),
-		vxo_mat_translate3(0, 0, arm_segment_length[4]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth/2, arm_segment_length[4]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_yellow, 2.0f)),
-		vxo_mat_scale3(1/arm_segment_width, 2/arm_segment_depth, 1/arm_segment_length[4])
-	);
-
-	vx_buffer_add_back(buf, segment);
-
-	/*segment = vxo_chain(
-		vxo_mat_rotate_z(angles[0]),
-		vxo_mat_scale3(CM_TO_VX, CM_TO_VX, CM_TO_VX),
-		vxo_mat_translate3(0, 0, arm_segment_length[0]/2 + arm_segment_length[1]/2),
-		vxo_mat_scale3(arm_segment_width, arm_segment_depth, arm_segment_length[0]),
-		vxo_box(vxo_mesh_style(color))
-	);*/
-}
-
 int initArmsLayer(state_t *state, layer_data_t *layerData) {
 	layerData->world = vx_world_create();
 	return 1;
@@ -234,10 +172,8 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
-	pthread_mutex_lock(&state->servo_angles_mutex);
-	draw_arm(armBuff, state->target_servo_angles, vx_red);
-	pthread_mutex_unlock(&state->servo_angles_mutex);
-	draw_arm(armBuff, state->current_servo_angles, vx_blue);
+	state->arm.drawTargetState(armBuff, vx_red);
+	state->arm.drawCurState(armBuff, vx_blue);
 	
 	//Swap buffers
 	vx_buffer_swap(gridBuff);

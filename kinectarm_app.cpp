@@ -19,6 +19,7 @@
 #include "body.h"
 #include "image.h"
 #include "config_space.h"
+#include "rexarm.h"
 
 static int64_t utime_now()
 {
@@ -50,10 +51,13 @@ static void arm_status_handler( const lcm_recv_buf_t *rbuf,
                            void *user) {
 	int i;
 	state_t *state = (state_t*) user;
+	double angles[NUM_SERVOS];
 
 	for (i = 0; i < msg->len; i++) {
-		state->current_servo_angles[i] = msg->statuses[i].position_radians;
+		angles[i] = msg->statuses[i].position_radians;
 	}
+
+	state->arm.setTargetAngles(angles);
 }
 
 static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
@@ -61,10 +65,12 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
+	double angles[NUM_SERVOS];
 
 	state->last_body = state->current_body;
 	state->current_body = Body(msg);
-	state->current_body.getServoAngles(state->target_servo_angles, true);
+	state->current_body.getServoAngles(angles, true);
+	state->arm.setTargetAngles(angles);
 }
 
 int angles_valid(double angles[]) {
@@ -104,23 +110,23 @@ void* arm_commander(void *data) {
 	int hz = 30;
 	int valid_angles;
 	state_t *state = (state_t*) data;
+	double angles[NUM_SERVOS];
 
 	dynamixel_command_list_t cmds;
     cmds.len = NUM_SERVOS;
     cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
-    	pthread_mutex_lock(&state->servo_angles_mutex);
-    	valid_angles = angles_valid(state->target_servo_angles);
+    	state->arm.getTargetAngles(angles);
+    	valid_angles = angles_valid(angles);
     	if (valid_angles) {
 	    		for (int id = 0; id < NUM_SERVOS; id++) {
 				cmds.commands[id].utime = utime_now();
-				cmds.commands[id].position_radians = state->target_servo_angles[id];
+				cmds.commands[id].position_radians = angles[id];
 				cmds.commands[id].speed = 0.5;
 				cmds.commands[id].max_torque = 0.7;
 		    }
     	}
-	    pthread_mutex_unlock(&state->servo_angles_mutex);
 
 	    if (valid_angles) {
 	    	pthread_mutex_lock(&state->lcm_mutex);
@@ -159,7 +165,6 @@ int main(int argc, char ** argv)
 	pthread_mutex_init(&state->layer_mutex, NULL);
 	pthread_mutex_init(&state->lcm_mutex, NULL);
 	pthread_mutex_init(&state->running_mutex, NULL);
-	pthread_mutex_init(&state->servo_angles_mutex, NULL);
 
 	state->layer_map = zhash_create(sizeof(vx_display_t*), sizeof(vx_layer_t*), zhash_uint64_hash, zhash_uint64_equals);
 
