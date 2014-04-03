@@ -100,7 +100,7 @@ void kinect_process(state_t* state){
 		//of the depth field
 		filter_front(state->depth);
 		//Filter out image pixels which aren't in foreground
-		state->depth.copyValid(state->im.valid);
+		//state->depth.copyValid(state->im.valid);
 		//Compute the gradient of the entire image
 		state->im.computeGradient(videoToGrad);
 
