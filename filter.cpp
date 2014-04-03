@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sat 29 Mar 2014 03:15:31 PM EDT
+	* Last Modified : Thu 03 Apr 2014 12:29:06 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -19,7 +19,7 @@ _._._._._._._._._._._._._._._._._._._._._.*/
 #include "filter.h"
 
 
-void filter_front(image_u32_t *im) {
+void filter_front(Image<uint16_t> & im) {
 	//Find closest pixel that isn't 0
 	uint16_t min_depth = 0xffff;
 	//For some reason these values showed up at areas where they
@@ -37,6 +37,20 @@ void filter_front(image_u32_t *im) {
 	NOISE_DEPTHS.push_back(0x780);
 	NOISE_DEPTHS.push_back(0x9f8);
 	int      min_id    = 0;
+	for(size_t i = 0; i < im.size(); ++i) {
+		uint16_t depth = im.get(i);
+		if(depth >= MIN_ALLOWED_DEPTH &&
+				depth < min_depth) {
+			//If it's a noise value, ignore it
+			if(std::find(NOISE_DEPTHS.begin(), NOISE_DEPTHS.end(),
+						depth) != NOISE_DEPTHS.end()) {
+				continue;
+			}
+			min_id = i;
+			min_depth = depth;
+		}
+	}
+	/*
 	for(int y = 0; y < im->height; ++y) {
 		for(int x = 0; x < im->width; ++x) {
 			int id = im->stride*y + x;
@@ -53,26 +67,41 @@ void filter_front(image_u32_t *im) {
 			}
 		}
 	}
+	*/
 	//min_id = im->width/2 + im->height/2 * im->stride;
-	printf("Min depth: %x\n", min_depth);
+	printf("Min depth: %d\n", min_depth);
 	blob_merging(im, min_id);
 }
 
-void blob_merging(image_u32_t *im, int start) {
+bool is_neighbor(uint16_t cur, uint16_t other) {
+	int diff = abs((int)cur - (int)other);
+	bool val = diff < 700;
+	/*
+	printf("diff: %d\n",diff);
+	if(val) printf("yahoo!\n");
+	*/
+	return val;
+}
+
+void blob_merging(Image<uint16_t> &im, int start) {
 	int id;
 	uint32_t px;
 	std::queue<int> search;
 	std::vector<int> passed;
-	std::vector<bool> visited   = std::vector<bool>(im->height*im->stride, false);
-	std::vector<bool> pass_vect = std::vector<bool>(im->height*im->stride, false);
+	std::vector<bool> visited   =
+		std::vector<bool>(im.h()*im.w(), false);
+	std::vector<bool> pass_vect =
+		std::vector<bool>(im.h()*im.w(), false);
+	static std::vector<bool> neighbor_search =
+		std::vector<bool>(8,true);
 	search.push(start);
 	while(!search.empty()) {
 		//printf("passed_size: %d\n",passed.size());
-		int cur_id = search.front();
+		size_t cur_id = search.front();
 		search.pop();
-		if(cur_id < 0 || cur_id >= im->height*im->stride) {
+		if(cur_id < 0 || cur_id >= im.size()) {
 			assert(0);
-			assert(cur_id >= 0 && cur_id < im->height*im->stride);
+			assert(cur_id >= 0 && cur_id < im.size());
 		}
 		if( visited[cur_id]) {
 			continue;
@@ -80,36 +109,29 @@ void blob_merging(image_u32_t *im, int start) {
 		passed.push_back(cur_id);
 		pass_vect[cur_id] = true;
 		visited[cur_id] = true;
-		int x = cur_id % im->stride;
-		int y = cur_id / im->stride;
-		std::vector<int> neighbors = getNeighbors(im, x, y);
+		int x = cur_id % im.w();
+		int y = cur_id / im.w();
+		std::vector<int> neighbors = im.getNeighborIds(x, y,
+				neighbor_search, is_neighbor);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
 			id = neighbors[i];
-			px = im->buf[id];
+			px = im.get(id);
 			if(!visited[id] && 
-					px_close_enough(
-						get_px_depth(px),
-						get_px_depth(im->buf[cur_id])
-					) &&
-					get_px_depth(px) >= MIN_ALLOWED_DEPTH) {
+					px_close_enough(px, im.get(cur_id)) &&
+					px >= MIN_ALLOWED_DEPTH) {
 				search.push(id);
 			}
 		}
 	}
 	//Mark
-	/*
-	for(size_t i = 0; i < passed.size(); ++i) {
-		id = passed[i];
-		im->buf[id] = 0xff00ff00;
-	}
-	*/
+	//for(size_t i = 0; i < passed.size(); ++i) {
+	//	id = passed[i];
+	//	im->buf[id] = 0xff00ff00;
+	//}
 	//Filter out everything else
-	for(int y = 0; y < im->height; ++y) {
-		for(int x = 0; x < im->width; ++x) {
-			int id = im->stride*y + x;
-			if(!pass_vect[id]) {
-				im->buf[id] = 0xffffffff;
-			}
+	for(size_t i = 0; i < im.size(); ++i) {
+		if(!pass_vect[i]) {
+			im.invalidate(i);
 		}
 	}
 }
@@ -137,7 +159,7 @@ std::vector<int> getNeighbors(image_u32_t *im, int x, int y) {
 			}
 			//only search *'s
 			if(j == 0 && i == 0) {
-				break;
+				continue;
 			}
 			id = im->stride*(y+j) + (x+i);
 

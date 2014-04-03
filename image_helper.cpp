@@ -1,4 +1,4 @@
-#include "image.h"
+#include "image_helper.h"
 
 uint8_t get_red(uint32_t px) {
     return px & 0xFF;
@@ -29,6 +29,11 @@ double MAX(double a, double b, double c) {
     return max;
 }
 
+void RGBtoHSV( uint32_t rgb,
+	double *h, double *s, double *v) {
+	RGBtoHSV(get_red(rgb),get_green(rgb),
+			get_blue(rgb),h,s,v);
+}
 
 void RGBtoHSV( uint32_t int_r, uint32_t int_g, uint32_t int_b, double *h, double *s, double *v)
 {

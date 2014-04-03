@@ -1,8 +1,9 @@
 #ifndef __KINECT_HANDLE__H__
 #define __KINECT_HANDLE__H__
 #include "common/image_util.h"
-#include "image.h"
+#include "image_helper.h"
 #include "pixel.h"
+#include "Gradient.h"
 #include <vector>
 
 //Kinect
@@ -15,6 +16,11 @@ void update_im_from_vect(const std::vector<uint8_t> & k_data,
 image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data); 
 
 void make_depth_viewable(image_u32_t *im);
+
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr);
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr);
+double   videoToGrad(uint32_t px);
+double   depthToGrad(uint16_t depth);
 
 uint16_t get_px_depth(uint32_t px);
 
@@ -125,20 +131,41 @@ public:
 		}
 		m_new_depth_frame = true;
 	}
-	bool getRGB(std::vector<uint8_t> &buffer) {
+	bool getRGB(std::vector<uint32_t> &buffer) {
 		Mutex::ScopedLock lock(m_rgb_mutex);
 		if (!m_new_rgb_frame)
 			return false;
-		buffer.swap(m_buffer_video);
+		int v_width = 640;
+		int v_height= 480;
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				buffer[y*v_width+x] = get_px(
+						m_buffer_video[3*v_width*y+3*x + 0],
+						m_buffer_video[3*v_width*y+3*x + 1],
+						m_buffer_video[3*v_width*y+3*x + 2],
+						0xff
+						);
+			}
+		}
 		m_new_rgb_frame = false;
 		return true;
 	}
 
-	bool getDepth(std::vector<uint8_t> &buffer) {
+	bool getDepth(std::vector<uint16_t> &buffer) {
 		Mutex::ScopedLock lock(m_depth_mutex);
+		int v_width = 640;
+		int v_height= 480;
 		if (!m_new_depth_frame)
 			return false;
-		buffer.swap(m_buffer_depth);
+		//buffer.swap(m_buffer_depth);
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				buffer[v_width*y + x] = (
+						m_buffer_depth[3*v_width*y+3*x + 0] | 
+						m_buffer_depth[3*v_width*y+3*x + 1] << 8
+						);
+			}
+		}
 		m_new_depth_frame = false;
 		return true;
 	}
@@ -152,7 +179,4 @@ private:
 	bool m_new_rgb_frame;
 	bool m_new_depth_frame;
 };
-
-
-
 #endif

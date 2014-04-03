@@ -33,3 +33,23 @@ Output binaries:
 kinectarm_app: Accepts LCM messages on joint positions and actuates arm servos
 
 kinectvision_app: 
+
+
+Fakenect
+========
+
+To record a set of data simply run:
+
+```
+fakenect-record <directory-to-record>
+```
+
+After recording, you should be able to play it back like this using
+glview:
+
+```
+LD_PRELOAD="/usr/local/lib64/fakenect/libfreenect.so" FAKENECT_PATH="<path-into-directory>" freenect-glview 
+```
+
+For some reason this doesn't work with the cpp wrapper, so we might
+want to use the c version of the code.
