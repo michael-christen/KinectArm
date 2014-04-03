@@ -1,45 +1,17 @@
 #include "blob_detection.h"
 
+double COLOR_THRESHOLD = 20;
+double TEMPLATE_HUE    = 180;
 
-unsigned int is_ball(double color_threshold,
+bool px_match(uint32_t base, uint32_t test) {
+	return color_fit(COLOR_THRESHOLD,
+			TEMPLATE_HUE, test);
+}
+
+bool color_fit(double color_threshold,
 					 double template_hue,
 					 uint32_t px) {
 	return hue_dist(template_hue, px) < color_threshold;
-}
-
-unsigned int getNeighbors(image_u32_t *im, int x, int y,
-						  int neighbors[MAX_NUM_NEIGHBORS],
-						  double template_hue, double color_threshold) {
-	int id;
-	unsigned int len = 0;
-	uint32_t px;
-	neighbors[0] = 0;
-	//Searching *'s
-	//***
-	//*.~
-	//~~~
-	for(int j = -1; j <= 0; ++j) {
-		//edge
-		if(j + y < 0 || j + y > im->height) {
-			continue;
-		}
-		for(int i = -1; i <= 1; ++i) {
-			//edge
-			if(i + x < 0 || i + x > im->width) {
-				continue;
-			}
-			//only search *'s
-			if(j >= 0 && i >= 0) {
-				break;
-			}
-			id = im->stride*(y+j) + (x+i);
-			px = im->buf[id];
-			if(is_ball(color_threshold,template_hue,px)) {
-				neighbors[len++] = id;
-			}
-		}
-	}
-	return len;
 }
 
 void getNLabels(int n_labels[], int labels[], int neighbors[], int len_neighbors) {
@@ -56,228 +28,192 @@ int minLabel(int n_labels[], int len_labels) {
 	return minLabel;
 }
 
-/*
-void unionLabels(Set *links[MAX_NUM_BALLS], int n_labels[MAX_NUM_NEIGHBORS],
-				 int len_neighbors) {
+void unionLabels(std::vector<Set> links, std::vector<int> n_labels) {
 	//Pass over twice
 	//1st time gets all set to first neighbor
 	//2nd updates rest
-	if(links[n_labels[0]]) {
-		for(int i = 0; i < 2; ++i) {
-			for(int j = 1; j < len_neighbors; ++j) {
-				if(links[n_labels[j]]) {
-					set_union(links[n_labels[0]], links[n_labels[j]]);
+	if(!n_labels.empty()) {
+		if(n_labels[0] < (int)links.size()) {
+			for(int i = 0; i < 2; ++i) {
+				for(size_t j = 1; j < n_labels.size(); ++j) {
+					if(n_labels[j] < (int)links.size()) {
+						links[n_labels[0]].unionS(links[n_labels[j]]);
+					}
 				}
 			}
 		}
 	}
 }
 
-int blob_detection(image_u32_t *im, ball_t *final_balls,
-				   double template_hue, uint32_t show_px,
-				   double color_threshold, int min_pxs) {
+std::vector<blob_t> blob_detection(Image<uint32_t> &im, 
+		double template_hue, uint32_t show_px,
+		double color_threshold, int min_pxs) {
+	COLOR_THRESHOLD = color_threshold;
+	TEMPLATE_HUE    = template_hue;
 	//aka max #labels
 	//list of links b/t labels
 	//Array of Set *
-	Set * links [MAX_NUM_BALLS] = {0};
-	ball_t balls [MAX_NUM_BALLS];
-	ball_t temp_balls [MAX_NUM_BALLS];
-	int final_num_balls = 0;
-	int num_links = 0;
-	int label_num;
+	//Set * links [MAX_NUM_BALLS] = {0};
+
+	std::vector<Set> links;
+	std::vector<blob_t> blobs;
+	std::vector<blob_t> temp_blobs;
+	//ball_t balls [MAX_NUM_BALLS];
+	//ball_t temp_balls [MAX_NUM_BALLS];
 	//each px has a label, 0 is default
-	int labels [im->stride*im->height];
+	std::vector<int> labels(im.size(),0);
+	//int labels [im->stride*im->height];
 	//These are the final labels that are detected as objects,
 	//used for modifying the image
-	int final_labels[MAX_NUM_BALLS];
+	//int final_labels[MAX_NUM_BALLS];
+	std::vector<int> final_labels;
 	//Immediate neighbor labels
-	int n_labels [MAX_NUM_NEIGHBORS];
+	//int n_labels [MAX_NUM_NEIGHBORS];
 	//Immediate neighbor id's
-	int neighbors[MAX_NUM_NEIGHBORS];
-	int len_neighbors;
-	int y, x, id, i;
-	uint32_t px;
-	label_num = 1;
+	//int neighbors[MAX_NUM_NEIGHBORS];
+	//int len_neighbors;
+	//int y, x, id, i;
+	//uint32_t px;
+	int label_num = 1;
+	static const std::vector<bool> search_neighbors = 
+	{1,1,1,
+	 1,  0,
+	 0,0,0};
 	//1st pass
-	for(y = 0; y < im->height; ++y) {
-		for(x = 0; x < im->width; ++x) {
-			id = im->stride*y + x;
-			px = im->buf[id];
-			if(is_ball(color_threshold,template_hue,px)){
-				len_neighbors = getNeighbors(im, x, y, neighbors,
-											 template_hue, color_threshold);
-				if(len_neighbors) {
-					getNLabels(n_labels, labels, neighbors,
-							   len_neighbors);
-					labels[id] = minLabel(n_labels, len_neighbors);
-					unionLabels(links, n_labels, len_neighbors);
+	for(size_t i = 0; i < im.size(); ++i) {
+		uint32_t px = im.get(i);
+		if(color_fit(color_threshold, template_hue, px)) {
+			std::vector<int> neighbors =
+				im.getNeighborIds(im.getX(i),im.getY(i),
+						search_neighbors, px_match);
+			if(!neighbors.empty()) {
+				std::vector<int> n_labels;
+				for(size_t j = 0; j < neighbors.size(); ++j) {
+					n_labels.push_back(labels[neighbors[j]]);
 				}
-				else {
-					if(label_num < MAX_NUM_BALLS) {
-						labels[id] = label_num;
-						links[label_num] = set_init(label_num);
-						num_links ++;
-						label_num ++;
-					} else {
-						printf("too large\n");
-					}
-				}
+				labels[i] = *std::min_element(n_labels.begin(), n_labels.end());
+				unionLabels(links, n_labels);
+			} else {
+				labels[i] = label_num;
+				links.push_back(Set(label_num));
+				label_num ++;
 			}
-			else {
-				labels[id] = 0;
-			}
+		} else {
+			labels[i] = 0;
 		}
 	}
 	//Init balls
-	for(i = 0; i <= label_num; ++i) {
-		balls[i].x = 0;
-		balls[i].y = 0;
+	for(int i = 0; i <= label_num; ++i) {
+		blob_t temp;
+		blobs.push_back(temp);
+		blobs[i].x = 0;
+		blobs[i].y = 0;
 
-		balls[i].t.x = 0;
-		balls[i].t.y = 0;
+		blobs[i].t.x = 0;
+		blobs[i].t.y = 0;
 
-		balls[i].b.x = 0;
-		balls[i].b.y = im->height;
+		blobs[i].b.x = 0;
+		blobs[i].b.y = im.h();
 
-		balls[i].l.x = im->width;
-		balls[i].l.y = 0;
+		blobs[i].l.x = im.w();
+		blobs[i].l.y = 0;
 
-		balls[i].r.x = 0;
-		balls[i].r.y = 0;
+		blobs[i].r.x = 0;
+		blobs[i].r.y = 0;
 
-		balls[i].valid  = 1;
-		balls[i].num_px = 0;
+		blobs[i].valid  = 1;
+		blobs[i].num_px = 0;
 	}
 	//2nd pass
-	for(y = 0; y < im->height; ++y) {
-		for(x = 0; x < im->width; ++x) {
-			id = im->stride*y + x;
-			px = im->buf[id];
-			if(is_ball(color_threshold,template_hue,px)
-			   && links[labels[id]]){
+	for(size_t i = 0; i < im.size(); ++i) {
+		uint32_t px = im.get(i);
+		int x = im.getX(i);
+		int y = im.getY(i);
+		if(color_fit(color_threshold,template_hue,px)
+				&& (int)links.size() > labels[i]){
 
-				labels[id] = set_find(links[labels[id]])->val;
-				//Add ball data
-				balls[labels[id]].x += x;
-				balls[labels[id]].y += y;
-				balls[labels[id]].num_px ++;
-				//Update t,b,l,r
-				if(x > balls[labels[id]].r.x) {
-					balls[labels[id]].r.x = x;
-					balls[labels[id]].r.y = y;
-					balls[labels[id]].valid = 1;
-					//If == then not our diamond
-				} else if(x == balls[labels[id]].r.x){
-					balls[labels[id]].valid = 0;
-				}
-				if(x < balls[labels[id]].l.x) {
-					balls[labels[id]].l.x = x;
-					balls[labels[id]].l.y = y;
-					balls[labels[id]].valid = 1;
-				} else if(x == balls[labels[id]].l.x){
-					balls[labels[id]].valid = 0;
-				}
-				if(y > balls[labels[id]].t.y) {
-					balls[labels[id]].t.x = x;
-					balls[labels[id]].t.y = y;
-					balls[labels[id]].valid = 1;
-				} else if(y == balls[labels[id]].t.y){
-					balls[labels[id]].valid = 0;
-				}
-				if(y < balls[labels[id]].b.y) {
-					balls[labels[id]].b.x = x;
-					balls[labels[id]].b.y = y;
-					balls[labels[id]].valid = 1;
-				} else if(y == balls[labels[id]].b.y){
-					balls[labels[id]].valid = 0;
-				}
-
-//				im->buf[id] = show_px;
+			labels[i] = links[labels[i]].findS()->get();
+			//Add ball data
+			blobs[labels[i]].x += x;
+			blobs[labels[i]].y += y;
+			blobs[labels[i]].num_px ++;
+			//Update t,b,l,r
+			if(x > blobs[labels[i]].r.x) {
+				blobs[labels[i]].r.x = x;
+				blobs[labels[i]].r.y = y;
+				blobs[labels[i]].valid = 1;
+				//If == then not our diamond
+			} else if(x == blobs[labels[i]].r.x){
+				blobs[labels[i]].valid = 0;
+			}
+			if(x < blobs[labels[i]].l.x) {
+				blobs[labels[i]].l.x = x;
+				blobs[labels[i]].l.y = y;
+				blobs[labels[i]].valid = 1;
+			} else if(x == blobs[labels[i]].l.x){
+				blobs[labels[i]].valid = 0;
+			}
+			if(y > blobs[labels[i]].t.y) {
+				blobs[labels[i]].t.x = x;
+				blobs[labels[i]].t.y = y;
+				blobs[labels[i]].valid = 1;
+			} else if(y == blobs[labels[i]].t.y){
+				blobs[labels[i]].valid = 0;
+			}
+			if(y < blobs[labels[i]].b.y) {
+				blobs[labels[i]].b.x = x;
+				blobs[labels[i]].b.y = y;
+				blobs[labels[i]].valid = 1;
+			} else if(y == blobs[labels[i]].b.y){
+				blobs[labels[i]].valid = 0;
 			}
 		}
 	}
 
 	//Filter out non-diamonds
-	int err = 2;
+	//int err = 2;
 	int largest_idx = -1;
 	int most_px    = 0;
 	//printf("%d possible diamonds\n",label_num);
-	for(i = 1; i < label_num; ++i) {
+	int final_num_blobs = 0;
+	for(int i = 1; i < label_num; ++i) {
 		//Assert right num_pxs
-		int right_num_pxs = (balls[i].num_px >= min_pxs &&
-							 balls[i].num_px <= MAX_PXS);
+		int right_num_pxs = (blobs[i].num_px >= min_pxs &&
+							 blobs[i].num_px <= MAX_PXS);
 
 		if(right_num_pxs) {
-			//Assert top and bottom y within left and right x
-			int top_and_bot_in_lr =
-				(balls[i].t.x > balls[i].l.x - err &&
-				 balls[i].t.x < err + balls[i].r.x &&
-				 balls[i].b.x > balls[i].l.x - err &&
-				 balls[i].b.x < err + balls[i].r.x);
-
-			//Assert top is always inline with bottom
-			int top_inline_bot =
-				pixel_width(balls[i].t,balls[i].b) < 5*err;
-
-			//assert width is <= height
-			int width = pixel_width(balls[i].l,balls[i].r);
-			int height = pixel_height(balls[i].t,balls[i].b);
-
-			double w_over_h = (width+0.0) / (height+0.0);
-			int width_lte_height = w_over_h <= 1.2 && w_over_h > 0.5;
-
-			double density = (balls[i].num_px + 0.0) / (width*height+0.0);
-			int dense_enough  = density > 0.45;
-			printf("i: %d, px_size: %d, t&b_in_lr: %d, t_inline_b: %d, w<=h: %d, w/h: %f,, height: %d, width: %d\n",
-			  i, balls[i].num_px, top_and_bot_in_lr,
-			  top_inline_bot, width_lte_height, w_over_h,
-			  height, width);
-			if(top_and_bot_in_lr &&
-			   top_inline_bot    &&
-			   width_lte_height  &&
-			   right_num_pxs     &&
-			   dense_enough) {
-
-				if(balls[i].num_px > most_px) {
-					most_px = balls[i].num_px;
-					largest_idx = final_num_balls;
-				}
-
-				temp_balls[final_num_balls] = balls[i];
-				//Get coordinates, not sum
-				temp_balls[final_num_balls].x
-					= (temp_balls[final_num_balls].x+0.0)/
-					temp_balls[final_num_balls].num_px;
-				temp_balls[final_num_balls].y =
-					(temp_balls[final_num_balls].y+0.0)/
-					temp_balls[final_num_balls].num_px;
-				final_labels[final_num_balls] = i;
-				   printf("%d passed, x: %f, y: %f\n",i,
-				   final_balls[final_num_balls].x,
-				   final_balls[final_num_balls].y);
-				final_num_balls ++;
+			if(blobs[i].num_px > most_px) {
+				most_px = blobs[i].num_px;
+				largest_idx = final_num_blobs;
 			}
+
+			temp_blobs.push_back(blobs[i]);
+			//Get coordinates, not sum
+			temp_blobs[final_num_blobs].x
+				= (temp_blobs[final_num_blobs].x+0.0)/
+				temp_blobs[final_num_blobs].num_px;
+			temp_blobs[final_num_blobs].y =
+				(temp_blobs[final_num_blobs].y+0.0)/
+				temp_blobs[final_num_blobs].num_px;
+			final_labels.push_back(i);
+			printf("%d passed, x: %f, y: %f\n",i,
+					temp_blobs[final_num_blobs].x,
+					temp_blobs[final_num_blobs].y);
+			final_num_blobs ++;
 		}
 	}
 	//Mark objects
-	int t_label;
-	for(y = 0; y < im->height; ++y) {
-		for(x = 0; x < im->width; ++x) {
-			id = im->stride*y + x;
-			t_label = labels[id];
-			for(int z = 0; z < final_num_balls; ++z) {
+	for(size_t i = 0; i < im.size(); ++i) {
+		int t_label = labels[i];
+		for(int z = 0; z < final_num_blobs; ++z) {
 				if(t_label == final_labels[z]) {
-					im->buf[id] = show_px;
+					im.set(i,show_px);
 					break;
 				}
-			}
 		}
 	}
-	//Clean up
-	for(i = 0; i <= label_num; ++i) {
-		set_destroy(links[i]);
-	}
 	//Order final_balls, so that largest is 0th
+	/*
 	if(largest_idx != -1) {
 		final_balls[0] = temp_balls[largest_idx];
 	}
@@ -288,7 +224,7 @@ int blob_detection(image_u32_t *im, ball_t *final_balls,
 		}
 		final_balls[count ++] = temp_balls[i];
 	}
-	return final_num_balls;
+	*/
+	return temp_blobs;
 }
-*/
 

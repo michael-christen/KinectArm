@@ -17,6 +17,7 @@
 #include "kinect_handle.h"
 #include "filter.h"
 #include "Image.h"
+#include "blob_detection.h"
 
 //Kinect
 #include <libfreenect.hpp>
@@ -95,7 +96,9 @@ void kinect_process(state_t* state){
 		update_kinect(state);
 		//Do cool processing
 		filter_front(state->depth);
-		//make_depth_viewable(state->depth);
+		blob_detection(state->im, 180, 0xff039dfd,
+				30, 20);
+
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 }

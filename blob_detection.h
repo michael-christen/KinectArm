@@ -7,10 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include <algorithm>
 #include "image_helper.h"
 #include "pixel.h"
+#include "Image.h"
 
-#define COLOR_THRESHOLD 37.0
 //ABGR
 //#define TEMPLATE_PX 0xff1e2a25
 //#define TEMPLATE_PX 0xff2c3f34
@@ -25,6 +26,9 @@
 #define MAX_NUM_NEIGHBORS 8
 #define MAX_NUM_BALLS 15000
 
+//#define COLOR_THRESHOLD 37.0
+//GLOBALS
+
 typedef struct ball ball_t;
 struct ball {
     double x, y;
@@ -33,15 +37,19 @@ struct ball {
     int num_px;
 };
 
-unsigned int is_ball(double color_threshold,
-                    double template_hue, uint32_t px);
+typedef struct blob blob_t;
+struct blob {
+	double x, y;
+	pixel_t t, b, l, r;
+	int valid;
+	int num_px;
+};
 
+bool color_fit(double color_threshold, double template_hue, 
+		uint32_t px);
 
-//Returns number of neighbors, modifies neighbors array to
-//contain their position in the buf
-unsigned int getNeighbors(image_u32_t *im, int x, int y,
-	int neighbors[MAX_NUM_NEIGHBORS],
-    double template_hue, double color_threshold);
+bool px_match(uint32_t base, uint32_t test);
+
 
 void getNLabels(int n_labels[], int labels[], int neighbors[], int
 	len_neighbors);
@@ -52,9 +60,9 @@ int minLabel(int n_labels[], int len_labels);
 
 void unionLabels(std::vector<Set> links, std::vector<int> n_labels);
 
-int blob_detection(image_u32_t *im, ball_t *final_balls,
-                   double template_hue, uint32_t show_px,
-                   double color_threshold, int min_pxs);
+std::vector<blob_t> blob_detection(Image<uint32_t> &im, 
+		double template_hue, uint32_t show_px,
+		double color_threshold, int min_pxs);
 
 
 #endif

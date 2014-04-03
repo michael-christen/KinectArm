@@ -12,7 +12,10 @@ class Image {
 
 		T get(int x, int y);
 		T get(int i);
+		int getX(int i);
+		int getY(int i);
 		void set(int x, int y, T t);
+		void set(int i, T t);
 		//Update data starting at index=0 -> index=ts.size()-1
 		void update(const std::vector<T> & ts);
 		//Returns im, pointer, not really safe, but nice for display
@@ -36,11 +39,11 @@ class Image {
 		//And bit vector corresponding to above diagram
 		std::vector<T> getNeighbors(int x, int y,
 				const std::vector<bool> & u_valid,
-				bool(*is_neighbor)(uint16_t, uint16_t)
+				bool(*is_neighbor)(T, T)
 		);
 		std::vector<int> getNeighborIds(int x, int y,
 				const std::vector<bool> & u_valid,
-				bool(*is_neighbor)(uint16_t, uint16_t)
+				bool(*is_neighbor)(T, T)
 		);
 
 		size_t size();
@@ -82,6 +85,18 @@ T Image<T>::get(int x, int y) {
 }
 
 template <typename T>
+int Image<T>::getY(int i) {
+	assert(i >= 0 && i < (int)data.size());
+	return i/width;
+}
+
+template <typename T>
+int Image<T>::getX(int i) {
+	assert(i >= 0 && i < (int)data.size());
+	return i%width;
+}
+
+template <typename T>
 T Image<T>::get(int i) {
 	assert(i >= 0 && i < (int)data.size());
 	return data[i];
@@ -100,6 +115,12 @@ int Image<T>::h() {
 template <typename T>
 void Image<T>::set(int x, int y, T t) {
 	data[id(x,y)] = t;
+}
+
+template <typename T>
+void Image<T>::set(int i, T t) {
+	assert(i >= 0 && i < (int)data.size());
+	data[i] = t;
 }
 
 template <typename T>
@@ -171,7 +192,7 @@ int Image<T>::id(int x, int y) {
 template <typename T>
 std::vector<int> Image<T>::getNeighborIds(int x, int y, 
 		const std::vector<bool> & u_valid,
-		bool(*is_neighbor)(uint16_t, uint16_t)
+		bool(*is_neighbor)(T, T)
 		) {
 
 	assert(u_valid.size() == 8);
@@ -212,7 +233,7 @@ std::vector<int> Image<T>::getNeighborIds(int x, int y,
 template <typename T>
 std::vector<T> Image<T>::getNeighbors(int x, int y, 
 		const std::vector<bool> & u_valid,
-		bool(*is_neighbor)(uint16_t, uint16_t)
+		bool(*is_neighbor)(T, T)
 		) {
 	std::vector<int> neighbors =
 		getNeighborIds(x,y,u_valid,is_neighbor);
