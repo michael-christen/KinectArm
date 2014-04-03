@@ -19,6 +19,8 @@ void make_depth_viewable(image_u32_t *im);
 
 uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr);
 uint32_t videoToIm(uint32_t video, bool valid, Gradient gr);
+double   videoToGrad(uint32_t px);
+double   depthToGrad(uint16_t depth);
 
 uint16_t get_px_depth(uint32_t px);
 

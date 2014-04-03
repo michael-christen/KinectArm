@@ -95,10 +95,16 @@ void kinect_process(state_t* state){
 		//Update
 		update_kinect(state);
 		//Do cool processing
-		filter_front(state->depth);
-		//Only look at those pixels which are in the foreground
-		state->depth.copyValid(state->im.valid);
 
+		//Only look at those pixels which are in the foreground
+		//of the depth field
+		filter_front(state->depth);
+		//Filter out image pixels which aren't in foreground
+		state->depth.copyValid(state->im.valid);
+		//Compute the gradient of the entire image
+		state->im.computeGradient(videoToGrad);
+
+		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;
 		double yellow_hue = 50.0;
@@ -111,6 +117,7 @@ void kinect_process(state_t* state){
 				10, 200);
 		blob_detection(state->im, yellow_hue, 0xff830dfc,
 				10, 200);
+				*/
 
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);

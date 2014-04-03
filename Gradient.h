@@ -1,6 +1,7 @@
 #ifndef __GRADIENT__H__
 #define __GRADIENT__H__
 #include <cmath>
+#include <cstdio>
 
 class Gradient {
 	public:
@@ -11,6 +12,7 @@ class Gradient {
 		double y();
 		double mag();
 		double angle();
+		void print();
 	private:
 		double X;
 		double Y;

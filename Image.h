@@ -25,7 +25,7 @@ class Image {
 		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient));
 
 		//Computes the gradient for the image
-		void computeGradient();
+		void computeGradient(double(*tVal)(T));
 
 		void invalidate(int x, int y);
 		void invalidate(int i);
@@ -54,6 +54,8 @@ class Image {
 		size_t size();
 		int w();
 		int h();
+		void printGradient();
+		void printGradient(int i);
 		std::vector<bool> valid;
 	private:
 		int width;
@@ -141,13 +143,20 @@ void Image<T>::update(const std::vector<T> & ts) {
 	assert(ts.size() == data.size());
 	data = ts;
 	valid.assign(size(),true);
-	gradient.assign(size(),Gradient());
+	//gradient.assign(size(),Gradient());
 }
 
 template <typename T>
 image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 	for(int x = 0; x < im->width; ++x) {
 		for(int y = 0; y < im->height; ++y) {
+			/*
+			if(gradient[id(x,y)].x() || 
+					gradient[id(x,y)].y()) {
+				printf("gradient @ (%d,%d)\n",x,y);
+				gradient[id(x,y)].print();
+			}
+			*/
 			im->buf[x+y*im->stride] = tToPX(
 					get(x,y),
 					valid[id(x,y)],
@@ -155,19 +164,29 @@ image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 			);
 		}
 	}
+	//printGradient();
 	return im;
 }
 
 template <typename T>
-void Image<T>::computeGradient() {
+void Image<T>::computeGradient(double(*tVal)(T)) {
 	//Leave far edges of image with gradient = 0, to avoid bounds
 	//checking
 	for(int x = 1; x < width-1; ++x) {
 		for(int y = 1; y < height-1; ++y) {
-			gradient[id(x,y)].x( get(x+1,y) - get(x-1,y) );
-			gradient[id(x,y)].y( get(x,y+1) - get(x,y-1) );
+			//printf("(x+1,y):%d\n", tVal(get(x+1,y)));
+			//printf("(x+1,y):%f\n",tVal(get(x+1,y)) - tVal(get(x-1,y)));
+			gradient[id(x,y)].x( 
+					tVal(get(x+1,y)) - tVal(get(x-1,y)) 
+			);
+			//printf("(x+1,y):%f\n",gradient[id(x,y)].x());
+			gradient[id(x,y)].y( 
+					tVal(get(x,y+1)) - tVal(get(x,y-1)) 
+			);
+			//gradient[id(x,y)].print();
 		}
 	}
+	//printGradient();
 }
 
 
@@ -218,6 +237,18 @@ int Image<T>::id(int x, int y) {
 	assert(x >= 0 && x < width);
 	assert(y >= 0 && y < height);
 	return y*width + x;
+}
+
+template <typename T>
+void Image<T>::printGradient(int i) {
+	gradient[i].print();
+}
+
+template <typename T>
+void Image<T>::printGradient() {
+	for(size_t i = 0; i < size(); ++i) {
+		gradient[i].print();
+	}
 }
 
 template <typename T>
