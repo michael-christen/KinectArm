@@ -35,6 +35,70 @@ void RGBtoHSV( uint32_t rgb,
 			get_blue(rgb),h,s,v);
 }
 
+uint32_t HSVtoRGB(double h, double s, double v) {
+	uint8_t r,g,b;
+	HSVtoRGB(h,s,v,&r,&g,&b);
+	return get_px(r,g,b,0xFF);
+}
+
+void HSVtoRGB(double h, double s, double v,
+		uint8_t *r, uint8_t *g, uint8_t *b) {
+	int i;
+	double f, p, q, t;
+	if( s == 0) {
+		//Gray
+		*r = *g = *b = v;
+		return;
+	}
+
+	v *= 255.0; //Normalize (0,1) -> (0,255)
+	if(h == 360) {
+		h -= 0.00001;
+	}
+	h /= 60; //Buckets 0->5
+	i = h;
+	f = h - i; //remainder in h
+	p = v*(1-s);
+	q = v*(1-s*f);
+	t = v*(1-s*(1-f));
+	switch(i) {
+		case 0:
+			*r = v;
+			*g = t;
+			*b = p;
+			break;
+		case 1:
+			*r = q;
+			*g = v;
+			*b = p;
+			break;
+		case 2:
+			*r = p;
+			*g = v;
+			*b = t;
+			break;
+		case 3:
+			*r = p;
+			*g = q;
+			*b = v;
+			break;
+		case 4:
+			*r = t;
+			*g = p;
+			*b = v;
+			break;
+		case 5:
+			*r = v;
+			*g = p;
+			*b = q;
+			break;
+		default: //You should never arrive here
+			printf("H:%f,i:%d\n",h,i);
+			assert(0);
+			break;
+	}
+}
+
 void RGBtoHSV( uint32_t int_r, uint32_t int_g, uint32_t int_b, double *h, double *s, double *v)
 {
 	double r,g,b;

@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Thu 03 Apr 2014 03:53:22 PM EDT
+	       * Last Modified : Thu 03 Apr 2014 05:41:33 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -57,8 +57,17 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
 
 uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
 	if(valid) {
-		return dist_to_grey(gr.mag());
-		return video;
+		//return dist_to_grey(gr.mag());
+		double h,s,v;
+		RGBtoHSV(video,&h,&s,&v);
+		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
+		uint8_t r,g,b;
+		r = get_red(px);
+		g = get_green(px);
+		b = get_blue(px);
+		//printf("r:%x,g:%x,b:%x\n",r,g,b);
+		return px;
+		//return video;
 	}
 	return 0xFF000000;
 }
