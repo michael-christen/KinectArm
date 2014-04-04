@@ -19,6 +19,7 @@
 #include "body.h"
 #include "config_space.h"
 #include "rexarm.h"
+#include "bounding_box.h"
 
 static int64_t utime_now()
 {
@@ -142,7 +143,7 @@ void* arm_commander(void *data) {
 }
 
 int main(int argc, char ** argv)
-{
+{	
 	eecs467_init(argc, argv);
 
 	state_t * state = (state_t*) calloc(1, sizeof(state_t));
@@ -158,6 +159,11 @@ int main(int argc, char ** argv)
 
 	lcm_t * lcm = lcm_create (NULL);
 	state->lcm = lcm;
+	
+	BoundingBox floor;
+	floor.setPosition(0, 0, 0);
+	floor.setDimensions(100, 100, 2);
+	state->cfs.addBoundingBox(floor);
 
 	//signal(SIGINT, terminal_signal_handler);
 

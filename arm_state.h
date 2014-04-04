@@ -20,6 +20,7 @@
 // Local Includes
 #include "body.h"
 #include "rexarm.h"
+#include "config_space.h"
 
 //////////////
 // CONSTANTS
@@ -90,6 +91,7 @@ struct state_t {
 
     Body current_body, last_body;
     RexArm arm;
+    ConfigSpace cfs;
 };
 
 

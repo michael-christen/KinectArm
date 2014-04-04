@@ -164,7 +164,11 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 	//Draw Axes
 	float axes[12] = {-1000, 0, 0, 1000, 0, 0, 0, -1000, 0, 0, 0, 0};
 	vx_resc_t *verts = vx_resc_copyf(axes, 12);
-	vx_buffer_add_back(gridBuff, vxo_lines(verts, 4, GL_LINES, vxo_points_style(vx_red, 2.0f)));
+	vx_buffer_add_back(gridBuff, vxo_lines(verts, 4, GL_LINES, vxo_points_style(vx_black, 2.0f)));
+	
+	//Draw Config Space
+	vx_buffer_t *cfsBuff = vx_world_get_buffer(layerData->world, "cfs");
+	state->cfs.draw(cfsBuff, vx_red);
 
 	float posAxes[6] = {0, 0, 0, 0, 1000, 0};
 	verts = vx_resc_copyf(posAxes, 6);
@@ -172,11 +176,12 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
-	state->arm.drawTargetState(armBuff, vx_red);
+	state->arm.drawTargetState(armBuff, vx_yellow);
 	state->arm.drawCurState(armBuff, vx_blue);
 	
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
+    vx_buffer_swap(cfsBuff);
 	vx_buffer_swap(armBuff);
 	return 1;
 }
