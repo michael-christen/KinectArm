@@ -66,6 +66,7 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            void *user) {
 	state_t *state = (state_t*) user;
 	double angles[NUM_SERVOS];
+	state->arm.getTargetAngles(angles);
 
 	state->last_body = state->current_body;
 	state->current_body = Body(msg);
