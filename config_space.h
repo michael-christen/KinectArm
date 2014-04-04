@@ -1,14 +1,14 @@
 #ifndef CONFIG_SPACE_H
 #define CONFIG_SPACE_H
 
-#include "box.h"
+#include "bounding_box.h"
 #include <vector>
 
 class ConfigSpace {
 	public:
-		void addBox(Box box);
+		void addBoundingBox(BoundingBox box);
 	private:
-		std::vector<Box> boxes;
+		std::vector<BoundingBox> boxes;
 };
 
 #endif

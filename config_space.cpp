@@ -2,8 +2,8 @@
 #include "../common/matd.h"
 #include "math.h"
 #include <vector>
-#include "box.h"
+#include "bounding_box.h"
 
-void ConfigSpace::addBox(Box box) {
+void ConfigSpace::addBoundingBox(BoundingBox box) {
 	this->boxes.push_back(box);
 }
