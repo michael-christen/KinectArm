@@ -103,6 +103,7 @@ void kinect_process(state_t* state){
 		//state->depth.copyValid(state->im.valid);
 		//Compute the gradient of the entire image
 		state->im.computeGradient(videoToGrad);
+		state->depth.computeGradient(depthToGrad);
 
 		/*
 		double pink_hue = 328.0;

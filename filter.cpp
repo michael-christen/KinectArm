@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Thu 03 Apr 2014 12:29:06 PM EDT
+	* Last Modified : Sat 05 Apr 2014 04:08:05 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -50,37 +50,8 @@ void filter_front(Image<uint16_t> & im) {
 			min_depth = depth;
 		}
 	}
-	/*
-	for(int y = 0; y < im->height; ++y) {
-		for(int x = 0; x < im->width; ++x) {
-			int id = im->stride*y + x;
-			uint32_t px = im->buf[id];
-			uint16_t depth = get_px_depth(px);
-			if(depth >= MIN_ALLOWED_DEPTH && depth < min_depth) {
-				//If it's a noise value, ignore it
-				if(std::find(NOISE_DEPTHS.begin(), NOISE_DEPTHS.end(),
-							depth) != NOISE_DEPTHS.end()) {
-					continue;
-				}
-				min_id = id;
-				min_depth = depth;
-			}
-		}
-	}
-	*/
-	//min_id = im->width/2 + im->height/2 * im->stride;
 	printf("Min depth: %d\n", min_depth);
 	blob_merging(im, min_id);
-}
-
-bool is_neighbor(uint16_t cur, uint16_t other) {
-	int diff = abs((int)cur - (int)other);
-	bool val = diff < 700;
-	/*
-	printf("diff: %d\n",diff);
-	if(val) printf("yahoo!\n");
-	*/
-	return val;
 }
 
 void blob_merging(Image<uint16_t> &im, int start) {
@@ -112,7 +83,7 @@ void blob_merging(Image<uint16_t> &im, int start) {
 		int x = cur_id % im.w();
 		int y = cur_id / im.w();
 		std::vector<int> neighbors = im.getNeighborIds(x, y,
-				neighbor_search, is_neighbor);
+				neighbor_search, px_close_enough);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
 			id = neighbors[i];
 			px = im.get(id);

@@ -25,7 +25,7 @@ class Image {
 		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient));
 
 		//Computes the gradient for the image
-		void computeGradient(double(*tVal)(T));
+		void computeGradient(double(*tVal)(T,bool));
 
 		void invalidate(int x, int y);
 		void invalidate(int i);
@@ -169,7 +169,7 @@ image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 }
 
 template <typename T>
-void Image<T>::computeGradient(double(*tVal)(T)) {
+void Image<T>::computeGradient(double(*tVal)(T,bool)) {
 	//Leave far edges of image with gradient = 0, to avoid bounds
 	//checking
 	for(int x = 1; x < width-1; ++x) {
@@ -177,11 +177,13 @@ void Image<T>::computeGradient(double(*tVal)(T)) {
 			//printf("(x+1,y):%d\n", tVal(get(x+1,y)));
 			//printf("(x+1,y):%f\n",tVal(get(x+1,y)) - tVal(get(x-1,y)));
 			gradient[id(x,y)].x( 
-					tVal(get(x+1,y)) - tVal(get(x-1,y)) 
+					tVal(get(x+1,y),valid[id(x+1,y)]) - 
+					tVal(get(x-1,y),valid[id(x-1,y)]) 
 			);
 			//printf("(x+1,y):%f\n",gradient[id(x,y)].x());
 			gradient[id(x,y)].y( 
-					tVal(get(x,y+1)) - tVal(get(x,y-1)) 
+					tVal(get(x,y+1),valid[id(x,y+1)]) - 
+					tVal(get(x,y-1),valid[id(x,y-1)]) 
 			);
 			//gradient[id(x,y)].print();
 		}
