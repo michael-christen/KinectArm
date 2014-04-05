@@ -6,12 +6,55 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sat 05 Apr 2014 02:00:05 PM EDT
+	       * Last Modified : Sat 05 Apr 2014 02:49:03 PM EDT
 
 	          * Created By : Michael Christen
 
 		     _._._._._._._._._._._._._._._._._._._._._.*/
 #include "kinect_handle.h"
+
+void get_depth(std::vector<uint16_t> & depth) {
+	int v_width = 640;
+	int v_height= 480;
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	{
+		/*
+		if (!got_depth)
+			return;
+			*/
+		//buffer.swap(m_buffer_depth);
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				depth[v_width*y + x] = (
+						depth_mid[3*v_width*y+3*x + 0] | 
+						depth_mid[3*v_width*y+3*x + 1] << 8
+						);
+			}
+		}
+		got_depth = false;
+	}
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+void get_rgb(std::vector<uint32_t> &rgb) {
+	int v_width = 640;
+	int v_height= 480;
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	{
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				rgb[y*v_width+x] = get_px(
+						rgb_mid[3*v_width*y+3*x + 0],
+						rgb_mid[3*v_width*y+3*x + 1],
+						rgb_mid[3*v_width*y+3*x + 2],
+						0xff
+						);
+			}
+		}
+	}
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
 	pthread_mutex_lock(&gl_backbuf_mutex);

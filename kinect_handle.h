@@ -38,6 +38,9 @@ struct DepthPoint {
 	int x, y; 
 };
 
+void get_depth(std::vector<uint16_t> & depth);
+void get_rgb(std::vector<uint32_t> & rgb);
+
 void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp);
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp);
 

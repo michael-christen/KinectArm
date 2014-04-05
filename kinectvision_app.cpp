@@ -112,9 +112,12 @@ void kinect_init(state_t* state) {
 				FREENECT_RESOLUTION_MEDIUM,
 				FREENECT_DEPTH_REGISTERED));
 	freenect_set_video_buffer(state->f_dev, rgb_back);
+	freenect_set_led(state->f_dev,LED_GREEN);
 
 	freenect_start_depth(state->f_dev);
-	freenect_start_video(state->f_dev);
+	freenect_set_led(state->f_dev,LED_GREEN);
+	//freenect_start_video(state->f_dev);
+	freenect_set_led(state->f_dev,LED_BLINK_RED_YELLOW);
 
 	/*
 	state->kinect = &freenect.createDevice<MyFreenectDevice>(0);
@@ -141,6 +144,8 @@ void kinect_destroy(state_t* state) {
 void update_kinect(state_t* state) {
 	static std::vector<uint16_t> depth(640*480);
 	static std::vector<uint32_t> rgb(640*480);
+	get_depth(depth);
+	get_rgb(rgb);
 	/*
 	state->kinect->updateState();
 	state->kinect->getDepth(depth);
