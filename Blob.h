@@ -2,6 +2,7 @@
 #define __BLOB__H__
 #include<iostream>
 #include<vector>
+#include<cassert>
 struct pos_t {
 	int x, y;
 };

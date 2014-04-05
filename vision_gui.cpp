@@ -151,14 +151,9 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
-		line_t line;
-		line.m = 1;
-		line.b = 0;
-		line.ll.x = 0;
-		line.ll.y = 0;
-		line.ru.x = 100;
-		line.ru.y = 100;
-		add_line_to_buffer(vb,line);
+		for(size_t i = 0; i < state->im_lines.size(); ++i) {
+			add_line_to_buffer(vb,state->im_lines[i]);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
@@ -196,6 +191,9 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
+		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
+			add_line_to_buffer(vb,state->depth_lines[i]);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
