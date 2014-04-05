@@ -16,6 +16,7 @@
 #include "body.h"
 #include "kinect_handle.h"
 #include "filter.h"
+#include "Line.h"
 #include "Image.h"
 #include "blob_detection.h"
 
@@ -104,6 +105,17 @@ void kinect_process(state_t* state){
 		//Compute the gradient of the entire image
 		state->im.computeGradient(videoToGrad);
 		state->depth.computeGradient(depthToGrad);
+		printf("\n\nImage\n");
+		std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
+		std::vector<line_t> im_lines;
+		for(size_t i = 0; i < im_blobs.size(); ++i) {
+			line_t tmp_line = linear_regression(im_blobs[i]);
+			if(tmp_line.variance < 10) {
+				im_lines.push_back(tmp_line);
+			}
+		}
+		printf("\nDepth\n");
+		get_gradient_blobs(state->depth);
 
 		/*
 		double pink_hue = 328.0;

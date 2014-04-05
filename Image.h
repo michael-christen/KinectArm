@@ -50,22 +50,25 @@ class Image {
 				const std::vector<bool> & u_valid,
 				bool(*is_neighbor)(T, T)
 		);
+		std::vector<int> getNeighborIds(int x, int y, 
+		const std::vector<bool> & u_valid,
+		bool(*is_neighbor)(Gradient, Gradient));
 
 		size_t size();
 		int w();
 		int h();
 		void printGradient();
 		void printGradient(int i);
+		int id(int x, int y);
 		std::vector<bool> valid;
+		//Gradient information
+		std::vector<Gradient> gradient;
 	private:
 		int width;
 		int height;
-		int id(int x, int y);
 		//Width*height vector containing our data
 		//Access to (x,y) -> x + width*y
 		std::vector<T> data;
-		//Gradient information
-		std::vector<Gradient> gradient;
 		//Valid bits to keep track of validness 
 		image_u32_t * im;
 };
@@ -283,6 +286,47 @@ std::vector<int> Image<T>::getNeighborIds(int x, int y,
 			}
 			size_t n = id(x+i,y+j);
 			T   t = data[n];
+			if(valid[n] && u_valid[index]
+				&& is_neighbor(current,t)) {
+				assert(n >= 0 && n < size());
+				neighbors.push_back(n);
+			}
+			index ++;
+		}
+	}
+	return neighbors;
+}
+
+template <typename T>
+std::vector<int> Image<T>::getNeighborIds(int x, int y, 
+		const std::vector<bool> & u_valid,
+		bool(*is_neighbor)(Gradient, Gradient)
+		) {
+
+	assert(u_valid.size() == 8);
+
+	std::vector<int> neighbors;
+	Gradient current = gradient[id(x,y)];
+	int index = 0;
+	for(int j = -1; j <= 1; ++j) {
+		for(int i = -1; i <= 1; ++i) {
+			//edge
+			if(j + y < 0 || j + y >= height) {
+				index ++;
+				continue;
+			}
+			//edge
+			if(i + x < 0 || i + x >= width) {
+				index ++;
+				continue;
+			}
+			//Don't return middle
+			if(j == 0 && i == 0) {
+				//Don't increment index
+				continue;
+			}
+			size_t n = id(x+i,y+j);
+			Gradient   t = gradient[n];
 			if(valid[n] && u_valid[index]
 				&& is_neighbor(current,t)) {
 				assert(n >= 0 && n < size());

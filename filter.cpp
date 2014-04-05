@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sat 05 Apr 2014 04:08:05 PM EDT
+	* Last Modified : Sat 05 Apr 2014 05:15:14 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -150,3 +150,24 @@ std::vector<int> getNeighbors(image_u32_t *im, int x, int y) {
 bool px_close_enough(uint16_t depth_0, uint16_t depth_1) {
 	return abs(depth_0 - depth_1) < 700;
 }
+
+bool grad_close_enough(Gradient cur, Gradient other) {
+	return (cur.mag() > 0.5 && other.mag() > 0.5) && 
+		fabs(getThetaDist(cur.angle(),other.angle())) < 0.005;
+}
+
+double getThetaDist(double from, double to) {
+
+	from = fmod(from, 2*M_PI);
+	to   = fmod(to, 2*M_PI);
+	double difference = fmod(to - from, 2*M_PI);
+	double sn = sign(difference);
+	if(fabs(difference) > M_PI) {
+		difference = -sn*M_PI + fmod(difference, M_PI);
+	}
+	return difference;
+}
+double sign(double val) {
+	return val < 0  ? -1.0 : 1.0;
+}
+
