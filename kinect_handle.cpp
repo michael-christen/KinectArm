@@ -6,12 +6,45 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Thu 03 Apr 2014 05:41:33 PM EDT
+	       * Last Modified : Sat 05 Apr 2014 02:00:05 PM EDT
 
 	          * Created By : Michael Christen
 
 		     _._._._._._._._._._._._._._._._._._._._._.*/
 #include "kinect_handle.h"
+void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
+{
+	pthread_mutex_lock(&gl_backbuf_mutex);
+
+	// swap buffers
+	assert (rgb_back == rgb);
+	rgb_back = rgb_mid;
+	freenect_set_video_buffer(dev, rgb_back);
+	rgb_mid = (uint8_t*)rgb;
+
+	got_rgb = true;
+	pthread_cond_signal(&gl_frame_cond);
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
+{
+	int i;
+	uint16_t *depth = (uint16_t*)v_depth;
+
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	for (i=0; i<640*480; i++) {
+		int pval = t_gamma[depth[i]];
+		depth_mid[3*i+0] = pval & 0xff;
+		depth_mid[3*i+1] = (pval & 0xff00) >> 8;
+		depth_mid[3*i+2] = 255;
+	}
+	got_depth = true;
+	pthread_cond_signal(&gl_frame_cond);
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+
 
 void update_im_from_vect(const std::vector<uint8_t> & k_data, 
 		image_u32_t *im) {

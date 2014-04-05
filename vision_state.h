@@ -19,6 +19,7 @@
 
 // LCM
 #include <lcm/lcm.h>
+#include <libfreenect.h>
 #include "kinect_handle.h"
 
 // Local Includes
@@ -92,7 +93,10 @@ struct state_t {
     pthread_t kinect_thread;
     pthread_mutex_t kinect_mutex;
 
-	MyFreenectDevice * kinect;
+	//MyFreenectDevice * kinect;
+	freenect_context *f_ctx;
+	freenect_device  *f_dev;
+	freenect_video_format current_format;
 };
 
 
