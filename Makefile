@@ -39,7 +39,7 @@ vision: ../../bin/kinectvision_app
 skeltrack: ../../bin/skeltrack_vision
 
 ../../bin/kinectarm_app: kinectarm_app.o arm_gui.o body.o pid_ctrl.o eecs467_util.o\
-	skeleton_joint_t.o skeleton_joint_list_t.o config_space.o box.o rexarm.o
+	skeleton_joint_t.o skeleton_joint_list_t.o config_space.o bounding_box.o rexarm.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
