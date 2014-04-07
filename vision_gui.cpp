@@ -159,10 +159,22 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
 }
+int normalize_y(int y) {
+	return 480-y;
+	//return y < 480/2 ? 480 - y : y - 480/2;
+}
+
+line_t normalize_line(line_t line) {
+	line.ll.y = normalize_y(line.ll.y);
+	line.ru.y = normalize_y(line.ru.y);
+	return line;
+}
 
 void add_line_to_buffer(vx_buffer_t *vb, line_t line) {
 	int npoints = 2;
 	float points[npoints*3];
+	line = normalize_line(line);
+	
 	points[3*0 + 0] = line.ll.x;
 	points[3*0 + 1] = line.ll.y;
 	points[3*0 + 2] = 0;
@@ -176,7 +188,7 @@ void add_line_to_buffer(vx_buffer_t *vb, line_t line) {
 				vx_resc_copyf(points, npoints*3),
 				npoints,
 				GL_LINE_LOOP,
-				vxo_lines_style(vx_purple, 1.0f)
+				vxo_lines_style(vx_red, 1.0f)
 				)
 			);
 	vx_buffer_add_back(vb,vo);

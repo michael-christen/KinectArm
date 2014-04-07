@@ -56,6 +56,7 @@ Blob<Gradient> get_gradient_blob(Image<T> &im,
 		int y = im.getY(cur_id);
 		visited[cur_id] = true;
 		blob.push(x,y,im.gradient[cur_id]);
+		im.set(cur_id,0);
 		std::vector<int> neighbors = im.getNeighborIds(x, y,
 				neighbor_search, grad_close_enough);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
@@ -74,7 +75,7 @@ std::vector<Blob<Gradient>> get_gradient_blobs(Image<T> &im) {
 	std::vector<bool> visited   =
 		std::vector<bool>(im.h()*im.w(), false);
 	for(size_t i = 0; i < im.size(); ++i) {
-		if(im.gradient[i].mag() > 0.1 && !visited[i]) {
+		if(im.gradient[i].mag() > 70 && !visited[i]) {
 			Blob<Gradient> blob = get_gradient_blob(im,visited,i);
 			if(blob.size() > 10) {
 				blobs.push_back(blob);

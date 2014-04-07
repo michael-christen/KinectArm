@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sat 05 Apr 2014 05:15:14 PM EDT
+	* Last Modified : Mon 07 Apr 2014 12:05:47 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -152,8 +152,10 @@ bool px_close_enough(uint16_t depth_0, uint16_t depth_1) {
 }
 
 bool grad_close_enough(Gradient cur, Gradient other) {
-	return (cur.mag() > 0.5 && other.mag() > 0.5) && 
-		fabs(getThetaDist(cur.angle(),other.angle())) < 0.005;
+	return (cur.mag() > 70 && other.mag() > 70) && 
+		//0.7 works well for image, but depth is a little too
+		//jittery
+		fabs(getThetaDist(cur.angle(),other.angle())) < 0.8;
 }
 
 double getThetaDist(double from, double to) {
