@@ -27,10 +27,38 @@ bool grad_close_enough(Gradient cur, Gradient other);
 std::vector<int> getNeighbors(image_u32_t *im, int x, int y);
 */
 template <typename T>
+void blurGradient(Image<T> &im);
+
+template <typename T>
 std::vector<Blob<Gradient>> get_gradient_blobs(Image<T> &im);
 
 template <typename T>
 Blob<Gradient> get_gradient_blob(Image<T> &im, int start_id);
+
+template <typename T>
+void blurGradient(Image<T> &im) {
+	//Gaussian is 3x3
+	std::vector<double> gaussian = {
+		0.1,0.1,0.1,
+		0.1,0.2,0.1,
+		0.1,0.1,0.1
+	};
+	std::vector<Gradient> newGrad = im.gradient;
+	for(int y = 1; y < im.h()-1; ++y) {
+		for(int x = 1; x < im.w()-1; ++x) {
+			//Compute gaussian
+			Gradient tg;
+			int dx, dy;
+			for(int i = 0; i < gaussian.size(); ++i) {
+				dx = i % 3 - 1;
+				dy = i / 3 - 1;
+				tg = tg + im.gradient[im.id(x+dx,y+dy)]*gaussian[i];
+			}
+			newGrad[im.id(x,y)] = tg; 
+		}
+	}	
+	im.gradient = newGrad;
+}
 
 template <typename T>
 Blob<Gradient> get_gradient_blob(Image<T> &im, 

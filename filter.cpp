@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Mon 07 Apr 2014 12:05:47 PM EDT
+	* Last Modified : Mon 07 Apr 2014 01:14:01 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -36,6 +36,8 @@ void filter_front(Image<uint16_t> & im) {
 	NOISE_DEPTHS.push_back(0x6e0);
 	NOISE_DEPTHS.push_back(0x780);
 	NOISE_DEPTHS.push_back(0x9f8);
+	NOISE_DEPTHS.push_back(513);
+	NOISE_DEPTHS.push_back(517);
 	int      min_id    = 0;
 	for(size_t i = 0; i < im.size(); ++i) {
 		uint16_t depth = im.get(i);
@@ -155,7 +157,7 @@ bool grad_close_enough(Gradient cur, Gradient other) {
 	return (cur.mag() > 70 && other.mag() > 70) && 
 		//0.7 works well for image, but depth is a little too
 		//jittery
-		fabs(getThetaDist(cur.angle(),other.angle())) < 0.8;
+		fabs(getThetaDist(cur.angle(),other.angle())) < 0.35;
 }
 
 double getThetaDist(double from, double to) {

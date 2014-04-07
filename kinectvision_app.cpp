@@ -104,7 +104,9 @@ void kinect_process(state_t* state){
 		//state->depth.copyValid(state->im.valid);
 		//Compute the gradient of the entire image
 		state->im.computeGradient(videoToGrad);
+		blurGradient(state->im);
 		state->depth.computeGradient(depthToGrad);
+		blurGradient(state->depth);
 		printf("\n\nImage\n");
 		std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
 		//std::vector<line_t> im_lines;

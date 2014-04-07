@@ -6,6 +6,9 @@
 class Gradient {
 	public:
 		Gradient();
+		Gradient& operator= (const Gradient& other);
+		Gradient operator+ (const Gradient& other);
+		Gradient operator* (double val);
 		void x(double);
 		double x();
 		void y(double);
