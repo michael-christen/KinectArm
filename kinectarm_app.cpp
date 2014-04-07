@@ -164,7 +164,7 @@ int main(int argc, char ** argv)
 	BoundingBox floorBoard, base;
 
 	floorBoard.setPosition(0, 0, 0);
-	floorBoard.setDimensions(100, 100, 2);
+	floorBoard.setDimensions(100, 100, 10);
 	state->cfs.addBoundingBox(&floorBoard);
 	base.setPosition(0, 0, 4);
 	base.setDimensions(7, 7, 8);

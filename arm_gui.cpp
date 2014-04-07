@@ -57,9 +57,9 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     } else if (!strcmp("s5", name)) {
     	state->gui_servo_angles[5] = pg_gd(pg, name);
     } else if (!strcmp("s6", name)) {
-    	state->arm.setDSF(pg_gd(pg, name));
+    	//state->arm.setDSF(pg_gd(pg, name));
     } else if (!strcmp("s7", name)) {
-    	state->arm.setTSF(pg_gd(pg, name));
+    	//state->arm.setTSF(pg_gd(pg, name));
     } else if (!strcmp("but1", name)) {
     	updateServoAngles = 1;
     } else if (!strcmp("but2", name)) {
@@ -166,7 +166,7 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 	vx_buffer_add_back(gridBuff, vxo_grid());
 
 	//Draw Axes
-	float axes[12] = {-1000, 0, 0, 1000, 0, 0, 0, -1000, 0, 0, 0, 0};
+	float axes[12] = {-1000, 0, 0, 0, 0, 0, 0, -1000, 0, 0, 1000, 0};
 	vx_resc_t *verts = vx_resc_copyf(axes, 12);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 4, GL_LINES, vxo_points_style(vx_black, 2.0f)));
 	
@@ -174,7 +174,7 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 	vx_buffer_t *cfsBuff = vx_world_get_buffer(layerData->world, "cfs");
 	state->cfs.draw(cfsBuff, vx_red);
 
-	float posAxes[6] = {0, 0, 0, 0, 1000, 0};
+	float posAxes[6] = {0, 0, 0, 1000, 0, 0};
 	verts = vx_resc_copyf(posAxes, 6);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 2, GL_LINES, vxo_points_style(vx_green, 2.0f)));
 
@@ -319,8 +319,8 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);
-    pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->arm.getDSF());
-    pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->arm.getTSF());
+    pg_add_double_slider(pg, "s6", "DSF", 0, 1, 0);
+    pg_add_double_slider(pg, "s7", "TSF", 0, 1, 0);
     pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
     pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
 

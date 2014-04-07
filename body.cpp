@@ -91,20 +91,30 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 
 	double shoulderAngle0 = sgn(shoulder.z - elbow.z)*(M_PI - acos(shoulderValue0));
 	double shoulderAngle1 = sgn(elbow.y - shoulder.y)*(acos(shoulderValue1) - M_PI/2);
-	double elbowAngle = sgn(elbow.y - wrist.y)*acos(elbowValue);
-	if(elbowValue < 0){
+	double elbowAngle = acos(elbowValue);
+
+	double unitZ_data[3] = {0, 0, 1};
+	matd_t *unitZ = matd_create_data(3, 1, unitZ_data);
+	matd_t *elbowCheck = matd_crossproduct(elbow_wrist, shoulder_elbow);
+	double elbowSign = sgn(matd_vec_dot_product(elbowCheck, unitZ));
+
+	matd_destroy(unitZ);
+	matd_destroy(elbowCheck);
+
+	/*if(elbowValue < 0){
 		//Elbow bent more than 90 degrees
 		printf("Elbow: %f -> ", elbowAngle);
 		elbowAngle += sgn(elbow.y - wrist.y)*M_PI;
 		printf("%f\n", elbowAngle);
 	}
-	else{printf("Elbow: %g\n", elbowAngle);}
+	else{printf("Elbow: %g\n", elbowAngle);}*/
 
 	servoAngles[0] = shoulderAngle0;
 	servoAngles[1] = shoulderAngle1;
-	if(fabs(servoAngles[2] - elbowAngle) < 0.5 ){
-		servoAngles[2] = elbowAngle;
-	}
+	servoAngles[2] = elbowSign*elbowAngle;
+	/*if(fabs(servoAngles[2] - elbowAngle) < 0.5 ){
+		servoAngles[2] = elbowSign*elbowAngle;
+	}*/
 	servoAngles[3] = servoAngles[4] = servoAngles[5] = 0;
 
 	matd_destroy(floor_shoulder);

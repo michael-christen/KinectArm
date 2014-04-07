@@ -12,10 +12,6 @@
 class RexArm {
 	public:
 		RexArm();
-		void setDSF(double dsf);
-		double getDSF();
-		void setTSF(double tsf);
-		double getTSF();
 		void setTargetAngles(double newAngles[], ConfigSpace &cfs);
 		void setCurAngles(double angles[]);
 		void getTargetAngles(double arr[]);
