@@ -7,10 +7,11 @@
 
 class ConfigSpace {
 	public:
-		void addBoundingBox(BoundingBox &box);
+		bool testCollisions(BoundingBox box[], int num);
+		void addBoundingBox(BoundingBox *box);
 		void draw(vx_buffer *buf, const float color[]);
 	private:
-		std::vector<BoundingBox> boxes;
+		std::vector<BoundingBox*> boxes;
 };
 
 #endif

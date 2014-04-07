@@ -2,6 +2,9 @@
 #include <math.h>
 #include "bounding_box.h"
 #include <stdio.h>
+#include "arm_gui.h"
+#include "vx/vx.h"
+#include "vx/vxo_drawables.h"
 
 BoundingBox::BoundingBox() {
 	double vec[3] = {0, 0, 0};
@@ -14,6 +17,10 @@ BoundingBox::BoundingBox() {
 	vec[1] = 0;
 	vec[2] = 1;
 	this->uz = matd_create_data(3, 1, vec);
+
+	this->tx = 0;
+	this->ty = 0;
+	this->tz = 0;
 }
 
 BoundingBox::~BoundingBox() {
@@ -23,10 +30,33 @@ BoundingBox::~BoundingBox() {
 	matd_destroy(this->uz);
 }
 
+void BoundingBox::reset() {
+	this->setPosition(0, 0, 0);
+	this->setRotations(0, 0, 0);
+}
+
 void BoundingBox::setPosition(double x, double y, double z) {
 	matd_put(this->pos, 0, 0, x);
 	matd_put(this->pos, 1, 0, y);
 	matd_put(this->pos, 2, 0, z);
+}
+
+void BoundingBox::setPosition(matd_t *pos) {
+	matd_put(this->pos, 0, 0, matd_get(pos, 0, 0));
+	matd_put(this->pos, 1, 0, matd_get(pos, 1, 0));
+	matd_put(this->pos, 2, 0, matd_get(pos, 2, 0));
+}
+
+void BoundingBox::setRotations(double tx, double ty, double tz) {
+	this->tx = tx;
+	this->ty = ty;
+	this->tz = tz;
+}
+
+void BoundingBox::addRotations(double tx, double ty, double tz) {
+	this->tx += tx;
+	this->ty += ty;
+	this->tz += tz;
 }
 
 void BoundingBox::setDimensions(double w, double h, double d) {
@@ -38,23 +68,19 @@ void BoundingBox::setDimensions(double w, double h, double d) {
 	this->d = d;
 }
 
-void BoundingBox::rotateUnitVectors(double tx, double ty, double tz) {
-	// Reset each unit vector
-	// X
-	/*double vec[3] = {1, 0, 0};
-	matd_destroy(this->ux);
-	this->ux = matd_create_data(3, 1, vec);
-	// Y
-	vec[0] = 0;
-	vec[1] = 1;
-	matd_destroy(this->uy);
-	this->uy = matd_create_data(3, 1, vec);
-	//Z
-	vec[1] = 0;
-	vec[2] = 1;
-	matd_destroy(this->uz);
-	this->uz = matd_create_data(3, 1, vec);*/
-	
+void BoundingBox::setUnitVectors(matd_t *ux, matd_t *uy, matd_t *uz) {
+	matd_put(this->ux, 0, 0, matd_get(ux, 0, 0));
+	matd_put(this->ux, 1, 0, matd_get(ux, 1, 0));
+	matd_put(this->ux, 2, 0, matd_get(ux, 2, 0));
+	matd_put(this->uy, 0, 0, matd_get(uy, 0, 0));
+	matd_put(this->uy, 1, 0, matd_get(uy, 1, 0));
+	matd_put(this->uy, 2, 0, matd_get(uy, 2, 0));
+	matd_put(this->uz, 0, 0, matd_get(uz, 0, 0));
+	matd_put(this->uz, 1, 0, matd_get(uz, 1, 0));
+	matd_put(this->uz, 2, 0, matd_get(uz, 2, 0));
+}
+
+/*void BoundingBox::rotateUnitVectors(double tx, double ty, double tz) {	
 	matd_t *temp;
 	
 	double rotation_dataz[9] = {cos(tz), -sin(tz), 0, sin(tz), cos(tz), 0, 0, 0, 1};
@@ -104,13 +130,28 @@ void BoundingBox::rotateUnitVectors(double tx, double ty, double tz) {
 	this->uz = matd_multiply(rot, temp);
 	matd_destroy(temp);
 	matd_destroy(rot);
-}
+}*/
 
 bool BoundingBox::intersect(BoundingBox *b) {
 	double checkL, sum;
 	BoundingBox *a = this;
 	matd_t *cross;
 	matd_t *T = matd_subtract(b->pos, a->pos);
+
+	//printf("\nT\n");
+	//matd_print(T, "%f");
+
+	/*printf("\na pos\n");
+	matd_print(a->pos, "%f");
+
+	printf("\nb pos\n");
+	matd_print(b->pos, "%f");*/
+	/*printf("\nb ux\n");
+	matd_print(b->ux, "%f");
+	printf("\nb uy\n");
+	matd_print(b->uy, "%f");
+	printf("\nb uz\n");
+	matd_print(b->uz, "%f");*/
 
 	// Case 1
 	checkL = fabs(matd_vec_dot_product(T, a->ux));
@@ -194,9 +235,9 @@ bool BoundingBox::intersect(BoundingBox *b) {
 	cross = matd_crossproduct(a->ux, b->ux);
 	checkL = fabs(matd_vec_dot_product(T, cross));
 	sum = fabs(a->hH*matd_vec_dot_product(a->uz, b->ux));
-	sum += fabs(a->hD*matd_vec_dot_product(a->uy, a->ux));
+	sum += fabs(a->hD*matd_vec_dot_product(a->uy, b->ux));
 	sum += fabs(b->hH*matd_vec_dot_product(a->ux, b->uz));
-	sum += fabs(b->hH*matd_vec_dot_product(a->ux, b->uy));
+	sum += fabs(b->hD*matd_vec_dot_product(a->ux, b->uy));
 	matd_destroy(cross);
 
 	if (checkL > sum) {
@@ -210,7 +251,7 @@ bool BoundingBox::intersect(BoundingBox *b) {
 	checkL = fabs(matd_vec_dot_product(T, cross));
 	sum = fabs(a->hH*matd_vec_dot_product(a->uz, b->uy));
 	sum += fabs(a->hD*matd_vec_dot_product(a->uy, b->uy));
-	sum += fabs(b->hW*matd_vec_dot_product(a->ux, b->uy));
+	sum += fabs(b->hW*matd_vec_dot_product(a->ux, b->uz));
 	sum += fabs(b->hD*matd_vec_dot_product(a->ux, b->ux));
 	matd_destroy(cross);
 
@@ -236,7 +277,7 @@ bool BoundingBox::intersect(BoundingBox *b) {
 	//printf("9 - checkL %f, sum %f\n", checkL, sum);
 
 	// Case 10
-	cross = matd_crossproduct(a->ux, b->uz);
+	cross = matd_crossproduct(a->uy, b->ux);
 	checkL = fabs(matd_vec_dot_product(T, cross));
 	sum = fabs(a->hW*matd_vec_dot_product(a->uz, b->ux));
 	sum += fabs(a->hD*matd_vec_dot_product(a->ux, b->ux));
@@ -327,6 +368,18 @@ bool BoundingBox::intersect(BoundingBox *b) {
 
 	matd_destroy(T);
 	return true;
+}
+
+void BoundingBox::draw(vx_buffer *buf, const float color[]) {
+    vx_object_t *box = vxo_chain(
+	    // Base
+	    vxo_mat_scale3(CM_TO_VX, CM_TO_VX, CM_TO_VX),
+	    vxo_mat_translate3(this->getX(), this->getY(), this->getZ()),
+	    vxo_mat_scale3(this->getW(), this->getH(), this->getD()),
+	    vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f))
+	);
+	
+	vx_buffer_add_back(buf, box);
 }
 
 double BoundingBox::getX() {

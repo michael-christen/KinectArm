@@ -57,7 +57,7 @@ static void arm_status_handler( const lcm_recv_buf_t *rbuf,
 		angles[i] = msg->statuses[i].position_radians;
 	}
 
-	state->arm.setTargetAngles(angles);
+	state->arm.setCurAngles(angles);
 }
 
 static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
@@ -71,7 +71,7 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	state->last_body = state->current_body;
 	state->current_body = Body(msg);
 	state->current_body.getServoAngles(angles, true);
-	state->arm.setTargetAngles(angles);
+	state->arm.setTargetAngles(angles, state->cfs);
 }
 
 int angles_valid(double angles[]) {
@@ -155,16 +155,20 @@ int main(int argc, char ** argv)
 	state->app.impl = state;
 	state->update_arm_cont = 0;
 	state->update_arm = 0;
-
+	state->arm = RexArm();
 	state->running = 1;
 
 	lcm_t * lcm = lcm_create (NULL);
 	state->lcm = lcm;
 	
-	BoundingBox floor;
-	floor.setPosition(0, 0, 0);
-	floor.setDimensions(100, 100, 2);
-	state->cfs.addBoundingBox(floor);
+	BoundingBox floorBoard, base;
+
+	floorBoard.setPosition(0, 0, 0);
+	floorBoard.setDimensions(100, 100, 2);
+	state->cfs.addBoundingBox(&floorBoard);
+	base.setPosition(0, 0, 4);
+	base.setDimensions(7, 7, 8);
+	state->cfs.addBoundingBox(&base);
 
 	//signal(SIGINT, terminal_signal_handler);
 
