@@ -89,7 +89,8 @@ void update_kinect(state_t* state) {
 	//update_im_from_vect(depth, state->depth);
 	//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 }
-
+//Practically unimportant
+#define MAX_VARIANCE 16000000
 void kinect_process(state_t* state){
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
@@ -113,18 +114,18 @@ void kinect_process(state_t* state){
 		state->im_lines.clear();
 		for(size_t i = 0; i < im_blobs.size(); ++i) {
 			line_t tmp_line = linear_regression(im_blobs[i]);
-			//if(tmp_line.variance < 10) {
+			if(tmp_line.variance <= MAX_VARIANCE) {
 				state->im_lines.push_back(tmp_line);
-			//}
+			}
 		}
 		printf("\nDepth\n");
 		std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(state->depth);
 		state->depth_lines.clear();
 		for(size_t i = 0; i < dp_blobs.size(); ++i) {
 			line_t tmp_line = linear_regression(dp_blobs[i]);
-			//if(tmp_line.variance < 10) {
+			if(tmp_line.variance <= MAX_VARIANCE) {
 				state->depth_lines.push_back(tmp_line);
-			//}
+			}
 		}
 		/*
 		double pink_hue = 328.0;

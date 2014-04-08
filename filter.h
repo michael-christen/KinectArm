@@ -97,6 +97,7 @@ Blob<Gradient> get_gradient_blob(Image<T> &im,
 	return blob;
 }
 
+#define MIN_SIZE     50
 template <typename T>
 std::vector<Blob<Gradient>> get_gradient_blobs(Image<T> &im) {
 	std::vector<Blob<Gradient>> blobs;
@@ -105,7 +106,7 @@ std::vector<Blob<Gradient>> get_gradient_blobs(Image<T> &im) {
 	for(size_t i = 0; i < im.size(); ++i) {
 		if(im.gradient[i].mag() > 70 && !visited[i]) {
 			Blob<Gradient> blob = get_gradient_blob(im,visited,i);
-			if(blob.size() > 10) {
+			if(blob.size() >= MIN_SIZE) {
 				blobs.push_back(blob);
 			}
 		}
