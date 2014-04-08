@@ -89,8 +89,8 @@ struct state_t {
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
 
-    Body current_body, last_body;
-    RexArm arm;
+    Body *body;
+    RexArm *arm;
     ConfigSpace cfs;
 };
 

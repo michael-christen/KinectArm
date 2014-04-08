@@ -18,6 +18,7 @@ class RexArm {
 		void getCurAngles(double arr[]);
 		void drawCurState(vx_buffer_t *buf, const float color[]);
 		void drawTargetState(vx_buffer_t *buf, const float color[]);
+
 	private:
 		pthread_mutex_t curAnglesMutex, targetAnglesMutex;
 		static const int numServos;

@@ -4,25 +4,25 @@
 #include "math.h"
 #include "skeleton_joint_list_t.h"
 #include "skeleton_joint_t.h"
+#include "data_smoother.h"
 
-Body::Body(const skeleton_joint_list_t *msg) {
-	joint_t *joint;
+Body::Body() {
+	this->ds = new DataSmoother(0.15, 0.2, 0, 0);
+}
+
+Body::~Body() {
+	delete this->ds;
+}
+
+void Body::processMsg(const skeleton_joint_list_t *msg) {
 	for (int i = 0; i < msg->len; i++) {
-		switch (i) {
-			case 0: joint = &(this->head); break;
-			case 1: joint = &(this->right_shoulder); break;
-			case 2: joint = &(this->right_elbow); break;
-			case 3: joint = &(this->right_wrist); break;
-			case 4: joint = &(this->left_shoulder); break;
-			case 5: joint = &(this->left_elbow); break;
-			default: joint = &(this->left_wrist); break;
-		}
-
-		joint->x = (double) msg->joints[i].x;
-		joint->y = (double) msg->joints[i].y;
-		joint->z = (double) msg->joints[i].z;
-		joint->screen_x = (double) msg->joints[i].screen_x;
-		joint->screen_y = (double) msg->joints[i].screen_y;
+		if (msg->joints[i].valid) {
+			this->joints[i].x = this->ds->getNewVal(i * 5, (double) msg->joints[i].x);
+			this->joints[i].y = this->ds->getNewVal(i * 5 + 1, (double) msg->joints[i].y);
+			this->joints[i].z = this->ds->getNewVal(i * 5 + 2, (double) msg->joints[i].z);
+			this->joints[i].screen_x = this->ds->getNewVal(i * 5 + 3, (double) msg->joints[i].screen_x);
+			this->joints[i].screen_y = this->ds->getNewVal(i * 5 + 4, (double) msg->joints[i].screen_y);
+		}		
 	}
 }
 
@@ -36,14 +36,14 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 
 	if(right_side){
 		//use right side of body
-		shoulder = this->right_shoulder;
-		elbow = this->right_elbow;
-		wrist = this->right_wrist;
+		shoulder = this->joints[RSHOULDER];
+		elbow = this->joints[RELBOW];
+		wrist = this->joints[RWRIST];
 	}else{
 		//use left side of body
-		shoulder = this->left_shoulder;
-		elbow = this->left_elbow;
-		wrist = this->left_wrist;
+		shoulder = this->joints[LSHOULDER];
+		elbow = this->joints[LELBOW];
+		wrist = this->joints[LWRIST];
 	}
 
 	double floor_shoulder_data[3] = {
@@ -101,20 +101,9 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_destroy(unitZ);
 	matd_destroy(elbowCheck);
 
-	/*if(elbowValue < 0){
-		//Elbow bent more than 90 degrees
-		printf("Elbow: %f -> ", elbowAngle);
-		elbowAngle += sgn(elbow.y - wrist.y)*M_PI;
-		printf("%f\n", elbowAngle);
-	}
-	else{printf("Elbow: %g\n", elbowAngle);}*/
-
 	servoAngles[0] = shoulderAngle0;
 	servoAngles[1] = shoulderAngle1;
 	servoAngles[2] = elbowSign*elbowAngle;
-	/*if(fabs(servoAngles[2] - elbowAngle) < 0.5 ){
-		servoAngles[2] = elbowSign*elbowAngle;
-	}*/
 	servoAngles[3] = servoAngles[4] = servoAngles[5] = 0;
 
 	matd_destroy(floor_shoulder);

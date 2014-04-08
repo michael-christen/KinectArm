@@ -57,7 +57,7 @@ static void arm_status_handler( const lcm_recv_buf_t *rbuf,
 		angles[i] = msg->statuses[i].position_radians;
 	}
 
-	state->arm.setCurAngles(angles);
+	state->arm->setCurAngles(angles);
 }
 
 static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
@@ -66,12 +66,11 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            void *user) {
 	state_t *state = (state_t*) user;
 	double angles[NUM_SERVOS];
-	state->arm.getTargetAngles(angles);
+	state->arm->getTargetAngles(angles);
 
-	state->last_body = state->current_body;
-	state->current_body = Body(msg);
-	state->current_body.getServoAngles(angles, true);
-	state->arm.setTargetAngles(angles, state->cfs);
+	state->body->processMsg(msg);
+	state->body->getServoAngles(angles, true);
+	state->arm->setTargetAngles(angles, state->cfs);
 }
 
 int angles_valid(double angles[]) {
@@ -118,7 +117,7 @@ void* arm_commander(void *data) {
     cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
-    	state->arm.getTargetAngles(angles);
+    	state->arm->getTargetAngles(angles);
     	valid_angles = angles_valid(angles);
     	if (valid_angles) {
 	    		for (int id = 0; id < NUM_SERVOS; id++) {
@@ -155,7 +154,8 @@ int main(int argc, char ** argv)
 	state->app.impl = state;
 	state->update_arm_cont = 0;
 	state->update_arm = 0;
-	state->arm = RexArm();
+	state->arm = new RexArm();
+	state->body = new Body();
 	state->running = 1;
 
 	lcm_t * lcm = lcm_create (NULL);
@@ -197,6 +197,8 @@ int main(int argc, char ** argv)
 	printf("after gui_create\n");
 
 	// clean up
+	delete state->arm;
+	delete state->body;
 	vx_global_destroy();
     getopt_destroy(state->gopt);
 

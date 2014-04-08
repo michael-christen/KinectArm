@@ -14,7 +14,6 @@ const double RexArm::segmentDepth[4] = {10, 10, 9.5, 8};
 const double RexArm::segmentZOffset = 11.5;
 
 RexArm::RexArm() {
-	printf("REXARM CTOR\n");
 	pthread_mutex_init(&this->curAnglesMutex, NULL);
 	pthread_mutex_init(&this->targetAnglesMutex, NULL);
 	this->dsf = 0.15;

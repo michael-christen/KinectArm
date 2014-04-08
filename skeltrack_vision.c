@@ -385,14 +385,16 @@ on_skeleton_draw (ClutterCanvas *canvas,
 
   int i;
   for (i = 0; i < lcm_skeleton.len; i++) {
-      lcm_skeleton.joints[0].x = 0;
-      lcm_skeleton.joints[0].y = 0;
-      lcm_skeleton.joints[0].z = 0;
-      lcm_skeleton.joints[0].screen_x = 0;
-      lcm_skeleton.joints[0].screen_y = 0;
+      lcm_skeleton.joints[i].valid = 0;
+      lcm_skeleton.joints[i].x = 0;
+      lcm_skeleton.joints[i].y = 0;
+      lcm_skeleton.joints[i].z = 0;
+      lcm_skeleton.joints[i].screen_x = 0;
+      lcm_skeleton.joints[i].screen_y = 0;
   }
 
   if (head) {
+      lcm_skeleton.joints[0].valid = 1;
       lcm_skeleton.joints[0].x = head->x;
       lcm_skeleton.joints[0].y = head->y;
       lcm_skeleton.joints[0].z = head->z;
@@ -401,6 +403,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
   }
       
   if (right_shoulder) {
+      lcm_skeleton.joints[1].valid = 1;
       lcm_skeleton.joints[1].x = right_shoulder->x;
       lcm_skeleton.joints[1].y = right_shoulder->y;
       lcm_skeleton.joints[1].z = right_shoulder->z;
@@ -409,6 +412,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
   }
 
   if (right_elbow) {
+      lcm_skeleton.joints[2].valid = 1;
       lcm_skeleton.joints[2].x = right_elbow->x;
       lcm_skeleton.joints[2].y = right_elbow->y;
       lcm_skeleton.joints[2].z = right_elbow->z;
@@ -418,6 +422,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
 
       
   if (right_hand) {
+      lcm_skeleton.joints[3].valid = 1;
       lcm_skeleton.joints[3].x = right_hand->x;
       lcm_skeleton.joints[3].y = right_hand->y;
       lcm_skeleton.joints[3].z = right_hand->z;
@@ -426,6 +431,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
   }
 
   if (left_shoulder) {
+      lcm_skeleton.joints[4].valid = 1;
       lcm_skeleton.joints[4].x = left_shoulder->x;
       lcm_skeleton.joints[4].y = left_shoulder->y;
       lcm_skeleton.joints[4].z = left_shoulder->z;
@@ -434,6 +440,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
   }
 
   if (left_elbow) {
+      lcm_skeleton.joints[5].valid = 1;
       lcm_skeleton.joints[5].x = left_elbow->x;
       lcm_skeleton.joints[5].y = left_elbow->y;
       lcm_skeleton.joints[5].z = left_elbow->z;
@@ -442,6 +449,7 @@ on_skeleton_draw (ClutterCanvas *canvas,
   }
 
   if (left_hand) {
+      lcm_skeleton.joints[6].valid = 1;
       lcm_skeleton.joints[6].x = left_hand->x;
       lcm_skeleton.joints[6].y = left_hand->y;
       lcm_skeleton.joints[6].z = left_hand->z;

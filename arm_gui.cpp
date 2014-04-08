@@ -57,9 +57,9 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     } else if (!strcmp("s5", name)) {
     	state->gui_servo_angles[5] = pg_gd(pg, name);
     } else if (!strcmp("s6", name)) {
-    	//state->arm.setDSF(pg_gd(pg, name));
+    	state->body->ds->setDSF(pg_gd(pg, name));
     } else if (!strcmp("s7", name)) {
-    	//state->arm.setTSF(pg_gd(pg, name));
+    	state->body->ds->setTSF(pg_gd(pg, name));
     } else if (!strcmp("but1", name)) {
     	updateServoAngles = 1;
     } else if (!strcmp("but2", name)) {
@@ -67,7 +67,7 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
 	    	for (i = 0; i < NUM_SERVOS; i++) {
 				angles[i] = 0.0;
 			}
-			state->arm.setTargetAngles(angles, state->cfs);
+			state->arm->setTargetAngles(angles, state->cfs);
 	    } else {
     		printf("Uncheck \"Update Arm Continuously\" first\n");
 	    }
@@ -76,7 +76,7 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     }
 
     if (state->update_arm_cont || updateServoAngles) {
-		state->arm.setTargetAngles(state->gui_servo_angles, state->cfs);
+		state->arm->setTargetAngles(state->gui_servo_angles, state->cfs);
     }
 }
 
@@ -180,8 +180,8 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
-	state->arm.drawTargetState(armBuff, vx_yellow);
-	state->arm.drawCurState(armBuff, vx_blue);
+	state->arm->drawTargetState(armBuff, vx_yellow);
+	state->arm->drawCurState(armBuff, vx_blue);
 	
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
@@ -319,8 +319,8 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);
-    pg_add_double_slider(pg, "s6", "DSF", 0, 1, 0);
-    pg_add_double_slider(pg, "s7", "TSF", 0, 1, 0);
+    pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
+    pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
     pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
     pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
 
