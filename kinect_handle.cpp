@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sat 05 Apr 2014 02:49:03 PM EDT
+	       * Last Modified : Tue 08 Apr 2014 05:46:39 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -58,6 +58,7 @@ void get_rgb(std::vector<uint32_t> &rgb) {
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
 	pthread_mutex_lock(&gl_backbuf_mutex);
+	printf("rgb calling\n");
 
 	// swap buffers
 	assert (rgb_back == rgb);
@@ -66,7 +67,7 @@ void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 	rgb_mid = (uint8_t*)rgb;
 
 	got_rgb = true;
-	pthread_cond_signal(&gl_frame_cond);
+	//pthread_cond_signal(&gl_frame_cond);
 	pthread_mutex_unlock(&gl_backbuf_mutex);
 }
 
@@ -74,16 +75,25 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
 	int i;
 	uint16_t *depth = (uint16_t*)v_depth;
+	printf("depth calling\n");
 
 	pthread_mutex_lock(&gl_backbuf_mutex);
 	for (i=0; i<640*480; i++) {
-		int pval = t_gamma[depth[i]];
+		//printf("yo:%d\n",i);
+		//printf("ho:%d\n",depth[i]);
+		int pval;
+		if(depth[i] >= 2048) {
+			pval = 0;
+		} else {
+			pval = t_gamma[depth[i]];
+		}
 		depth_mid[3*i+0] = pval & 0xff;
 		depth_mid[3*i+1] = (pval & 0xff00) >> 8;
 		depth_mid[3*i+2] = 255;
 	}
+	printf("hi\n");
 	got_depth = true;
-	pthread_cond_signal(&gl_frame_cond);
+	//pthread_cond_signal(&gl_frame_cond);
 	pthread_mutex_unlock(&gl_backbuf_mutex);
 }
 

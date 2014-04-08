@@ -91,6 +91,7 @@ struct state_t {
 	image_u32_t * depth;
 	*/
     pthread_t kinect_thread;
+    pthread_t kinect_event_thread;
     pthread_mutex_t kinect_mutex;
 
 	//MyFreenectDevice * kinect;

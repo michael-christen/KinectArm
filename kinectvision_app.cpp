@@ -104,6 +104,7 @@ void kinect_init(state_t* state) {
 
 	freenect_set_tilt_degs(state->f_dev,0);
 	freenect_set_led(state->f_dev,LED_RED);
+	printf("setting up\n");
 	freenect_set_depth_callback(state->f_dev, depth_cb);
 	freenect_set_video_callback(state->f_dev, rgb_cb);
 	freenect_set_video_mode(state->f_dev,
@@ -116,7 +117,7 @@ void kinect_init(state_t* state) {
 
 	freenect_start_depth(state->f_dev);
 	freenect_set_led(state->f_dev,LED_GREEN);
-	//freenect_start_video(state->f_dev);
+	freenect_start_video(state->f_dev);
 	freenect_set_led(state->f_dev,LED_BLINK_RED_YELLOW);
 
 	/*
@@ -194,15 +195,25 @@ void kinect_process(state_t* state){
 
 void * kinect_analyze(void * data){
 	state_t * state = (state_t *) data;
-	kinect_init(state);
 
 	while(state->running){
+		//Process callbacks
 		kinect_process(state);
 		usleep(10000);
 	}
 
 	//camera_destroy(state);
 	return NULL;
+}
+void * kinect_event(void * data){
+	state_t * state = (state_t *) data;
+	while(true) {
+		if(state->f_ctx) {
+			if(freenect_process_events(state->f_ctx) < 0) {
+				break;
+			}
+		}
+	}
 }
 
 
@@ -250,8 +261,10 @@ int main(int argc, char ** argv)
 		exit(-1);
 	}
 
+	kinect_init(state);
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
 	pthread_create(&state->kinect_thread, NULL, kinect_analyze, state);
+	pthread_create(&state->kinect_event_thread, NULL, kinect_event,state);
 	gui_create(state);
 	printf("after gui_create\n");
 
