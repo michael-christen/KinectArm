@@ -102,7 +102,7 @@ void kinect_init(state_t* state) {
 	rgb_front = (uint8_t*)malloc(640*480*3);
 
 
-	freenect_set_tilt_degs(state->f_dev,0);
+	freenect_set_tilt_degs(state->f_dev,10);
 	freenect_set_led(state->f_dev,LED_RED);
 	printf("setting up\n");
 	freenect_set_depth_callback(state->f_dev, depth_cb);
