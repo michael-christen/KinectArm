@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Thu 03 Apr 2014 12:29:06 PM EDT
+	* Last Modified : Mon 07 Apr 2014 01:14:01 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -36,6 +36,8 @@ void filter_front(Image<uint16_t> & im) {
 	NOISE_DEPTHS.push_back(0x6e0);
 	NOISE_DEPTHS.push_back(0x780);
 	NOISE_DEPTHS.push_back(0x9f8);
+	NOISE_DEPTHS.push_back(513);
+	NOISE_DEPTHS.push_back(517);
 	int      min_id    = 0;
 	for(size_t i = 0; i < im.size(); ++i) {
 		uint16_t depth = im.get(i);
@@ -50,37 +52,8 @@ void filter_front(Image<uint16_t> & im) {
 			min_depth = depth;
 		}
 	}
-	/*
-	for(int y = 0; y < im->height; ++y) {
-		for(int x = 0; x < im->width; ++x) {
-			int id = im->stride*y + x;
-			uint32_t px = im->buf[id];
-			uint16_t depth = get_px_depth(px);
-			if(depth >= MIN_ALLOWED_DEPTH && depth < min_depth) {
-				//If it's a noise value, ignore it
-				if(std::find(NOISE_DEPTHS.begin(), NOISE_DEPTHS.end(),
-							depth) != NOISE_DEPTHS.end()) {
-					continue;
-				}
-				min_id = id;
-				min_depth = depth;
-			}
-		}
-	}
-	*/
-	//min_id = im->width/2 + im->height/2 * im->stride;
 	printf("Min depth: %d\n", min_depth);
 	blob_merging(im, min_id);
-}
-
-bool is_neighbor(uint16_t cur, uint16_t other) {
-	int diff = abs((int)cur - (int)other);
-	bool val = diff < 700;
-	/*
-	printf("diff: %d\n",diff);
-	if(val) printf("yahoo!\n");
-	*/
-	return val;
 }
 
 void blob_merging(Image<uint16_t> &im, int start) {
@@ -112,7 +85,7 @@ void blob_merging(Image<uint16_t> &im, int start) {
 		int x = cur_id % im.w();
 		int y = cur_id / im.w();
 		std::vector<int> neighbors = im.getNeighborIds(x, y,
-				neighbor_search, is_neighbor);
+				neighbor_search, px_close_enough);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
 			id = neighbors[i];
 			px = im.get(id);
@@ -179,3 +152,26 @@ std::vector<int> getNeighbors(image_u32_t *im, int x, int y) {
 bool px_close_enough(uint16_t depth_0, uint16_t depth_1) {
 	return abs(depth_0 - depth_1) < 700;
 }
+
+bool grad_close_enough(Gradient cur, Gradient other) {
+	return (cur.mag() > 70 && other.mag() > 70) && 
+		//0.7 works well for image, but depth is a little too
+		//jittery
+		fabs(getThetaDist(cur.angle(),other.angle())) < 0.35;
+}
+
+double getThetaDist(double from, double to) {
+
+	from = fmod(from, 2*M_PI);
+	to   = fmod(to, 2*M_PI);
+	double difference = fmod(to - from, 2*M_PI);
+	double sn = sign(difference);
+	if(fabs(difference) > M_PI) {
+		difference = -sn*M_PI + fmod(difference, M_PI);
+	}
+	return difference;
+}
+double sign(double val) {
+	return val < 0  ? -1.0 : 1.0;
+}
+

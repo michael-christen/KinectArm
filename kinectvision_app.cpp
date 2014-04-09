@@ -16,6 +16,7 @@
 #include "body.h"
 #include "kinect_handle.h"
 #include "filter.h"
+#include "Line.h"
 #include "Image.h"
 #include "blob_detection.h"
 
@@ -158,7 +159,8 @@ void update_kinect(state_t* state) {
 	//update_im_from_vect(depth, state->depth);
 	//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 }
-
+//Practically unimportant
+#define MAX_VARIANCE 16000000
 void kinect_process(state_t* state){
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
@@ -173,7 +175,28 @@ void kinect_process(state_t* state){
 		//state->depth.copyValid(state->im.valid);
 		//Compute the gradient of the entire image
 		state->im.computeGradient(videoToGrad);
-
+		blurGradient(state->im);
+		state->depth.computeGradient(depthToGrad);
+		blurGradient(state->depth);
+		printf("\n\nImage\n");
+		std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
+		//std::vector<line_t> im_lines;
+		state->im_lines.clear();
+		for(size_t i = 0; i < im_blobs.size(); ++i) {
+			line_t tmp_line = linear_regression(im_blobs[i]);
+			if(tmp_line.variance <= MAX_VARIANCE) {
+				state->im_lines.push_back(tmp_line);
+			}
+		}
+		printf("\nDepth\n");
+		std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(state->depth);
+		state->depth_lines.clear();
+		for(size_t i = 0; i < dp_blobs.size(); ++i) {
+			line_t tmp_line = linear_regression(dp_blobs[i]);
+			if(tmp_line.variance <= MAX_VARIANCE) {
+				state->depth_lines.push_back(tmp_line);
+			}
+		}
 		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;

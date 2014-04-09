@@ -151,10 +151,47 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
+		for(size_t i = 0; i < state->im_lines.size(); ++i) {
+			add_line_to_buffer(vb,state->im_lines[i]);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
+}
+int normalize_y(int y) {
+	return 480-y;
+	//return y < 480/2 ? 480 - y : y - 480/2;
+}
+
+line_t normalize_line(line_t line) {
+	line.ll.y = normalize_y(line.ll.y);
+	line.ru.y = normalize_y(line.ru.y);
+	return line;
+}
+
+void add_line_to_buffer(vx_buffer_t *vb, line_t line) {
+	int npoints = 2;
+	float points[npoints*3];
+	line = normalize_line(line);
+	
+	points[3*0 + 0] = line.ll.x;
+	points[3*0 + 1] = line.ll.y;
+	points[3*0 + 2] = 0;
+	points[3*1 + 0] = line.ru.x;
+	points[3*1 + 1] = line.ru.y;
+	points[3*1 + 2] = 0;
+	vx_object_t * vo = vxo_chain(
+			vxo_mat_scale3(1,1,1),
+			vxo_mat_translate3(0,0,0),
+			vxo_lines(
+				vx_resc_copyf(points, npoints*3),
+				npoints,
+				GL_LINE_LOOP,
+				vxo_lines_style(vx_red, 1.0f)
+				)
+			);
+	vx_buffer_add_back(vb,vo);
 }
 
 int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
@@ -166,6 +203,9 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
+		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
+			add_line_to_buffer(vb,state->depth_lines[i]);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);

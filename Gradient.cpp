@@ -6,7 +6,7 @@
 
 	    * Creation Date : 03-04-2014
 
-	       * Last Modified : Thu 03 Apr 2014 02:38:09 PM EDT
+	       * Last Modified : Mon 07 Apr 2014 01:00:25 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -15,6 +15,27 @@
 
 Gradient::Gradient()
 	:X(0.0), Y(0.0) {}
+
+Gradient& Gradient::operator= (const Gradient& other) {
+	X = other.X;
+	Y = other.Y;
+	return *this;
+}
+
+Gradient Gradient::operator+ (const Gradient& other){
+	Gradient temp;
+	temp.X = X + other.X;
+	temp.Y = Y + other.Y;
+	return temp;
+
+}
+
+Gradient Gradient::operator*(double val) {
+	Gradient temp;
+	temp.X = X*val;
+	temp.Y = Y*val;
+	return temp;
+}
 
 void Gradient::x(double val) {
 	X = val;

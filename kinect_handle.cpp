@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Tue 08 Apr 2014 05:46:39 PM EDT
+	       * Last Modified : Tue 08 Apr 2014 08:04:30 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -128,6 +128,7 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 };
 
 uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
+	/*
 	uint8_t  scaled_down;
 	double   tmp;
 	//Not sure how to fix?
@@ -139,6 +140,29 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
 		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
 	}
 	return 0xFF000000;
+	*/
+	uint8_t  scaled_down;
+	double   tmp;
+	/*
+	if(!depth) {
+		return 0xFFFFFFFF;
+	}
+	*/
+	uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
+	return px;
+	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
+	/*
+	if(true || gr.mag() > 0.01 && valid)
+		return px;
+	else 
+		return 0xFF000000;
+	tmp *= 0xff;
+	scaled_down = 0xff - (uint8_t)tmp;
+	if(valid) {
+		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
+	}
+	return 0xFF000000;
+	*/
 }
 
 uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
@@ -146,27 +170,37 @@ uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
 		//return dist_to_grey(gr.mag());
 		double h,s,v;
 		RGBtoHSV(video,&h,&s,&v);
+		//if(s) printf("s:%f\n",s);
 		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
 		uint8_t r,g,b;
 		r = get_red(px);
 		g = get_green(px);
 		b = get_blue(px);
 		//printf("r:%x,g:%x,b:%x\n",r,g,b);
+		/*
+		if(!video) {
+			return 0xFFFFFFFF;
+		}
+		*/
 		return px;
 		//return video;
 	}
 	return 0xFF000000;
 }
 
-double   videoToGrad(uint32_t px) {
+double   videoToGrad(uint32_t px, bool valid) {
 	double h,s,v;
 	RGBtoHSV(px,&h,&s,&v);
 	//printf("px:%x -> V:%f\n",px,v);
 	return 255.0*v;
 	//return (double) (0xFFFFFF & px);
 }
-double   depthToGrad(uint16_t depth) {
-	return (double) depth;
+double   depthToGrad(uint16_t depth, bool valid) {
+	/*
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
+	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
+	*/
+	return valid ? 255.0 : 0.0;
 }
 
 void make_depth_viewable(image_u32_t *im) {

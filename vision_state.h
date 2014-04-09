@@ -24,6 +24,7 @@
 
 // Local Includes
 #include "Image.h"
+#include "Line.h"
 //////////////
 // CONSTANTS
 //////////////
@@ -86,7 +87,9 @@ struct state_t {
 
 	//Image<uint32_t> im;
 	Image<uint16_t> depth;
+	std::vector<line_t> depth_lines;
 	Image<uint32_t> im;
+	std::vector<line_t> im_lines;
 	/*
 	image_u32_t * depth;
 	*/
