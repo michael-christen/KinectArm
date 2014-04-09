@@ -6,12 +6,98 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sun 06 Apr 2014 10:47:55 AM EDT
+	       * Last Modified : Tue 08 Apr 2014 08:04:30 PM EDT
 
 	          * Created By : Michael Christen
 
 		     _._._._._._._._._._._._._._._._._._._._._.*/
 #include "kinect_handle.h"
+
+void get_depth(std::vector<uint16_t> & depth) {
+	int v_width = 640;
+	int v_height= 480;
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	{
+		/*
+		if (!got_depth)
+			return;
+			*/
+		//buffer.swap(m_buffer_depth);
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				depth[v_width*y + x] = (
+						depth_mid[3*v_width*y+3*x + 0] | 
+						depth_mid[3*v_width*y+3*x + 1] << 8
+						);
+			}
+		}
+		got_depth = false;
+	}
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+void get_rgb(std::vector<uint32_t> &rgb) {
+	int v_width = 640;
+	int v_height= 480;
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	{
+		for(int y = 0; y < v_height; ++y) {
+			for(int x = 0; x < v_width; ++x) {
+				rgb[y*v_width+x] = get_px(
+						rgb_mid[3*v_width*y+3*x + 0],
+						rgb_mid[3*v_width*y+3*x + 1],
+						rgb_mid[3*v_width*y+3*x + 2],
+						0xff
+						);
+			}
+		}
+	}
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
+{
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	printf("rgb calling\n");
+
+	// swap buffers
+	assert (rgb_back == rgb);
+	rgb_back = rgb_mid;
+	freenect_set_video_buffer(dev, rgb_back);
+	rgb_mid = (uint8_t*)rgb;
+
+	got_rgb = true;
+	//pthread_cond_signal(&gl_frame_cond);
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
+{
+	int i;
+	uint16_t *depth = (uint16_t*)v_depth;
+	printf("depth calling\n");
+
+	pthread_mutex_lock(&gl_backbuf_mutex);
+	for (i=0; i<640*480; i++) {
+		//printf("yo:%d\n",i);
+		//printf("ho:%d\n",depth[i]);
+		int pval;
+		if(depth[i] >= 2048) {
+			pval = 0;
+		} else {
+			pval = t_gamma[depth[i]];
+		}
+		depth_mid[3*i+0] = pval & 0xff;
+		depth_mid[3*i+1] = (pval & 0xff00) >> 8;
+		depth_mid[3*i+2] = 255;
+	}
+	printf("hi\n");
+	got_depth = true;
+	//pthread_cond_signal(&gl_frame_cond);
+	pthread_mutex_unlock(&gl_backbuf_mutex);
+}
+
+
 
 void update_im_from_vect(const std::vector<uint8_t> & k_data, 
 		image_u32_t *im) {
