@@ -12,16 +12,13 @@
 class RexArm {
 	public:
 		RexArm();
-		void setDSF(double dsf);
-		double getDSF();
-		void setTSF(double tsf);
-		double getTSF();
 		void setTargetAngles(double newAngles[], ConfigSpace &cfs);
 		void setCurAngles(double angles[]);
 		void getTargetAngles(double arr[]);
 		void getCurAngles(double arr[]);
 		void drawCurState(vx_buffer_t *buf, const float color[]);
 		void drawTargetState(vx_buffer_t *buf, const float color[]);
+
 	private:
 		pthread_mutex_t curAnglesMutex, targetAnglesMutex;
 		static const int numServos;

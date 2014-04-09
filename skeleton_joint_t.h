@@ -19,6 +19,7 @@ extern "C" {
 typedef struct _skeleton_joint_t skeleton_joint_t;
 struct _skeleton_joint_t
 {
+    int32_t    valid;
     int32_t    x;
     int32_t    y;
     int32_t    z;

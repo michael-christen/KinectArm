@@ -22,7 +22,8 @@ int64_t __skeleton_joint_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__skeleton_joint_t_get_hash;
     (void) cp;
 
-    int64_t hash = 0x9ed48f65609215a0LL
+    int64_t hash = 0xc05517a0b35ef0a0LL
+         + __int32_t_hash_recursive(&cp)
          + __int32_t_hash_recursive(&cp)
          + __int32_t_hash_recursive(&cp)
          + __int32_t_hash_recursive(&cp)
@@ -48,6 +49,9 @@ int __skeleton_joint_t_encode_array(void *buf, int offset, int maxlen, const ske
     int pos = 0, thislen, element;
 
     for (element = 0; element < elements; element++) {
+
+        thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].valid), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
 
         thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].x), 1);
         if (thislen < 0) return thislen; else pos += thislen;
@@ -87,6 +91,8 @@ int __skeleton_joint_t_encoded_array_size(const skeleton_joint_t *p, int element
     int size = 0, element;
     for (element = 0; element < elements; element++) {
 
+        size += __int32_t_encoded_array_size(&(p[element].valid), 1);
+
         size += __int32_t_encoded_array_size(&(p[element].x), 1);
 
         size += __int32_t_encoded_array_size(&(p[element].y), 1);
@@ -112,6 +118,9 @@ int __skeleton_joint_t_decode_array(const void *buf, int offset, int maxlen, ske
 
     for (element = 0; element < elements; element++) {
 
+        thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].valid), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
         thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].x), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
@@ -135,6 +144,8 @@ int __skeleton_joint_t_decode_array_cleanup(skeleton_joint_t *p, int elements)
 {
     int element;
     for (element = 0; element < elements; element++) {
+
+        __int32_t_decode_array_cleanup(&(p[element].valid), 1);
 
         __int32_t_decode_array_cleanup(&(p[element].x), 1);
 
@@ -175,6 +186,8 @@ int __skeleton_joint_t_clone_array(const skeleton_joint_t *p, skeleton_joint_t *
 {
     int element;
     for (element = 0; element < elements; element++) {
+
+        __int32_t_clone_array(&(p[element].valid), &(q[element].valid), 1);
 
         __int32_t_clone_array(&(p[element].x), &(q[element].x), 1);
 

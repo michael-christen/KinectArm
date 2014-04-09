@@ -13,7 +13,6 @@
 #include "vision_state.h"
 #include "eecs467_util.h"
 #include "vision_gui.h"
-#include "body.h"
 #include "kinect_handle.h"
 #include "filter.h"
 #include "Line.h"
