@@ -25,7 +25,7 @@
 //////////////
 // CONSTANTS
 //////////////
-#define NUM_LAYERS 1
+#define NUM_LAYERS 2
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
