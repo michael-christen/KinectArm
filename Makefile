@@ -45,7 +45,8 @@ skeltrack: ../../bin/skeltrack_vision
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 ../../bin/kinectvision_app: kinectvision_app.o vision_gui.o disjoint.o blob_detection.o\
-	pixel.o eecs467_util.o kinect_handle.o image_helper.o filter.o Gradient.o Line.o
+	pixel.o eecs467_util.o kinect_handle.o image_helper.o filter.o \
+	Gradient.o Line.o Image.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
