@@ -170,47 +170,56 @@ void kinect_process(state_t* state){
 		//Only look at those pixels which are in the foreground
 		//of the depth field
 		filter_front(state->depth);
-		//Filter out image pixels which aren't in foreground
-		//state->depth.copyValid(state->im.valid);
-		//Compute the gradient of the entire image
-		state->im.computeGradient(videoToGrad);
-		blurGradient(state->im);
-		state->depth.computeGradient(depthToGrad);
-		blurGradient(state->depth);
-		printf("\n\nImage\n");
-		std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
-		//std::vector<line_t> im_lines;
-		state->im_lines.clear();
-		for(size_t i = 0; i < im_blobs.size(); ++i) {
-			line_t tmp_line = linear_regression(im_blobs[i]);
-			if(tmp_line.variance <= MAX_VARIANCE) {
-				state->im_lines.push_back(tmp_line);
+
+		if (!state->getopt_options.use_markers) {
+			//Filter out image pixels which aren't in foreground
+			//state->depth.copyValid(state->im.valid);
+			//Compute the gradient of the entire image
+			state->im.computeGradient(videoToGrad);
+			blurGradient(state->im);
+			state->depth.computeGradient(depthToGrad);
+			blurGradient(state->depth);
+			printf("\n\nImage\n");
+			std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
+			//std::vector<line_t> im_lines;
+			state->im_lines.clear();
+			for(size_t i = 0; i < im_blobs.size(); ++i) {
+				line_t tmp_line = linear_regression(im_blobs[i]);
+				if(tmp_line.variance <= MAX_VARIANCE) {
+					state->im_lines.push_back(tmp_line);
+				}
+			}
+			printf("\nDepth\n");
+			std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(state->depth);
+			state->depth_lines.clear();
+			for(size_t i = 0; i < dp_blobs.size(); ++i) {
+				line_t tmp_line = linear_regression(dp_blobs[i]);
+				if(tmp_line.variance <= MAX_VARIANCE) {
+					state->depth_lines.push_back(tmp_line);
+				}
 			}
 		}
-		printf("\nDepth\n");
-		std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(state->depth);
-		state->depth_lines.clear();
-		for(size_t i = 0; i < dp_blobs.size(); ++i) {
-			line_t tmp_line = linear_regression(dp_blobs[i]);
-			if(tmp_line.variance <= MAX_VARIANCE) {
-				state->depth_lines.push_back(tmp_line);
-			}
-		}
-		/*
+		
 		double pink_hue = 328.0;
 		double green_hue = 73.0;
 		double yellow_hue = 50.0;
 		double blue_hue   = 209.0;
-		blob_detection(state->im, green_hue, 0xff039dfc,
+		std::vector<blob_t> green_markers = blob_detection(state->im, green_hue, 0xff00ff15,
 				10, 200);
-		blob_detection(state->im, blue_hue, 0xff030dfc,
+		std::vector<blob_t> blue_markers = blob_detection(state->im, blue_hue, 0xfff8ff21,
 				10, 200);
-		blob_detection(state->im, pink_hue, 0xff030d0c,
+		/*blob_detection(state->im, pink_hue, 0xff7300ff,
+				10, 200);*/
+		std::vector<blob_t> yellow_markers = blob_detection(state->im, yellow_hue, 0xff21fff8,
 				10, 200);
-		blob_detection(state->im, yellow_hue, 0xff830dfc,
-				10, 200);
-				*/
 
+		if (green_markers.size() > 0) {
+			double sX = green_markers.at(0).x;
+			double sY = green_markers.at(0).y;
+			uint16_t sZ = state->depth.get(sX, sY);
+
+			printf("hand pos - %f, %f, %u\n", sX, sY, sZ);
+		}
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 }
@@ -273,15 +282,15 @@ int main(int argc, char ** argv)
 	state->layer_map = zhash_create(sizeof(vx_display_t*), sizeof(vx_layer_t*), zhash_uint64_hash, zhash_uint64_equals);
 
 	getopt_add_bool(state->gopt, 'h', "help", 0, "Show this help");
-	//getopt_add_bool(state->gopt, 'v', "verbose", 0, "Show extra debugging output");
-	//getopt_add_int (state->gopt, 'l', "limitKBs", "-1", "Remote display bandwidth limit. < 0: unlimited.");
-	//getopt_add_double (state->gopt, 'd', "decimate", "0", "Decimate image by this amount before showing in vx");
+	getopt_add_bool(state->gopt, 'm', "use-markers", 0, "Use colored markers for joints (yellow for shoulder, blue for elbow, green for wrist");
 
 	if (!getopt_parse(state->gopt, argc, argv, 0) ||
 		getopt_get_bool(state->gopt,"help")) {
 		getopt_do_usage(state->gopt);
 		exit(-1);
 	}
+
+	state->getopt_options.use_markers = getopt_get_bool(state->gopt, "use-markers");
 
 	kinect_init(state);
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);

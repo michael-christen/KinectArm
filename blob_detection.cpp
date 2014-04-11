@@ -178,7 +178,13 @@ std::vector<blob_t> blob_detection(Image<uint32_t> &im,
 		int right_num_pxs = (blobs[i].num_px >= min_pxs &&
 							 blobs[i].num_px <= MAX_PXS);
 
-		if(right_num_pxs) {
+		int width = pixel_width(blobs[i].l,blobs[i].r);
+		int height = pixel_height(blobs[i].t,blobs[i].b);
+
+		double density = (blobs[i].num_px + 0.0) / (width*height+0.0);
+		int dense_enough  = density > 0.25;
+
+		if(right_num_pxs && dense_enough) {
 			if(blobs[i].num_px > most_px) {
 				most_px = blobs[i].num_px;
 				//largest_idx = final_num_blobs;

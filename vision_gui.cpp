@@ -146,7 +146,7 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	{
 		//Visual map
 		vx_object_t * vo = vxo_image_from_u32(
-				state->im.getImage(videoToIm), 
+				state->im.getImage(videoToIm, state->getopt_options.use_markers), 
 				VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
@@ -199,7 +199,7 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	{
 		//Depth map
 		vx_object_t * vo = vxo_image_from_u32(
-				state->depth.getImage(depthToIm),
+				state->depth.getImage(depthToIm, state->getopt_options.use_markers),
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);

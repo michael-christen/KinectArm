@@ -44,8 +44,7 @@ typedef struct getopt_options_t getopt_options_t;
 
 
 struct getopt_options_t {
-    int verbose, no_video, limitKBs, autoCamera, mouseGuidance;
-    double decimate;
+    int use_markers;
 };
 
 struct layer_data_t {

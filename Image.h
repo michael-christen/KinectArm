@@ -22,7 +22,7 @@ class Image {
 		//Returns im, pointer, not really safe, but nice for display
 		//Sets the image and returns it
 		//Comparator takes T and valid bit, if add other things like gradient, this would take those too
-		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient));
+		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient, bool), bool use_markers);
 
 		//Computes the gradient for the image
 		void computeGradient(double(*tVal)(T,bool));
@@ -150,7 +150,7 @@ void Image<T>::update(const std::vector<T> & ts) {
 }
 
 template <typename T>
-image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
+image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient, bool), bool use_markers) {
 	for(int x = 0; x < im->width; ++x) {
 		for(int y = 0; y < im->height; ++y) {
 			/*
@@ -163,7 +163,8 @@ image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 			im->buf[x+y*im->stride] = tToPX(
 					get(x,y),
 					valid[id(x,y)],
-					gradient[id(x,y)]
+					gradient[id(x,y)],
+					use_markers
 			);
 		}
 	}

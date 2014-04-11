@@ -58,7 +58,7 @@ void get_rgb(std::vector<uint32_t> &rgb) {
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
 	pthread_mutex_lock(&gl_backbuf_mutex);
-	printf("rgb calling\n");
+	//printf("rgb calling\n");
 
 	// swap buffers
 	assert (rgb_back == rgb);
@@ -75,7 +75,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
 	int i;
 	uint16_t *depth = (uint16_t*)v_depth;
-	printf("depth calling\n");
+	//printf("depth calling\n");
 
 	pthread_mutex_lock(&gl_backbuf_mutex);
 	for (i=0; i<640*480; i++) {
@@ -91,7 +91,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 		depth_mid[3*i+1] = (pval & 0xff00) >> 8;
 		depth_mid[3*i+2] = 255;
 	}
-	printf("hi\n");
+	//printf("hi\n");
 	got_depth = true;
 	//pthread_cond_signal(&gl_frame_cond);
 	pthread_mutex_unlock(&gl_backbuf_mutex);
@@ -127,29 +127,31 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	return im;
 };
 
-uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
-	/*
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, bool use_markers) {
+	
 	uint8_t  scaled_down;
 	double   tmp;
 	//Not sure how to fix?
-	uint16_t MAX_DEPTH_VAL = 0x1fff;
-	tmp = (depth+0.0)/(MAX_DEPTH_VAL+0.0);
-	tmp *= 0xff;
-	scaled_down = 0xff - (uint8_t)tmp;
-	if(valid) {
-		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
+	if (use_markers){
+		uint16_t MAX_DEPTH_VAL = 0x1fff;
+		tmp = (depth+0.0)/(MAX_DEPTH_VAL+0.0);
+		tmp *= 0xff;
+		scaled_down = 0xff - (uint8_t)tmp;
+
+		if(!depth) {
+			return 0xFFFFFFFF;
+		}
+
+		if(valid) {
+			return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
+		}
+
+		return 0xFF000000;
+	} else {
+		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
+		return px;
 	}
-	return 0xFF000000;
-	*/
-	uint8_t  scaled_down;
-	double   tmp;
-	/*
-	if(!depth) {
-		return 0xFFFFFFFF;
-	}
-	*/
-	uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
-	return px;
+
 	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
 	/*
 	if(true || gr.mag() > 0.01 && valid)
@@ -165,27 +167,23 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
 	*/
 }
 
-uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
-	if(valid) {
-		//return dist_to_grey(gr.mag());
-		double h,s,v;
-		RGBtoHSV(video,&h,&s,&v);
-		//if(s) printf("s:%f\n",s);
-		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
-		uint8_t r,g,b;
-		r = get_red(px);
-		g = get_green(px);
-		b = get_blue(px);
-		//printf("r:%x,g:%x,b:%x\n",r,g,b);
-		/*
-		if(!video) {
-			return 0xFFFFFFFF;
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, bool use_markers) {
+	if (use_markers) {
+		return video;
+	} else {
+		if(valid) {
+			//return dist_to_grey(gr.mag());
+			double h,s,v;
+			RGBtoHSV(video,&h,&s,&v);
+			uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
+			uint8_t r,g,b;
+			r = get_red(px);
+			g = get_green(px);
+			b = get_blue(px);
+			return px;
 		}
-		*/
-		return px;
-		//return video;
-	}
-	return 0xFF000000;
+		return 0xFF000000;
+	}	
 }
 
 double   videoToGrad(uint32_t px, bool valid) {
