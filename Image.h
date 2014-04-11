@@ -5,6 +5,9 @@
 #include <cassert>
 #include <vector>
 
+double GetRealWorldXFromDepth(uint16_t depth, int x); //returns real world X in mm, with reference to the center of the image as 0mm
+double GetRealWorldYFromDepth(uint16_t depth, int y); //returns real world Y in mm, with reference to the center of the image as 0mm
+
 template <typename T>
 class Image {
 	public:
