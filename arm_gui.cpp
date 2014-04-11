@@ -169,14 +169,14 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 	float axes[12] = {-1000, 0, 0, 0, 0, 0, 0, -1000, 0, 0, 1000, 0};
 	vx_resc_t *verts = vx_resc_copyf(axes, 12);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 4, GL_LINES, vxo_points_style(vx_black, 2.0f)));
-	
-	//Draw Config Space
-	vx_buffer_t *cfsBuff = vx_world_get_buffer(layerData->world, "cfs");
-	state->cfs.draw(cfsBuff, vx_red);
 
 	float posAxes[6] = {0, 0, 0, 1000, 0, 0};
 	verts = vx_resc_copyf(posAxes, 6);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 2, GL_LINES, vxo_points_style(vx_green, 2.0f)));
+	
+	//Draw Config Space
+	vx_buffer_t *cfsBuff = vx_world_get_buffer(layerData->world, "cfs");
+	state->cfs.draw(cfsBuff, vx_red);
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
@@ -195,42 +195,47 @@ int destroyArmsLayer(state_t *state, layer_data_t *layerData) {
 	return 1;
 }
 
-int initDebugLayer(state_t *state, layer_data_t *layerData) {
+int initSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	layerData->world = vx_world_create();
 	return 1;
 }
 
-int displayInitDebugLayer(state_t *state, layer_data_t *layerData) {
-	float black[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-	vx_layer_set_background_color(layerData->layer, black);
+int displayInitSkeletonLayer(state_t *state, layer_data_t *layerData) {
+	const float eye[3] = {-50, -50, 50};
+	const float lookat[3] = {0, 0, 25};
+	const float up[3] = {0, 0, 1};
+
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
-	//vx_layer_add_event_handler(layerData->layer, &state->veh);
+	vx_layer_camera_lookat(layerData->layer, eye, lookat, up, 1);
 	return 1;
 }
 
-int renderDebugLayer(state_t *state, layer_data_t *layerData) {
-	/*vx_buffer_t *textBuff = vx_world_get_buffer(layerData->world, "text");
+int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
+	//Draw Grid
+	vx_buffer_t *gridBuff = vx_world_get_buffer(layerData->world, "grid");
+	vx_buffer_add_back(gridBuff, vxo_grid());
 
-	char debugText[700];
-	const char* formatting = "<<left,#ffffff,serif>>X: %f\nY: %f\nTheta: %f\nGyro[0]: %d\nDiff_x: %f\nPID_OUT: %f\nDIAMOND: %d\nDOING_PID: %d\nCOV_X: %f, COV_Y: %f\n, FSM Time(t): %f\n, FSM Time(c): %f\n";
-	sprintf(debugText, formatting,
-			state->pos_x, state->pos_y,
-			state->pos_theta, state->gyro[0],
-			state->diff_x, state->green_pid_out,
-			state->diamond_seen, state->doing_pid,
-			matd_get(state->var_matrix,0,0),
-			matd_get(state->var_matrix,1,1),
-			state->fsm_time_elapsed,
-			state->fsmTimeElapsed
-		   );
-	vx_object_t *vo = vxo_text_create(VXO_TEXT_ANCHOR_TOP_LEFT, debugText);
-	vx_buffer_add_back(textBuff, vxo_pix_coords(VX_ORIGIN_TOP_LEFT, vo));
-	vx_buffer_swap(textBuff);*/
-	//printf("endRender DEBUG\n");
+	//Draw Axes
+	float axes[12] = {-1000, 0, 0, 0, 0, 0, 0, -1000, 0, 0, 1000, 0};
+	vx_resc_t *verts = vx_resc_copyf(axes, 12);
+	vx_buffer_add_back(gridBuff, vxo_lines(verts, 4, GL_LINES, vxo_points_style(vx_black, 2.0f)));
+
+	float posAxes[6] = {0, 0, 0, 1000, 0, 0};
+	verts = vx_resc_copyf(posAxes, 6);
+	vx_buffer_add_back(gridBuff, vxo_lines(verts, 2, GL_LINES, vxo_points_style(vx_green, 2.0f)));
+	
+	//Draw Skeleton
+	vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
+	state->body->draw(skeletonBuff, vx_blue, vx_yellow);
+
+	//Swap buffers
+	vx_buffer_swap(gridBuff);
+	vx_buffer_swap(skeletonBuff);
 	return 1;
 }
 
-int destroyDebugLayer(state_t *state, layer_data_t *layerData) {
+int destroySkeletonLayer(state_t *state, layer_data_t *layerData) {
+	vx_world_destroy(layerData->world);
 	return 1;
 }
 
@@ -298,16 +303,16 @@ void gui_create(state_t *state) {
 	state->layers[0].render = renderArmsLayer;
 	state->layers[0].destroy = destroyArmsLayer;
 
-	/*state->layers[1].enable = 1;
-	state->layers[1].name = "Debug";
-	state->layers[1].position[0] = 0;
-	state->layers[1].position[1] = 0;
-	state->layers[1].position[2] = 0.666f;
-	state->layers[1].position[3] = 0.333f;
-	state->layers[1].init = initDebugLayer;
-	state->layers[1].displayInit = displayInitDebugLayer;
-	state->layers[1].render = renderDebugLayer;
-	state->layers[1].destroy = destroyDebugLayer;*/
+	state->layers[1].enable = 1;
+	state->layers[1].name = "Skeleton";
+	state->layers[1].position[0] = 0.0f;
+	state->layers[1].position[1] = 0.0f;
+	state->layers[1].position[2] = 0.5f;
+	state->layers[1].position[3] = 1.0f;
+	state->layers[1].init = initSkeletonLayer;
+	state->layers[1].displayInit = displayInitSkeletonLayer;
+	state->layers[1].render = renderSkeletonLayer;
+	state->layers[1].destroy = destroySkeletonLayer;
 
 	vx_remote_display_source_t * remote = vx_remote_display_source_create_attr(&state->app, &remote_attr);
 

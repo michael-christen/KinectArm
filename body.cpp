@@ -5,6 +5,7 @@
 #include "skeleton_joint_list_t.h"
 #include "skeleton_joint_t.h"
 #include "data_smoother.h"
+#include "vx/vxo_drawables.h"
 
 Body::Body() {
 	this->ds = new DataSmoother(0.15, 0.2, 0, 0);
@@ -111,4 +112,34 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_destroy(shoulder_elbow0);
 	matd_destroy(shoulder_elbow1);
 	matd_destroy(elbow_wrist);
+}
+
+void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_color[]) {
+	vx_object_t *vo;
+	float scale = 1/20.0;
+	float zoffset = 0;
+
+	//Draw Axes
+	float axes[12] = {(float)(joints[RSHOULDER].x - joints[HEAD].x), (float)(joints[RSHOULDER].z - joints[HEAD].z), (float)(-joints[RSHOULDER].y+zoffset - joints[HEAD].y),
+						(float)(joints[RELBOW].x - joints[HEAD].x), (float)(joints[RELBOW].z - joints[HEAD].z), (float)(-joints[RELBOW].y+zoffset - joints[HEAD].y), 
+						(float)(joints[RELBOW].x - joints[HEAD].x), (float)(joints[RELBOW].z - joints[HEAD].z), (float)(-joints[RELBOW].y+zoffset - joints[HEAD].y), 
+						(float)(joints[RWRIST].x - joints[HEAD].x), (float)(joints[RWRIST].z - joints[HEAD].z), (float)(-joints[RWRIST].y+zoffset - joints[HEAD].y)};
+	vx_resc_t *verts = vx_resc_copyf(axes, 12);
+	vo = vxo_chain(
+		vxo_mat_scale3(scale, scale, scale),
+		vxo_lines(verts, 4, GL_LINES, vxo_points_style(bone_color, 2.0f))
+	);
+
+	vx_buffer_add_back(buf, vo);	
+
+	//Draw Joints
+	for (int i = 0; i < NUM_JOINTS; i++) {
+		vo = vxo_chain(
+			vxo_mat_translate3(joints[i].x*scale - joints[HEAD].x*scale, joints[i].z*scale - joints[HEAD].z*scale, -joints[i].y*scale+zoffset - joints[HEAD].y*scale),
+			vxo_mat_scale3(3, 3, 3),
+			vxo_sphere(vxo_mesh_style(joint_color))
+		);
+
+		vx_buffer_add_back(buf, vo);
+	}
 }
