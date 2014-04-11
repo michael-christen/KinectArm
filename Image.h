@@ -5,6 +5,9 @@
 #include <cassert>
 #include <vector>
 
+double GetRealWorldXFromDepth(uint16_t depth, int x); //returns real world X in mm, with reference to the center of the image as 0mm
+double GetRealWorldYFromDepth(uint16_t depth, int y); //returns real world Y in mm, with reference to the center of the image as 0mm
+
 template <typename T>
 class Image {
 	public:
@@ -72,6 +75,27 @@ class Image {
 		//Valid bits to keep track of validness 
 		image_u32_t * im;
 };
+
+double GetRealWorldXFromDepth(uint16_t depth, int x) {
+    const double xFieldOfView = 57.0f;
+    const double halfXFieldOfView = xFieldOfView / 2;
+    const int imWidth = 640;
+    const double halfWidth = imWidth / 2.f;
+    const double xFocal = halfWidth / tan(halfXFieldOfView);
+    
+    return (static_cast<double>(x) - halfWidth) * static_cast<double>(depth) / xFocal;
+}
+
+double GetRealWorldYFromDepth(uint16_t depth, int y) {
+    const double yFieldOfView = 43.0f;
+    const double halfYFieldOfView = yFieldOfView / 2;
+    const int imWidth = 480;
+    const double halfWidth = imWidth / 2.f;
+    const double yFocal = halfWidth / tan(halfYFieldOfView);
+    
+    return (static_cast<double>(y) - halfWidth) * static_cast<double>(depth) / yFocal;
+    
+} 
 
 template <typename T>
 Image<T>::Image(int w, int h) 
