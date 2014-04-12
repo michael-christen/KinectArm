@@ -2,11 +2,14 @@
 #define __FILTER__H__
 #include "kinect_handle.h"
 #include "Image.h"
+#include "pixel.h"
 #include "Blob.h"
 #include "Gradient.h"
 #include "common/timestamp.h"
+#include<climits>
 #include<vector>
 #include<queue>
+#include<algorithm>
 
 #define MIN_ALLOWED_DEPTH 0x01ff
 
@@ -23,7 +26,10 @@ double sign(double val);
 
 bool grad_close_enough(Gradient cur, Gradient other);
 
+void dtocs(std::vector<double> & transf, Image<uint16_t> & im);
 void get_dist_transform(std::vector<double> & transf, Image<uint16_t> & im);
+std::vector<pixel> minc_local_threshold(std::vector<double> & transf,
+		Image<uint16_t> &im);
 
 //Get id's of valid neighbors @ (x,y)
 /*

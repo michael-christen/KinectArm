@@ -167,6 +167,7 @@ void kinect_process(state_t* state){
 		//Update
 		update_kinect(state);
 		//Do cool processing
+		double prev_time = utime_now()/1000000.0;
 
 		//Only look at those pixels which are in the foreground
 		//of the depth field
@@ -201,6 +202,8 @@ void kinect_process(state_t* state){
 			}
 		}
 		get_dist_transform(d_transf, state->depth);
+		//dtocs(d_transf, state->depth);
+		minc_local_threshold(d_transf, state->depth);
 		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;
@@ -215,6 +218,8 @@ void kinect_process(state_t* state){
 		blob_detection(state->im, yellow_hue, 0xff830dfc,
 				10, 200);
 				*/
+		double cur_time = utime_now()/1000000.0;
+		printf("TOTAL KINECT PROCESSING = %f\n",cur_time-prev_time);
 
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);

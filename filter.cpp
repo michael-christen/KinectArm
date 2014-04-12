@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Fri 11 Apr 2014 11:53:57 PM EDT
+	* Last Modified : Sat 12 Apr 2014 03:09:15 AM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -165,6 +165,82 @@ bool get_all(uint16_t a, uint16_t b) {
 }
 
 
+void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
+	printf("in dtocs\n");
+	std::vector<unsigned int> dist_map = 
+		std::vector<unsigned int>(im.size(), 0);
+	std::vector<bool> search1 = {
+		1, 1, 1,
+		1,    0,
+		0, 0, 0
+	};
+	std::vector<bool> search2 = {
+		0, 0, 0,
+		0,    1,
+		1, 1, 1
+	};
+
+	double prev_time = utime_now()/1000000.0;
+	//Setup the F image, non-bg is max, bg is 0
+	for(int i = 0; i < im.size(); ++i) {
+		if(im.isValid(i)) {
+			dist_map[i] = UINT_MAX;
+		}
+	}
+	std::vector<int> neighborIds;
+	std::vector<unsigned int> calcs 
+		= std::vector<unsigned int>(4,UINT_MAX);
+	const int num_iters = 1;
+	for(int n = 0; n < num_iters; ++n) {
+		//First real pass
+		for(int y = 0; y < im.h(); ++y) {
+			for(int x = 0; x < im.w(); ++x) {
+				neighborIds = im.getNeighborIds(
+						x,y,search1,get_all);
+				if(!neighborIds.empty()) {
+					const unsigned int dist_to_i = 1;
+					for(size_t i = 0; i < neighborIds.size(); ++i) {
+						calcs[i] = 1 + dist_to_i + dist_map[i];
+					}
+					unsigned int min_val = 
+						*std::min_element(calcs.begin(), calcs.begin() +
+								neighborIds.size());
+					dist_map[im.id(x,y)] = std::min(
+							dist_map[im.id(x,y)],
+							min_val);
+				}
+			}
+		}
+		//Second pass
+		for(int y = im.h()-1; y >= 0; --y) {
+			for(int x = im.w()-1; x >= 0; --x) {
+				neighborIds = im.getNeighborIds(
+						x,y,search2,get_all);
+				if(!neighborIds.empty()) {
+					const unsigned int dist_to_i = 1;
+					for(size_t i = 0; i < neighborIds.size(); ++i) {
+						calcs[i] = 1 + dist_to_i + dist_map[i];
+					}
+					unsigned int min_val = 
+						*std::min_element(calcs.begin(), calcs.begin() +
+								neighborIds.size());
+					dist_map[im.id(x,y)] = std::min(
+							dist_map[im.id(x,y)],
+							min_val);
+				}
+			}
+		}
+	}
+	//Set double values
+	dist.clear();
+	for(int i = 0; i < dist_map.size(); ++i) {
+		dist.push_back( (double) dist_map[i]);
+	}
+	double cur_time = utime_now()/1000000.0;
+	printf("dtocs took: %f(s)\n",cur_time-prev_time);
+	printf("done hagar\n");
+}
+
 void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
 	dist   = std::vector<double>(im.size(),0);
 	std::vector<bool> visited  = std::vector<bool>(im.size(), false);
@@ -218,6 +294,41 @@ void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
 	double new_time = utime_now()/1000000.0;
 	printf("time = %f ",new_time-cur_time);
 	printf("num_times = %d\n",num_times);
+}
+
+std::vector<pixel> minc_local_threshold(
+		std::vector<double> & transf, Image<uint16_t> & im) {
+	const double c = 0.7;
+	const int num_wide = 6;
+	std::vector<pixel> skeleton_pts;
+	double mean;
+	int num_valid;
+	std::vector<int> neighbors;
+	std::vector<double> new_transf = transf;
+	for(int i = 0; i < im.size(); ++i) {
+		neighbors = im.getBlockNeighborIds(i,num_wide);
+		mean = 0;
+		num_valid = 0;
+		if(im.isValid(i)) {
+			for(int j = 0; j < neighbors.size(); ++j) {
+				if(im.isValid(neighbors[j])) {
+					mean += transf[neighbors[j]];
+					num_valid ++;
+				}
+			}
+			mean /= num_valid + 0.0;
+			//printf("mean: %f\n",mean);
+			if(transf[i] > mean + c) {
+				new_transf[i]  = 100;
+				pixel_t px = {im.getX(i), im.getY(i)};
+				skeleton_pts.push_back(px);
+			} else {
+				new_transf[i]  = 0;
+			}
+		}
+	}
+	transf = new_transf;
+	return skeleton_pts;
 }
 
 double getThetaDist(double from, double to) {

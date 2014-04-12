@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Fri 11 Apr 2014 10:52:05 PM EDT
+	       * Last Modified : Sat 12 Apr 2014 01:44:04 AM EDT
 
 	          * Created By : Michael Christen
 
@@ -151,11 +151,22 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
 		printf("D:%f\n",d_transf[id]);
 	}
 	*/
-	//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
-	double val = d_transf[id] / 100;
-	uint32_t px = HSVtoRGB(90,0.5,val);
-	//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,val);
-	return px;
+	if(!d_transf.empty()) {
+		//printf("id:%d, size:%d\n",id, d_transf.size());
+		//printf("d_transf -> %f\n",d_transf[id]);
+		double val = d_transf[id]/100.0;
+		/*
+		if(val) {
+			printf("val: %f\n",val);
+		}
+		*/
+		uint32_t px = HSVtoRGB(90,0.5,val);
+		//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,val);
+		return px;
+	} else {
+		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
+		return px;
+	}
 	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
 	/*
 	if(true || gr.mag() > 0.01 && valid)

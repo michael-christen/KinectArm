@@ -54,8 +54,10 @@ class Image {
 				bool(*is_neighbor)(T, T)
 		);
 		std::vector<int> getNeighborIds(int x, int y, 
-		const std::vector<bool> & u_valid,
-		bool(*is_neighbor)(Gradient, Gradient));
+				const std::vector<bool> & u_valid,
+				bool(*is_neighbor)(Gradient, Gradient));
+		//Get nxn grid of id's centered at i
+		std::vector<int> getBlockNeighborIds(int i, int n);
 
 		size_t size();
 		int w();
@@ -355,5 +357,31 @@ std::vector<T> Image<T>::getNeighbors(int x, int y,
 		v_neighbors.push_back(get(neighbors[i]));
 	}
 	return v_neighbors;
+}
+
+template <typename T>
+std::vector<int> Image<T>::getBlockNeighborIds(int i, int n) {
+	std::vector<int> neighbors;
+	int cur_x = getX(i);
+	int cur_y = getY(i);
+
+	for(int y = -n/2; y <= n/2; ++y) { 
+		if(cur_y + y < 0 || cur_y + y >= height) {
+			continue;
+		}
+		for(int x = -n/2; x <= n/2; ++x) { 
+			//edge
+			if(cur_x + x < 0 || cur_x + x >= width) {
+				continue;
+			}
+			//Don't return middle
+			if(cur_y == 0 && cur_x == 0) {
+				//Don't increment index
+				continue;
+			}
+			neighbors.push_back(id(cur_x + x, cur_y + y));
+		}
+	}
+	return neighbors;
 }
 #endif
