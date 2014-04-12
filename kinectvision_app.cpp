@@ -158,6 +158,7 @@ void update_kinect(state_t* state) {
 	//update_im_from_vect(depth, state->depth);
 	//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 }
+std::vector<double> d_transf; 
 //Practically unimportant
 #define MAX_VARIANCE 16000000
 void kinect_process(state_t* state){
@@ -199,6 +200,7 @@ void kinect_process(state_t* state){
 				state->depth_lines.push_back(tmp_line);
 			}
 		}
+		d_transf = get_dist_transform(state->depth);
 		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;

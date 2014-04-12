@@ -17,6 +17,7 @@ extern pthread_mutex_t gl_backbuf_mutex;
 extern pthread_cond_t gl_frame_cond;
 extern uint8_t *depth_mid, *depth_front;
 extern uint8_t *rgb_back, *rgb_mid, *rgb_front;
+extern std::vector<double> d_transf;
 
 
 void update_im_from_vect(const std::vector<uint8_t> & k_data,
@@ -26,8 +27,8 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data);
 
 void make_depth_viewable(image_u32_t *im);
 
-uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr);
-uint32_t videoToIm(uint32_t video, bool valid, Gradient gr);
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int i);
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int i);
 double   videoToGrad(uint32_t px, bool valid);
 double   depthToGrad(uint16_t depth, bool valid);
 

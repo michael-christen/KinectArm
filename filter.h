@@ -22,6 +22,8 @@ double sign(double val);
 
 bool grad_close_enough(Gradient cur, Gradient other);
 
+std::vector<double> get_dist_transform(Image<uint16_t> & im);
+
 //Get id's of valid neighbors @ (x,y)
 /*
 std::vector<int> getNeighbors(image_u32_t *im, int x, int y);

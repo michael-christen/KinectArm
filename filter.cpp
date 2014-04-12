@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Wed 09 Apr 2014 06:05:25 PM EDT
+	* Last Modified : Fri 11 Apr 2014 10:51:02 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -158,6 +158,61 @@ bool grad_close_enough(Gradient cur, Gradient other) {
 		//0.7 works well for image, but depth is a little too
 		//jittery
 		fabs(getThetaDist(cur.angle(),other.angle())) < 0.15;
+}
+
+bool get_all(uint16_t a, uint16_t b) {
+	return true;
+}
+
+
+std::vector<double> get_dist_transform(Image<uint16_t> & im) {
+	std::vector<double> dist   = std::vector<double>(im.size(),0);
+	std::vector<bool> visited  = std::vector<bool>(im.size(), false);
+	std::vector<bool> new_visited = std::vector<bool>(im.size(), false);
+	std::vector<bool> neighbor = std::vector<bool>(8, true);
+	//Initialize large gradients to visited
+	for(int i = 0; i < im.size(); ++i) {
+		if(im.gradient[i].mag() > 50) {
+			visited[i] = true;
+		}
+	}
+	//Leave far edges alone
+	bool done = false;
+	int num_times = 0;
+	new_visited = visited;
+	while(!done) {
+		num_times ++;
+		done = true;
+		for(int x = 1; x < im.w()-1; ++x) {
+			for(int y = 1; y < im.h()-1; ++y) {
+				if(!visited[im.id(x,y)] && im.isValid(x,y)) {
+					std::vector<int> neighborIds = 
+						im.getNeighborIds(x,y,neighbor,get_all);
+					//Get min dist
+					double min_d = 999999999;
+					bool found_min = false;
+					for(size_t i = 0; i < neighborIds.size(); ++i) {
+						int id = neighborIds[i];
+						if(visited[id] && dist[id] < min_d) {
+							found_min = true;
+							min_d = dist[id];
+						}
+					}
+					if(found_min) {
+						new_visited[im.id(x,y)] = true;
+						dist[im.id(x,y)]    = min_d+1;
+					} else {
+						done = false;
+					}
+				} else {
+					new_visited[im.id(x,y)] = true;
+				}
+			}
+		}
+		visited = new_visited;
+	}
+	printf("num_times = %d\n",num_times);
+	return dist;
 }
 
 double getThetaDist(double from, double to) {
