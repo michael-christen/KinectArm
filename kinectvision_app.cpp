@@ -200,7 +200,7 @@ void kinect_process(state_t* state){
 				state->depth_lines.push_back(tmp_line);
 			}
 		}
-		d_transf = get_dist_transform(state->depth);
+		get_dist_transform(d_transf, state->depth);
 		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;

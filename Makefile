@@ -48,7 +48,7 @@ skeltrack: ../../bin/skeltrack_vision
 	pixel.o eecs467_util.o image_helper.o filter.o \
 	Gradient.o Line.o Image.o
 	@echo "\t$@"
-	@$(CXX) -o $@ $^ $(LDFLAGS)
+	@$(CXX) -o $@ $^ $(LDFLAGS) -O3
 
 ../../bin/skeltrack_vision: skeltrack_vision.o skeleton_joint_t.o skeleton_joint_list_t.o
 	@echo "\t$@"

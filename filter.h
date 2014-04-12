@@ -4,6 +4,7 @@
 #include "Image.h"
 #include "Blob.h"
 #include "Gradient.h"
+#include "common/timestamp.h"
 #include<vector>
 #include<queue>
 
@@ -22,7 +23,7 @@ double sign(double val);
 
 bool grad_close_enough(Gradient cur, Gradient other);
 
-std::vector<double> get_dist_transform(Image<uint16_t> & im);
+void get_dist_transform(std::vector<double> & transf, Image<uint16_t> & im);
 
 //Get id's of valid neighbors @ (x,y)
 /*
