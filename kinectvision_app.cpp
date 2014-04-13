@@ -216,14 +216,14 @@ void kinect_process(state_t* state){
 			if (yellow_markers.size() > 0) {
 				int imageX = (int)yellow_markers.at(0).x;
 				int imageY = (int)yellow_markers.at(0).y;
-				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sZ = (double) state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
-				state->joints[HEAD].y = sY - 600;
+				state->joints[HEAD].y = -sY - 600;
 				state->joints[HEAD].x = sX;
 				state->joints[HEAD].z = sZ;
 				state->joints[RSHOULDER].x = sX;
-				state->joints[RSHOULDER].y = sY;
+				state->joints[RSHOULDER].y = -sY;
 				state->joints[RSHOULDER].z = sZ;
 				state->joints[RSHOULDER].screen_x = imageX;
 				state->joints[RSHOULDER].screen_y = imageY;
@@ -232,12 +232,12 @@ void kinect_process(state_t* state){
 			if (blue_markers.size() > 0) {
 				int imageX = (int)blue_markers.at(0).x;
 				int imageY = (int)blue_markers.at(0).y;
-				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sZ = (double)state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
 
 				state->joints[RELBOW].x = sX;
-				state->joints[RELBOW].y = sY;
+				state->joints[RELBOW].y = -sY;
 				state->joints[RELBOW].z = sZ;
 				state->joints[RELBOW].screen_x = imageX;
 				state->joints[RELBOW].screen_y = imageY;
@@ -246,12 +246,12 @@ void kinect_process(state_t* state){
 			if (green_markers.size() > 0) {
 				int imageX = (int)green_markers.at(0).x;
 				int imageY = (int)green_markers.at(0).y;
-				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sZ = (double)state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
 
 				state->joints[RWRIST].x = sX;
-				state->joints[RWRIST].y = sY;
+				state->joints[RWRIST].y = -sY;
 				state->joints[RWRIST].z = sZ;
 				state->joints[RWRIST].screen_x = imageX;
 				state->joints[RWRIST].screen_y = imageY;

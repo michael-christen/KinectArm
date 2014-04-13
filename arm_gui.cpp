@@ -318,15 +318,15 @@ void gui_create(state_t *state) {
 
 	// Handles layer init, rendering, and destruction
 	parameter_gui_t *pg = pg_create();
-    pg_add_double_slider(pg, "s0", "S0 (Shoulder Rotation)", -M_PI, M_PI, 0);
+    /*pg_add_double_slider(pg, "s0", "S0 (Shoulder Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s1", "S1 (Shoulder Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s2", "S2 (Elbow)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
-    pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);
+    pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
-    pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
+    //pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
     pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
