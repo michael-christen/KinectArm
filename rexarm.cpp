@@ -193,9 +193,7 @@ void RexArm::setTargetAngles(double angles[], ConfigSpace &cfs) {
 
 	//printf("---------\n");
 
-	if (cfs.testCollisions(tempSegments, NUM_SEGMENTS)) {
-		printf("Collision detected! - %d\n", colCount++);
-	} else {
+	if (!cfs.testCollisions(tempSegments, NUM_SEGMENTS)) {
 		pthread_mutex_lock(&this->targetAnglesMutex);
 		for (int i = 0; i < this->numServos; i++) {
 			this->targetAngles[i] = angles[i];

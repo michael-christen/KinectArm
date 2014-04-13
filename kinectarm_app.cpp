@@ -68,6 +68,30 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	double angles[NUM_SERVOS];
 	state->arm->getTargetAngles(angles);
 
+	for (int i = 0; i < 7; i++) {
+		if (i == HEAD || i == RSHOULDER || i == RELBOW || i == RWRIST) {
+			switch (i) {
+				case HEAD:
+					printf("HEAD - ");
+				break;
+
+				case RSHOULDER:
+					printf("RSHOULDER - ");
+				break;
+
+				case RELBOW:
+					printf("RELBOW - ");
+				break;
+
+				case RWRIST:
+					printf("RWRIST - ");
+				break;
+			}
+
+			printf("%d, %d, %d\n", msg->joints[i].x, msg->joints[i].y, msg->joints[i].z);
+		}
+	}
+
 	state->body->processMsg(msg);
 	state->body->getServoAngles(angles, true);
 	state->arm->setTargetAngles(angles, state->cfs);

@@ -25,11 +25,14 @@
 // Local Includes
 #include "Image.h"
 #include "Line.h"
+#include "joint.h"
 //////////////
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 2
 #define NUM_SERVOS 6
+
+#define NUM_JOINTS 7
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
@@ -100,6 +103,8 @@ struct state_t {
 	freenect_context *f_ctx;
 	freenect_device  *f_dev;
 	freenect_video_format current_format;
+
+    joint_t joints[NUM_JOINTS];
 };
 
 

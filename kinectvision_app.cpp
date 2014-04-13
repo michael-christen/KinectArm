@@ -4,10 +4,9 @@
 #include <stdlib.h>
 
 // LCM
-#include "lcmtypes/dynamixel_command_list_t.h"
-#include "lcmtypes/dynamixel_command_t.h"
-#include "lcmtypes/dynamixel_status_list_t.h"
-#include "lcmtypes/dynamixel_status_t.h"
+#include <lcm/lcm.h>
+#include "skeleton_joint_t.h"
+#include "skeleton_joint_list_t.h"
 
 // Local Includes
 #include "vision_state.h"
@@ -18,6 +17,7 @@
 #include "Line.h"
 #include "Image.h"
 #include "blob_detection.h"
+#include "joint.h"
 
 //Kinect
 #include <libfreenect.hpp>
@@ -161,6 +161,7 @@ void update_kinect(state_t* state) {
 //Practically unimportant
 #define MAX_VARIANCE 16000000
 void kinect_process(state_t* state){
+
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Update
@@ -198,30 +199,84 @@ void kinect_process(state_t* state){
 					state->depth_lines.push_back(tmp_line);
 				}
 			}
-		}
-		
-		double pink_hue = 328.0;
-		double green_hue = 73.0;
-		double yellow_hue = 50.0;
-		double blue_hue   = 209.0;
-		std::vector<blob_t> green_markers = blob_detection(state->im, green_hue, 0xff00ff15,
-				10, 200);
-		std::vector<blob_t> blue_markers = blob_detection(state->im, blue_hue, 0xfff8ff21,
-				10, 200);
-		/*blob_detection(state->im, pink_hue, 0xff7300ff,
-				10, 200);*/
-		std::vector<blob_t> yellow_markers = blob_detection(state->im, yellow_hue, 0xff21fff8,
-				10, 200);
+		} else {
+			double pink_hue = 328.0;
+			double green_hue = 73.0;
+			double yellow_hue = 50.0;
+			double blue_hue   = 209.0;
+			std::vector<blob_t> green_markers = blob_detection(state->im, green_hue, 0xff00ff15,
+					10, 200);
+			std::vector<blob_t> blue_markers = blob_detection(state->im, blue_hue, 0xfff8ff21,
+					10, 200);
+			/*blob_detection(state->im, pink_hue, 0xff7300ff,
+					10, 200);*/
+			std::vector<blob_t> yellow_markers = blob_detection(state->im, yellow_hue, 0xff21fff8,
+					10, 200);
 
-		if (green_markers.size() > 0) {
-			double sX = green_markers.at(0).x;
-			double sY = green_markers.at(0).y;
-			uint16_t sZ = state->depth.get(sX, sY);
+			if (yellow_markers.size() > 0) {
+				int imageX = (int)yellow_markers.at(0).x;
+				int imageY = (int)yellow_markers.at(0).y;
+				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sX = GetRealWorldXFromDepth(sZ, imageX);
+				double sY = GetRealWorldYFromDepth(sZ, imageY);
+				state->joints[HEAD].y = sY - 600;
+				state->joints[HEAD].x = sX;
+				state->joints[HEAD].z = sZ;
+				state->joints[RSHOULDER].x = sX;
+				state->joints[RSHOULDER].y = sY;
+				state->joints[RSHOULDER].z = sZ;
+				state->joints[RSHOULDER].screen_x = imageX;
+				state->joints[RSHOULDER].screen_y = imageY;
+			}
 
-			printf("hand pos - %f, %f, %u\n", sX, sY, sZ);
+			if (blue_markers.size() > 0) {
+				int imageX = (int)blue_markers.at(0).x;
+				int imageY = (int)blue_markers.at(0).y;
+				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sX = GetRealWorldXFromDepth(sZ, imageX);
+				double sY = GetRealWorldYFromDepth(sZ, imageY);
+
+				state->joints[RELBOW].x = sX;
+				state->joints[RELBOW].y = sY;
+				state->joints[RELBOW].z = sZ;
+				state->joints[RELBOW].screen_x = imageX;
+				state->joints[RELBOW].screen_y = imageY;
+			}
+
+			if (green_markers.size() > 0) {
+				int imageX = (int)green_markers.at(0).x;
+				int imageY = (int)green_markers.at(0).y;
+				uint16_t sZ = state->depth.get(imageX, imageY);
+				double sX = GetRealWorldXFromDepth(sZ, imageX);
+				double sY = GetRealWorldYFromDepth(sZ, imageY);
+
+				state->joints[RWRIST].x = sX;
+				state->joints[RWRIST].y = sY;
+				state->joints[RWRIST].z = sZ;
+				state->joints[RWRIST].screen_x = imageX;
+				state->joints[RWRIST].screen_y = imageY;
+			}
 		}
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
+
+  // First make sure all of the joints that we care about are present
+
+	skeleton_joint_list_t lcm_skeleton;
+	lcm_skeleton.len = NUM_JOINTS;
+	lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
+
+	for (int i = 0; i < lcm_skeleton.len; i++) {
+		lcm_skeleton.joints[i].valid = 1;
+		lcm_skeleton.joints[i].x = state->joints[i].x;
+		lcm_skeleton.joints[i].y = state->joints[i].y;
+		lcm_skeleton.joints[i].z = state->joints[i].z;
+		lcm_skeleton.joints[i].screen_x = state->joints[i].screen_x;
+		lcm_skeleton.joints[i].screen_y = state->joints[i].screen_y;
+	}
+
+	skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
+	free(lcm_skeleton.joints);
 }
 
 void * kinect_analyze(void * data){
@@ -274,6 +329,15 @@ int main(int argc, char ** argv)
 
 	//signal(SIGINT, terminal_signal_handler);
 
+	int i;
+	for (i = 0; i < NUM_JOINTS; i++) {
+		state->joints[i].x = 0;
+		state->joints[i].y = 0;
+		state->joints[i].z = 0;
+		state->joints[i].screen_x = 0;
+		state->joints[i].screen_y = 0;
+	}
+
 	pthread_mutex_init(&state->layer_mutex, NULL);
 	pthread_mutex_init(&state->lcm_mutex, NULL);
 	pthread_mutex_init(&state->running_mutex, NULL);
@@ -296,6 +360,7 @@ int main(int argc, char ** argv)
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
 	pthread_create(&state->kinect_thread, NULL, kinect_analyze, state);
 	pthread_create(&state->kinect_event_thread, NULL, kinect_event,state);
+	//pthread_join(state->kinect_thread, NULL);
 	gui_create(state);
 	printf("after gui_create\n");
 

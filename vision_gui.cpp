@@ -272,7 +272,8 @@ void gui_create(state_t *state) {
 	vx_remote_display_source_attr_t remote_attr;
 	vx_remote_display_source_attr_init(&remote_attr);
 	remote_attr.advertise_name = "Kinect Arm";
-
+	remote_attr.advertise_port++;
+	remote_attr.connection_port++;
 
 	// Init layer data structs
 	state->layers[0].enable = 1;
