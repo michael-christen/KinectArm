@@ -102,7 +102,7 @@ void kinect_init(state_t* state) {
 	rgb_front = (uint8_t*)malloc(640*480*3);
 
 
-	freenect_set_tilt_degs(state->f_dev,10);
+	freenect_set_tilt_degs(state->f_dev,15);
 	freenect_set_led(state->f_dev,LED_RED);
 	printf("setting up\n");
 	freenect_set_depth_callback(state->f_dev, depth_cb);
@@ -200,22 +200,19 @@ void kinect_process(state_t* state){
 				}
 			}
 		} else {
-			double pink_hue = 328.0;
-			double green_hue = 73.0;
-			double yellow_hue = 50.0;
-			double blue_hue   = 209.0;
-			std::vector<blob_t> green_markers = blob_detection(state->im, green_hue, 0xff00ff15,
-					10, 200);
-			std::vector<blob_t> blue_markers = blob_detection(state->im, blue_hue, 0xfff8ff21,
-					10, 200);
-			/*blob_detection(state->im, pink_hue, 0xff7300ff,
-					10, 200);*/
-			std::vector<blob_t> yellow_markers = blob_detection(state->im, yellow_hue, 0xff21fff8,
-					10, 200);
+			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
+			blob_type_t blue_blob_type = {209.0, 0xfff8ff21, 10, 200};
+			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 200};
+			std::vector<blob_type_t> blob_types;
+			blob_types.push_back(yellow_blob_type);
+			blob_types.push_back(blue_blob_type);
+			blob_types.push_back(green_blob_type);
+			//double pink_hue = 328.0;
+			std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
 
-			if (yellow_markers.size() > 0) {
-				int imageX = (int)yellow_markers.at(0).x;
-				int imageY = (int)yellow_markers.at(0).y;
+			if (markers[0].size() > 0) {
+				int imageX = (int)markers[0][0].x;
+				int imageY = (int)markers[0][0].y;
 				double sZ = (double) state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
@@ -223,35 +220,35 @@ void kinect_process(state_t* state){
 				state->joints[HEAD].x = sX;
 				state->joints[HEAD].z = sZ;
 				state->joints[RSHOULDER].x = sX;
-				state->joints[RSHOULDER].y = -sY;
+				state->joints[RSHOULDER].y = sY;
 				state->joints[RSHOULDER].z = sZ;
 				state->joints[RSHOULDER].screen_x = imageX;
 				state->joints[RSHOULDER].screen_y = imageY;
 			}
 
-			if (blue_markers.size() > 0) {
-				int imageX = (int)blue_markers.at(0).x;
-				int imageY = (int)blue_markers.at(0).y;
+			if (markers[1].size() > 0) {
+				int imageX = (int)markers[1][0].x;
+				int imageY = (int)markers[1][0].y;
 				double sZ = (double)state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
 
 				state->joints[RELBOW].x = sX;
-				state->joints[RELBOW].y = -sY;
+				state->joints[RELBOW].y = sY;
 				state->joints[RELBOW].z = sZ;
 				state->joints[RELBOW].screen_x = imageX;
 				state->joints[RELBOW].screen_y = imageY;
 			}
 
-			if (green_markers.size() > 0) {
-				int imageX = (int)green_markers.at(0).x;
-				int imageY = (int)green_markers.at(0).y;
+			if (markers[2].size() > 0) {
+				int imageX = (int)markers[2][0].x;
+				int imageY = (int)markers[2][0].y;
 				double sZ = (double)state->depth.get(imageX, imageY);
 				double sX = GetRealWorldXFromDepth(sZ, imageX);
 				double sY = GetRealWorldYFromDepth(sZ, imageY);
 
 				state->joints[RWRIST].x = sX;
-				state->joints[RWRIST].y = -sY;
+				state->joints[RWRIST].y = sY;
 				state->joints[RWRIST].z = sZ;
 				state->joints[RWRIST].screen_x = imageX;
 				state->joints[RWRIST].screen_y = imageY;

@@ -90,9 +90,19 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 
 	//printf("Elbow: %g\n", elbowValue);
 
-	double shoulderAngle0 = sgn(shoulder.z - elbow.z)*(M_PI - acos(shoulderValue0));
-	double shoulderAngle1 = sgn(elbow.y - shoulder.y)*(acos(shoulderValue1) - M_PI/2);
+	double shoulderAngle0 = (acos(shoulderValue0));
+	double shoulderAngle1 = (acos(shoulderValue1) - M_PI/2);
 	double elbowAngle = acos(elbowValue);
+
+	if (elbow.z - shoulder.z < 0) {
+		shoulderAngle0 = M_PI - shoulderAngle0;
+	} else {
+		shoulderAngle0 = shoulderAngle0 - M_PI;
+	}
+
+	if (elbow.y - shoulder.y > 0) {
+		//shoulderAngle0 = M_PI - shoulderAngle0;
+	}
 
 	double unitZ_data[3] = {0, 0, 1};
 	matd_t *unitZ = matd_create_data(3, 1, unitZ_data);
@@ -102,10 +112,18 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_destroy(unitZ);
 	matd_destroy(elbowCheck);
 
-	servoAngles[0] = shoulderAngle0;
-	servoAngles[1] = shoulderAngle1;
-	servoAngles[2] = elbowSign*elbowAngle;
-	servoAngles[3] = servoAngles[4] = servoAngles[5] = 0;
+	double leftHandDist = fabs(this->joints[LWRIST].z);
+
+	if (leftHandDist < 1000) {
+		printf("Left hand is close enough!\n");
+		servoAngles[3] = elbowSign*elbowAngle;
+	} else {
+		servoAngles[0] = shoulderAngle0;
+		servoAngles[1] = shoulderAngle1;
+		servoAngles[2] = elbowSign*elbowAngle;
+		servoAngles[4] = servoAngles[5] = 0;
+	}
+	printf("s0 - %f\n", shoulderAngle0);
 
 	matd_destroy(floor_shoulder);
 	matd_destroy(shoulder_elbow);
@@ -120,7 +138,7 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 	float zoffset = 0;
 
 	//Draw Axes
-	float axes[12] = {(float)(joints[RSHOULDER].x - joints[HEAD].x), (float)(joints[RSHOULDER].z - joints[HEAD].z), (float)(-joints[RSHOULDER].y+zoffset - joints[HEAD].y),
+	/*float axes[12] = {(float)(joints[RSHOULDER].x - joints[HEAD].x), (float)(joints[RSHOULDER].z - joints[HEAD].z), (float)(-joints[RSHOULDER].y+zoffset - joints[HEAD].y),
 						(float)(joints[RELBOW].x - joints[HEAD].x), (float)(joints[RELBOW].z - joints[HEAD].z), (float)(-joints[RELBOW].y+zoffset - joints[HEAD].y), 
 						(float)(joints[RELBOW].x - joints[HEAD].x), (float)(joints[RELBOW].z - joints[HEAD].z), (float)(-joints[RELBOW].y+zoffset - joints[HEAD].y), 
 						(float)(joints[RWRIST].x - joints[HEAD].x), (float)(joints[RWRIST].z - joints[HEAD].z), (float)(-joints[RWRIST].y+zoffset - joints[HEAD].y)};
@@ -130,7 +148,7 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 		vxo_lines(verts, 4, GL_LINES, vxo_points_style(bone_color, 2.0f))
 	);
 
-	vx_buffer_add_back(buf, vo);	
+	vx_buffer_add_back(buf, vo);	*/
 
 	//Draw Joints
 	for (int i = 0; i < NUM_JOINTS; i++) {

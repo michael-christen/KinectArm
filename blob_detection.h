@@ -45,6 +45,12 @@ struct blob {
 	int num_px;
 };
 
+typedef struct blob_type blob_type_t;
+struct blob_type {
+	double template_hue, show_px;
+	double color_threshold, min_pxs;
+};
+
 bool color_fit(double color_threshold, double template_hue, 
 		uint32_t px);
 
@@ -60,9 +66,7 @@ int minLabel(int n_labels[], int len_labels);
 
 void unionLabels(std::vector<Set> links, std::vector<int> n_labels);
 
-std::vector<blob_t> blob_detection(Image<uint32_t> &im, 
-		double template_hue, uint32_t show_px,
-		double color_threshold, int min_pxs);
+std::vector<std::vector<blob_t>> blob_detection(Image<uint32_t> &im, std::vector<blob_type_t> &blob_types);
 
 
 #endif
