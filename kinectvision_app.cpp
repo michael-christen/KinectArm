@@ -158,7 +158,9 @@ void update_kinect(state_t* state) {
 	//update_im_from_vect(depth, state->depth);
 	//printf("Dist: %x\n",state->depth->buf[state->depth->stride*240 + 320]);
 }
-std::vector<double> d_transf; 
+
+//std::vector<double> d_transf; 
+Image<double> d_transf(640,480);
 //Practically unimportant
 #define MAX_VARIANCE 16000000
 void kinect_process(state_t* state){
@@ -201,9 +203,16 @@ void kinect_process(state_t* state){
 				state->depth_lines.push_back(tmp_line);
 			}
 		}
+		printf("getting d_transf\n");
 		get_dist_transform(d_transf, state->depth);
 		//dtocs(d_transf, state->depth);
-		minc_local_threshold(d_transf, state->depth);
+		printf("getting threshold\n");
+		//minc_local_threshold(d_transf);
+		printf("getting gradient\n");
+		d_transf.computeGradient(d_map_to_grad);
+		printf("done with d_transf\n");
+		
+
 		/*
 		double pink_hue = 328.0;
 		double green_hue = 73.0;
@@ -246,6 +255,7 @@ void * kinect_event(void * data){
 			}
 		}
 	}
+	return NULL;
 }
 
 
@@ -267,6 +277,7 @@ int main(int argc, char ** argv)
 
 	state->im    = Image<uint32_t>(640,480);
 	state->depth = Image<uint16_t>(640,480);
+	//d_transf     = Image<double>(640,480);
     state->current_format = FREENECT_VIDEO_RGB;
 	//state->im    = image_u32_create(640, 480);
 	/*

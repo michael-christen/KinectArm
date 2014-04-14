@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Sat 12 Apr 2014 01:44:04 AM EDT
+	       * Last Modified : Mon 14 Apr 2014 11:02:49 AM EDT
 
 	          * Created By : Michael Christen
 
@@ -154,13 +154,18 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
 	if(!d_transf.empty()) {
 		//printf("id:%d, size:%d\n",id, d_transf.size());
 		//printf("d_transf -> %f\n",d_transf[id]);
-		double val = d_transf[id]/100.0;
+		double val = d_transf.get(id)/100.0;
 		/*
 		if(val) {
 			printf("val: %f\n",val);
 		}
 		*/
-		uint32_t px = HSVtoRGB(90,0.5,val);
+		/*
+		uint32_t px =
+			HSVtoRGB((d_transf.gradient[id].angle()+M_PI)/M_PI*180
+				,0.5,val);
+		*/
+		uint32_t px  = HSVtoRGB(180, 0.5, val);
 		//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,val);
 		return px;
 	} else {
@@ -213,6 +218,13 @@ double   videoToGrad(uint32_t px, bool valid) {
 	//return (double) (0xFFFFFF & px);
 }
 double   depthToGrad(uint16_t depth, bool valid) {
+	/*
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
+	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
+	*/
+	return valid ? 255.0 : 0.0;
+}
+double   d_map_to_grad(double dist, bool valid) {
 	/*
 	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);

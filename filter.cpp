@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sat 12 Apr 2014 03:09:15 AM EDT
+	* Last Modified : Mon 14 Apr 2014 11:01:41 AM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -241,8 +241,10 @@ void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
 	printf("done hagar\n");
 }
 
-void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
-	dist   = std::vector<double>(im.size(),0);
+void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
+	dist.copyValid(im.valid);
+	dist.data = std::vector<double>(640*480,0);
+	//dist   = std::vector<double>(im.size(),0);
 	std::vector<bool> visited  = std::vector<bool>(im.size(), false);
 	std::vector<bool> new_visited = std::vector<bool>(im.size(), false);
 	std::vector<bool> neighbor = std::vector<bool>(8, true);
@@ -263,6 +265,9 @@ void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
 	double cur_time = utime_now()/1000000.0;
 	while(!toVisit.empty()) {
 		newToVisit.clear();
+		if(num_times > 10000000) {
+			break;
+		}
 		for(size_t i = 0; i < toVisit.size(); ++i) {
 			num_times ++;
 			int cur_id = toVisit[i];
@@ -275,14 +280,14 @@ void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
 				bool found_min = false;
 				for(size_t j = 0; j < neighborIds.size(); ++j) {
 					int id = neighborIds[j];
-					if(visited[id] && dist[id] < min_d) {
+					if(visited[id] && dist.get(id) < min_d) {
 						found_min = true;
-						min_d = dist[id];
+						min_d = dist.get(id);
 					}
 				}
 				if(found_min) {
 					new_visited[cur_id] = true;
-					dist[cur_id]    = min_d+1;
+					dist.set(cur_id,min_d+1);
 				} else {
 					newToVisit.push_back(cur_id);
 				}
@@ -297,37 +302,39 @@ void get_dist_transform(std::vector<double> & dist, Image<uint16_t> & im) {
 }
 
 std::vector<pixel> minc_local_threshold(
-		std::vector<double> & transf, Image<uint16_t> & im) {
+		Image<double> & transf) {
 	const double c = 0.7;
 	const int num_wide = 6;
 	std::vector<pixel> skeleton_pts;
 	double mean;
 	int num_valid;
 	std::vector<int> neighbors;
-	std::vector<double> new_transf = transf;
-	for(int i = 0; i < im.size(); ++i) {
-		neighbors = im.getBlockNeighborIds(i,num_wide);
+	std::vector<double> new_transf = transf.data;
+	for(int i = 0; i < transf.size(); ++i) {
+		neighbors = transf.getBlockNeighborIds(i,num_wide);
 		mean = 0;
 		num_valid = 0;
-		if(im.isValid(i)) {
+		if(transf.isValid(i)) {
 			for(int j = 0; j < neighbors.size(); ++j) {
-				if(im.isValid(neighbors[j])) {
-					mean += transf[neighbors[j]];
+				if(transf.isValid(neighbors[j])) {
+					mean += transf.get(neighbors[j]);
 					num_valid ++;
 				}
 			}
 			mean /= num_valid + 0.0;
 			//printf("mean: %f\n",mean);
-			if(transf[i] > mean + c) {
-				new_transf[i]  = 100;
-				pixel_t px = {im.getX(i), im.getY(i)};
+			if(transf.get(i) > mean + c) {
+				new_transf[i] = 100;
+				pixel_t px = {transf.getX(i), transf.getY(i)};
 				skeleton_pts.push_back(px);
+				transf.validate(i);
 			} else {
-				new_transf[i]  = 0;
+				new_transf[i] =  0;
+				transf.invalidate(i);
 			}
 		}
 	}
-	transf = new_transf;
+	transf.data = new_transf;
 	return skeleton_pts;
 }
 

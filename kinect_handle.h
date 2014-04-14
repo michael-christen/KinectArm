@@ -2,6 +2,7 @@
 #define __KINECT_HANDLE__H__
 #include "common/image_util.h"
 #include "image_helper.h"
+#include "Image.h"
 #include "pixel.h"
 #include "Gradient.h"
 #include "vision_state.h"
@@ -17,7 +18,8 @@ extern pthread_mutex_t gl_backbuf_mutex;
 extern pthread_cond_t gl_frame_cond;
 extern uint8_t *depth_mid, *depth_front;
 extern uint8_t *rgb_back, *rgb_mid, *rgb_front;
-extern std::vector<double> d_transf;
+//extern std::vector<double> d_transf;
+extern Image<double> d_transf;
 
 
 void update_im_from_vect(const std::vector<uint8_t> & k_data,
@@ -31,6 +33,7 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int i);
 uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int i);
 double   videoToGrad(uint32_t px, bool valid);
 double   depthToGrad(uint16_t depth, bool valid);
+double  d_map_to_grad(double dist, bool valid); 
 
 uint16_t get_px_depth(uint32_t px);
 

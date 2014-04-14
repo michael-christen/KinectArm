@@ -33,6 +33,7 @@ class Image {
 		void invalidate(int x, int y);
 		void invalidate(int i);
 		void validate(int x, int y);
+		void validate(int i);
 		void setValid(int x, int y, bool v);
 		void setValid(int i, bool v);
 		bool isValid(int x, int y);
@@ -60,6 +61,7 @@ class Image {
 		std::vector<int> getBlockNeighborIds(int i, int n);
 
 		size_t size();
+		bool   empty();
 		int w();
 		int h();
 		void printGradient();
@@ -68,12 +70,12 @@ class Image {
 		std::vector<bool> valid;
 		//Gradient information
 		std::vector<Gradient> gradient;
+		std::vector<T> data;
 	private:
 		int width;
 		int height;
 		//Width*height vector containing our data
 		//Access to (x,y) -> x + width*y
-		std::vector<T> data;
 		//Valid bits to keep track of validness 
 		image_u32_t * im;
 };
@@ -147,6 +149,11 @@ size_t Image<T>::size() {
 }
 
 template <typename T>
+bool Image<T>::empty() {
+	return size() == 0;
+}
+
+template <typename T>
 void Image<T>::update(const std::vector<T> & ts) {
 	assert(ts.size() == data.size());
 	data = ts;
@@ -215,6 +222,11 @@ void Image<T>::invalidate(int x, int y) {
 template <typename T>
 void Image<T>::validate(int x, int y) {
 	setValid(x,y,true);
+}
+
+template <typename T>
+void Image<T>::validate(int i) {
+	setValid(i,true);
 }
 
 template <typename T>

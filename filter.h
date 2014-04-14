@@ -27,9 +27,10 @@ double sign(double val);
 bool grad_close_enough(Gradient cur, Gradient other);
 
 void dtocs(std::vector<double> & transf, Image<uint16_t> & im);
-void get_dist_transform(std::vector<double> & transf, Image<uint16_t> & im);
-std::vector<pixel> minc_local_threshold(std::vector<double> & transf,
-		Image<uint16_t> &im);
+
+void get_dist_transform(Image<double> & transf, Image<uint16_t> & im);
+
+std::vector<pixel> minc_local_threshold(Image<double> & transf);
 
 //Get id's of valid neighbors @ (x,y)
 /*
