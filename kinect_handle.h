@@ -35,6 +35,7 @@ uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int i);
 double   videoToGrad(uint32_t px, bool valid);
 double   depthToGrad(uint16_t depth, bool valid);
 double  d_map_to_grad(double dist, bool valid); 
+double  d_map_v_grad(double dist, bool valid); 
 
 uint16_t get_px_depth(uint32_t px);
 

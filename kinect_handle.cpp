@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Mon 14 Apr 2014 01:46:35 PM EDT
+	       * Last Modified : Mon 14 Apr 2014 03:38:56 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -247,6 +247,9 @@ double   depthToGrad(uint16_t depth, bool valid) {
 	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
 	*/
+	return valid ? 255.0 : 0.0;
+}
+double   d_map_v_grad(double dist, bool valid) {
 	return valid ? 255.0 : 0.0;
 }
 double   d_map_to_grad(double dist, bool valid) {
