@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Mon 14 Apr 2014 12:05:28 PM EDT
+	       * Last Modified : Mon 14 Apr 2014 01:46:35 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -154,10 +154,31 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
 	if(!d_transf.empty()) {
 		//printf("id:%d, size:%d\n",id, d_transf.size());
 		//printf("d_transf -> %f\n",d_transf[id]);
-		double val = d_transf.get(id)/100.0;
+		double val = d_transf.get(id)/8000.0;
+		if(val > 1.0) {
+			printf("Val: %f\n",val);
+		}
 		val = d_transf.gradient[id].mag() / 255.0;
-		/*
 		if(!d_transf.isValid(id)) {
+			val = 0;
+		} else {
+			val = 1;
+		}
+
+		/*
+		double ang_dist = 
+		 fabs(getThetaDist(d_transf.gradient[id].angle(), -M_PI));
+		if(ang_dist < 0.1) {
+			val = 1;
+		} else { 
+			val = 0;
+		}
+		*/
+		/*
+		double mag = d_transf.gradient[id].mag();
+		if(mag > 50) {
+			val = 1;
+		} else {
 			val = 0;
 		}
 		*/
@@ -233,7 +254,7 @@ double   d_map_to_grad(double dist, bool valid) {
 	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
 	*/
-	return dist*30;
+	return dist;
 	return valid ? 255.0 : 0.0;
 }
 

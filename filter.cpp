@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Mon 14 Apr 2014 12:05:40 PM EDT
+	* Last Modified : Mon 14 Apr 2014 01:57:45 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -241,8 +241,76 @@ void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
 	printf("done hagar\n");
 }
 
+#define INF 1E20
+
+//Adapted from Felzenswalb
+std::vector<double> dTrans1(std::vector<double> & row) {
+	std::vector<double> d = std::vector<double>(row.size(),0);
+	std::vector<int>    v = std::vector<int>(row.size(), 0);
+	std::vector<double> z = std::vector<double>(row.size()+1,0);
+	int k = 0;
+	v[0] = 0;
+	z[0] = -INF;
+	z[1] = +INF;
+	for(int q = 1; q < row.size(); ++q) {
+		double s = 
+			((row[q] + pow(q,2)) -
+			(row[v[k]] + pow(v[k],2))) / 
+			(2*q - 2*v[k]);
+		while(s <= z[k]) {
+			k --;
+			s = 
+				((row[q] + pow(q,2)) -
+				(row[v[k]] + pow(v[k],2))) / 
+				(2*q - 2*v[k]);
+		}
+		k++;
+		v[k] = q;
+		z[k] = s;
+		z[k+1] = +INF;
+	}
+	k = 0;
+	for(int q = 0; q < row.size(); ++q) {
+		while(z[k+1] < q) {
+			k++;
+		}
+		d[q] = pow(q-v[k],2) + row[v[k]];
+	}
+	return d;
+}
+
+void dTransImage(Image<double> & im) {
+	//Transform along columns
+	double val;
+	for(int x = 0; x < im.w(); ++x) {
+		std::vector<double> col;
+		for(int y = 0; y < im.h(); ++y) {
+			val = im.isValid(x,y) ? +INF : 0;
+			col.push_back(val);
+		} 
+		col = dTrans1(col);
+		for(int y = 0; y < im.h(); ++y) {
+			im.set(x,y,col[y]);
+		}
+	}
+
+	//Transform along rows
+	for(int y = 0; y < im.h(); ++y) {
+		std::vector<double> row;
+		for(int x = 0; x < im.w(); ++x) {
+			row.push_back(im.get(x,y));
+		} 
+		row = dTrans1(row);
+		for(int x = 0; x < im.w(); ++x) {
+			im.set(x,y,row[x]);
+		}
+	}
+}
+
 void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 	im.copyValid(dist.valid);
+	dTransImage(dist);
+	return;
 	dist.data = std::vector<double>(640*480,0);
 	//dist   = std::vector<double>(im.size(),0);
 	std::vector<bool> visited  = std::vector<bool>(im.size(), false);
@@ -300,7 +368,7 @@ void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 
 std::vector<pixel> minc_local_threshold(
 		Image<double> & transf) {
-	const double c = 0.7;
+	const double c = -9;
 	const int num_wide = 6;
 	std::vector<pixel> skeleton_pts;
 	double mean;
@@ -314,13 +382,14 @@ std::vector<pixel> minc_local_threshold(
 		if(transf.isValid(i)) {
 			for(int j = 0; j < neighbors.size(); ++j) {
 				if(transf.isValid(neighbors[j])) {
-					mean += transf.get(neighbors[j]);
+					//mean += transf.get(neighbors[j]);
+					mean += transf.gradient[neighbors[j]].mag();
 					num_valid ++;
 				}
 			}
 			mean /= num_valid + 0.0;
 			//printf("mean: %f\n",mean);
-			if(transf.get(i) > mean + c) {
+			if(transf.gradient[i].mag() < mean + c) {
 				new_transf[i] = 100;
 				pixel_t px = {transf.getX(i), transf.getY(i)};
 				skeleton_pts.push_back(px);

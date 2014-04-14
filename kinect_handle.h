@@ -6,6 +6,7 @@
 #include "pixel.h"
 #include "Gradient.h"
 #include "vision_state.h"
+#include "filter.h"
 #include <vector>
 
 //Kinect

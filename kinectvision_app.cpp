@@ -206,10 +206,10 @@ void kinect_process(state_t* state){
 		printf("getting d_transf\n");
 		get_dist_transform(d_transf, state->depth);
 		//dtocs(d_transf, state->depth);
-		printf("getting threshold\n");
-		//minc_local_threshold(d_transf);
 		printf("getting gradient\n");
 		d_transf.computeGradient(d_map_to_grad);
+		printf("getting threshold\n");
+		minc_local_threshold(d_transf);
 		printf("done with d_transf\n");
 		
 
