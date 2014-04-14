@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Mon 14 Apr 2014 11:02:49 AM EDT
+	       * Last Modified : Mon 14 Apr 2014 12:05:28 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -155,17 +155,21 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
 		//printf("id:%d, size:%d\n",id, d_transf.size());
 		//printf("d_transf -> %f\n",d_transf[id]);
 		double val = d_transf.get(id)/100.0;
+		val = d_transf.gradient[id].mag() / 255.0;
+		/*
+		if(!d_transf.isValid(id)) {
+			val = 0;
+		}
+		*/
 		/*
 		if(val) {
 			printf("val: %f\n",val);
 		}
 		*/
-		/*
 		uint32_t px =
 			HSVtoRGB((d_transf.gradient[id].angle()+M_PI)/M_PI*180
 				,0.5,val);
-		*/
-		uint32_t px  = HSVtoRGB(180, 0.5, val);
+		//uint32_t px  = HSVtoRGB(90, 0.5, val);
 		//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,val);
 		return px;
 	} else {
@@ -229,6 +233,7 @@ double   d_map_to_grad(double dist, bool valid) {
 	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
 	*/
+	return dist*30;
 	return valid ? 255.0 : 0.0;
 }
 

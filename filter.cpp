@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Mon 14 Apr 2014 11:01:41 AM EDT
+	* Last Modified : Mon 14 Apr 2014 12:05:40 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -242,7 +242,7 @@ void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
 }
 
 void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
-	dist.copyValid(im.valid);
+	im.copyValid(dist.valid);
 	dist.data = std::vector<double>(640*480,0);
 	//dist   = std::vector<double>(im.size(),0);
 	std::vector<bool> visited  = std::vector<bool>(im.size(), false);
@@ -265,9 +265,6 @@ void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 	double cur_time = utime_now()/1000000.0;
 	while(!toVisit.empty()) {
 		newToVisit.clear();
-		if(num_times > 10000000) {
-			break;
-		}
 		for(size_t i = 0; i < toVisit.size(); ++i) {
 			num_times ++;
 			int cur_id = toVisit[i];
