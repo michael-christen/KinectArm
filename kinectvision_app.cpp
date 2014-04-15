@@ -216,6 +216,9 @@ void kinect_process(state_t* state){
 		minc_local_threshold(d_transf);
 		printf("done with d_transf\n");
 		blurGradient(d_transf);
+		/*
+		std::vector<line_t> dp_lines = hough_transform(d_transf);
+		printf("Num_linos: %d\n",dp_lines.size());
 		std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(d_transf);
 		state->depth_lines.clear();
 		printf("NUM_BLOBS: %d\n",dp_blobs.size());
@@ -225,6 +228,8 @@ void kinect_process(state_t* state){
 				state->depth_lines.push_back(tmp_line);
 			}
 		}
+		state->depth_lines = dp_lines;
+		*/
 
 		/*
 		double pink_hue = 328.0;
