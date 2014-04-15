@@ -32,6 +32,50 @@ pthread_cond_t gl_frame_cond = PTHREAD_COND_INITIALIZER;
 uint8_t *depth_mid, *depth_front;
 uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
+static void nodestroy (vx_event_handler_t * vh)
+{
+	// do nothing, since this event handler is statically allocated.
+}
+
+static int touch_event (vx_event_handler_t * vh, vx_layer_t * vl, vx_camera_pos_t * pos, vx_touch_event_t * mouse)
+{
+	return 0;
+}
+
+static int mouse_event (vx_event_handler_t * vh, vx_layer_t * vl, vx_camera_pos_t * pos, vx_mouse_event_t * mouse)
+{
+	state_t * state = (state_t*) vh->impl;
+	vx_mouse_event_t last_mouse;
+	if (state->init_last_mouse) {
+		memcpy(&last_mouse, &state->last_mouse, sizeof(vx_mouse_event_t));
+		memcpy(&state->last_mouse, mouse, sizeof(vx_mouse_event_t));
+	} else {
+		memcpy(&state->last_mouse, mouse, sizeof(vx_mouse_event_t));
+		state->init_last_mouse = 1;
+		return 0;
+	}
+
+	int diff_button = mouse->button_mask ^ last_mouse.button_mask;
+	int button_down = diff_button & (!last_mouse.button_mask);
+	int button_up = diff_button & last_mouse.button_mask;
+	if (button_down) {
+		double man_point[3];
+		vx_ray3_t ray;
+		vx_camera_pos_compute_ray(pos, mouse->x, mouse->y, &ray);
+		vx_ray3_intersect_xy(&ray, 0, man_point);
+		state->mouseDownSet = 1;
+		state->mouseDownX = man_point[0];
+		state->mouseDownY = man_point[1];
+	}
+
+
+	return 0;
+}
+
+static int key_event (vx_event_handler_t * vh, vx_layer_t * vl, vx_key_event_t * key)
+{
+	return 0;
+}
 
 
 static void terminal_signal_handler(int signum)
@@ -172,6 +216,21 @@ void kinect_process(state_t* state){
 		//of the depth field
 		filter_front(state->depth);
 
+		if (state->set_hand_dist) {
+			printf("Setting hand distance threshold to trigger hand tracking\n");
+			state->set_hand_dist = 0;
+		}
+
+		if (state->set_open_hand) {
+			printf("Setting open hand threshold\n");
+			state->set_open_hand = 0;
+		}
+
+		if (state->set_closed_hand) {
+			printf("Setting closed hand threshold\n");
+			state->set_closed_hand = 0;
+		}
+
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
 			//state->depth.copyValid(state->im.valid);
@@ -259,21 +318,23 @@ void kinect_process(state_t* state){
 
   // First make sure all of the joints that we care about are present
 
-	skeleton_joint_list_t lcm_skeleton;
-	lcm_skeleton.len = NUM_JOINTS;
-	lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
+	if (state->send_data) {
+		skeleton_joint_list_t lcm_skeleton;
+		lcm_skeleton.len = NUM_JOINTS;
+		lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
 
-	for (int i = 0; i < lcm_skeleton.len; i++) {
-		lcm_skeleton.joints[i].valid = 1;
-		lcm_skeleton.joints[i].x = state->joints[i].x;
-		lcm_skeleton.joints[i].y = state->joints[i].y;
-		lcm_skeleton.joints[i].z = state->joints[i].z;
-		lcm_skeleton.joints[i].screen_x = state->joints[i].screen_x;
-		lcm_skeleton.joints[i].screen_y = state->joints[i].screen_y;
+		for (int i = 0; i < lcm_skeleton.len; i++) {
+			lcm_skeleton.joints[i].valid = 1;
+			lcm_skeleton.joints[i].x = state->joints[i].x;
+			lcm_skeleton.joints[i].y = state->joints[i].y;
+			lcm_skeleton.joints[i].z = state->joints[i].z;
+			lcm_skeleton.joints[i].screen_x = state->joints[i].screen_x;
+			lcm_skeleton.joints[i].screen_y = state->joints[i].screen_y;
+		}
+
+		skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
+		free(lcm_skeleton.joints);
 	}
-
-	skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
-	free(lcm_skeleton.joints);
 }
 
 void * kinect_analyze(void * data){
@@ -310,6 +371,14 @@ int main(int argc, char ** argv)
 	state->app.display_finished = display_finished;
 	state->app.display_started = display_started;
 	state->app.impl = state;
+	state->veh.dispatch_order = -10;
+	state->veh.touch_event = touch_event;
+	state->veh.mouse_event = mouse_event;
+	state->veh.key_event = key_event;
+	state->veh.destroy = nodestroy;
+	state->veh.impl  = state;
+	state->init_last_mouse = 0;
+	state->mouseDownSet = 0;
 
 	state->running = 1;
 

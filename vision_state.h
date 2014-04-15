@@ -77,6 +77,11 @@ struct state_t {
     lcm_t * lcm;
     pthread_mutex_t lcm_mutex;
 
+    vx_mouse_event_t last_mouse;
+
+    int init_last_mouse, mouseDownSet;
+    double mouseDownX, mouseDownY;
+
     pthread_t lcm_handle_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
@@ -105,6 +110,8 @@ struct state_t {
 	freenect_video_format current_format;
 
     joint_t joints[NUM_JOINTS];
+
+    int send_data, set_hand_dist, set_open_hand, set_closed_hand;
 };
 
 

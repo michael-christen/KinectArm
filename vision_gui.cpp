@@ -40,11 +40,15 @@ double arm_segment_depth = 2.5;
 
 void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char *name)
 {
-	//state_t *state = (state_t*) pl->impl;
-    if (!strcmp("s0", name)) {
-		printf("s0 changed\n");
-    } else if (!strcmp("but1", name)) {
-    	printf("but1 pressed\n");
+	state_t *state = (state_t*) pl->impl;
+    if (!strcmp("but1", name)) {
+		state->set_hand_dist = 1;
+    } else if (!strcmp("but2", name)) {
+    	state->set_open_hand = 1;
+    } else if (!strcmp("but3", name)) {
+    	state->set_closed_hand = 1;
+    } else if (!strcmp("cb1", name)) {
+    	state->send_data = pg_gb(pg, name);
     }
 }
 
@@ -137,6 +141,7 @@ int displayInitKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	float upRight[2] = {640, 480};
 
 	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_add_event_handler(layerData->layer, &state->veh);
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
 	return 1;
 }
@@ -205,6 +210,13 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->depth_lines[i]);
+		}
+		if (state->mouseDownSet) {
+			line_t line;
+			line.ll.x = line.ru.x = state->mouseDownX;
+			line.ll.y = 0;
+			line.ru.y = 680;
+			add_line_to_buffer(vb,line);
 		}
 		vx_buffer_swap(vb);
 	}
@@ -302,8 +314,11 @@ void gui_create(state_t *state) {
 
 	// Handles layer init, rendering, and destruction
 	parameter_gui_t *pg = pg_create();
-    pg_add_double_slider(pg, "s0", "A slider", -M_PI, M_PI, 0);
-    pg_add_buttons(pg, "but1", "Button 1", NULL);
+    pg_add_check_boxes(pg, "cb1", "Send Data", state->send_data, NULL);
+    pg_add_buttons(pg, "but1", "Set Hand Distance",
+    					"but2", "Set Open Hand",
+    					"but3", "Set Closed Hand",
+    					 NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
     my_listener->impl = state;
