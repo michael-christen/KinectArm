@@ -18,6 +18,7 @@
 #include "Line.h"
 #include "Image.h"
 #include "blob_detection.h"
+#include "Graph.h"
 
 //Kinect
 #include <libfreenect.hpp>
@@ -216,6 +217,10 @@ void kinect_process(state_t* state){
 		minc_local_threshold(d_transf);
 		printf("done with d_transf\n");
 		blurGradient(d_transf);
+		std::map<int,G_Node> graph = 
+		   getGraphFromSkeleton(d_transf);	
+		state->pts = 
+			getEndPoints(d_transf, graph, 20);
 		/*
 		std::vector<line_t> dp_lines = hough_transform(d_transf);
 		printf("Num_linos: %d\n",dp_lines.size());

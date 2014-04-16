@@ -25,7 +25,7 @@ CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_LCMT
 LDFLAGS =  $(LDFLAGS_VX_GTK) $(LDFLAGS_VX) $(LDFLAGS_GTK) $(LDFLAGS_IMAGESOURCE) $(LDFLAGS_COMMON) $(LDFLAGS_LCMTYPES) $(LDFLAGS_LCM) $(LDFLAGS_STD) $(LDFLAGS_USRLIBDIRS) $(LDFLAGS_LIBFREENECT) $(LDFLAGS_GFREENECT) $(LDFLAGS_SKELTRACK) $(LDFLAGS_CLUTTER)
 CXXFLAGS_STD := -g -D FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D REENTRANT \
 	-Wall -Wno-unused-parameter -pthread -Wno-write-strings -Wno-error=switch
-CFLAGS_CXX = $(CXXFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_USB) $(CFLAGS_LIBFREENECT) -fPIC -O2 -std=c++0x
+CFLAGS_CXX = $(CXXFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_USB) $(CFLAGS_LIBFREENECT) -fPIC -O2 -std=c++11
 
 BINARIES = ../../bin/kinectarm_app ../../bin/kinectvision_app ../../bin/skeltrack_vision
 LIB = ../../lib
@@ -46,7 +46,7 @@ skeltrack: ../../bin/skeltrack_vision
 
 ../../bin/kinectvision_app: kinectvision_app.o kinect_handle.o vision_gui.o disjoint.o blob_detection.o\
 	pixel.o eecs467_util.o image_helper.o filter.o \
-	Gradient.o Line.o Image.o
+	Gradient.o Line.o Image.o Graph.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS) -O3
 

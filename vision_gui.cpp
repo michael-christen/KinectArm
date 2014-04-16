@@ -154,6 +154,7 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
+		
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
@@ -170,6 +171,14 @@ line_t normalize_line(line_t line) {
 	return line;
 }
 
+void add_circle_to_buffer(vx_buffer_t *vb, int x, int y) {
+	vx_object_t * vo = vxo_chain(
+			vxo_mat_translate3(x,y,0),
+			vxo_mat_scale3(5,5,5),
+			vxo_circle(vxo_lines_style(vx_green, 3))
+			);
+	vx_buffer_add_back(vb,vo);
+}
 void add_line_to_buffer(vx_buffer_t *vb, line_t line) {
 	int npoints = 2;
 	float points[npoints*3];
@@ -205,6 +214,11 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->depth_lines[i]);
+		}
+		//Add points
+		for(size_t i = 0; i < state->pts.size(); ++i) {
+			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
+					480-state->im.getY(state->pts[i]));
 		}
 		vx_buffer_swap(vb);
 	}
