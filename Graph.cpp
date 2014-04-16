@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 01:42:45 PM EDT
+ * Last Modified : Wed 16 Apr 2014 02:54:14 PM EDT
 
  * Created By : Michael Christen
 
@@ -72,7 +72,6 @@ std::vector<int> getEndPoints(
 	//Get end points
 	for(int i = 0; i < num_pts; ++i) {
 		clearDist(graph);
-		graph[start].min_dist = 0;
 		for(int j = 0; j <= i; ++j) {
 			graph[endPoints[j]].min_dist = 0;
 		}
@@ -95,6 +94,14 @@ void clearDist(std::map<int, G_Node> &graph) {
 		it->second.min_dist = DBL_MAX;
 	}
 }
+ #define dNode std::pair<int, double>
+
+class dNodeComp {
+	public:
+		bool operator() (const dNode &a, const dNode &b) const{
+			return a.second < b.second;
+		}
+};
 
 int dijkstra(
 		std::map<int, G_Node> & graph,
@@ -102,23 +109,31 @@ int dijkstra(
 		int start
 		) {
 	std::vector<bool> visited = std::vector<bool>(d_transf.size(),false);
+	std::priority_queue<dNode, std::vector<dNode>, dNodeComp> pQ;
+
 	visited[start] = true;
 	int numVisited = 1;
 	G_Node temp = graph[start];
 	//Visit all of the nodes
-	while(numVisited != graph.size()) {
+	pQ.push(dNode(start, 0.0));
+	while(!pQ.empty()) {
+		dNode min = pQ.top();
+		pQ.pop();
+		temp = graph[min.first];
 		//Change distances if needed
 		for(int i = 0; i < temp.nodes.size(); ++i) {
 			int id = temp.nodes[i];
-			if(!visited[id]) {
+	//		if(!visited[id]) {
 				//Might want to compute actual euclidean dist
 				double dist = temp.min_dist + 1;
 				if(dist < graph[temp.nodes[i]].min_dist) {
 					graph[temp.nodes[i]].min_dist =
 						dist;
+					pQ.push(dNode(temp.nodes[i],dist));
 				}
-			}
+	//		}
 		}
+		/*
 		//Find smallest distance
 		double min_dist = DBL_MAX;
 		int min_id = -1;
@@ -130,16 +145,15 @@ int dijkstra(
 			}
 		}
 		if(min_id < 0) {
-			/*
 			printf("numVisits: %d, size: %d\n",
 					numVisited, graph.size());
-					*/
 			break;
 		}
 		assert(min_id >= 0);
 		visited[min_id] = true;
 		numVisited ++;
 		temp = graph[min_id];
+		*/
 	}
 	//Now that all of the closest distances are computed,
 	//Return the largest one

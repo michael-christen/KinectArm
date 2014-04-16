@@ -9,6 +9,7 @@
 #include<climits>
 #include<map>
 #include<vector>
+#include<queue>
 #include<algorithm>
 #include<float.h>
 
