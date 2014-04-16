@@ -127,30 +127,9 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	return im;
 };
 
-uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, bool use_markers) {
-	
-	uint8_t  scaled_down;
-	double   tmp;
-	//Not sure how to fix?
-	if (use_markers){
-		uint16_t MAX_DEPTH_VAL = 0x1fff;
-		tmp = (depth+0.0)/(MAX_DEPTH_VAL+0.0);
-		tmp *= 0xff;
-		scaled_down = 0xff - (uint8_t)tmp;
-
-		if(!depth) {
-			return 0xFFFFFFFF;
-		}
-
-		if(valid) {
-			return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
-		}
-
-		return 0xFF000000;
-	} else {
-		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
-		return px;
-	}
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
+	uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
+	return px;
 
 	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
 	/*
@@ -167,23 +146,43 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, bool use_markers) {
 	*/
 }
 
-uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, bool use_markers) {
-	if (use_markers) {
-		return video;
-	} else {
-		if(valid) {
-			//return dist_to_grey(gr.mag());
-			double h,s,v;
-			RGBtoHSV(video,&h,&s,&v);
-			uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
-			uint8_t r,g,b;
-			r = get_red(px);
-			g = get_green(px);
-			b = get_blue(px);
-			return px;
-		}
-		return 0xFF000000;
-	}	
+uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr) {
+	uint8_t  scaled_down;
+	double   tmp;
+
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
+	tmp = (depth+0.0)/(MAX_DEPTH_VAL+0.0);
+	tmp *= 0xff;
+	scaled_down = 0xff - (uint8_t)tmp;
+
+	if(!depth) {
+		return 0xFFFFFFFF;
+	}
+
+	if(valid) {
+		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
+	}
+
+	return 0xFF000000;
+}
+
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
+	if(valid) {
+		//return dist_to_grey(gr.mag());
+		double h,s,v;
+		RGBtoHSV(video,&h,&s,&v);
+		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
+		uint8_t r,g,b;
+		r = get_red(px);
+		g = get_green(px);
+		b = get_blue(px);
+		return px;
+	}
+	return 0xFF000000;	
+}
+
+uint32_t videoToImMarkers(uint32_t video, bool valid, Gradient gr) {
+	return video;
 }
 
 double   videoToGrad(uint32_t px, bool valid) {

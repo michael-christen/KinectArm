@@ -151,10 +151,20 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Visual map
-		vx_object_t * vo = vxo_image_from_u32(
-				state->im.getImage(videoToIm, state->getopt_options.use_markers), 
+		vx_object_t * vo;
+
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->im.getImage(videoToImMarkers), 
 				VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else {
+			vo = vxo_image_from_u32(
+				state->im.getImage(videoToIm), 
+				VXO_IMAGE_FLIPY,
+				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+			
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
@@ -212,9 +222,17 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Depth map
-		vx_object_t * vo = vxo_image_from_u32(
-				state->depth.getImage(depthToIm, state->getopt_options.use_markers),
+		vx_object_t * vo;
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->depth.getImage(depthToImMarkers),
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else { 
+			vo = vxo_image_from_u32(
+				state->depth.getImage(depthToIm),
+			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+		 
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
