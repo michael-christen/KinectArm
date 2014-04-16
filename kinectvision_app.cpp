@@ -214,8 +214,10 @@ void kinect_process(state_t* state){
 	{
 		double prev_time, cur_time;
 		double gPrevTime, gCurTime;
+		double setupTime, processTime, tearDownTime;
 		//Update
 		gPrevTime = utime_now()/1000000.0;
+		prev_time = gPrevTime;
 		update_kinect(state);
 		//Do cool processing
 
@@ -271,25 +273,17 @@ void kinect_process(state_t* state){
 			//dtocs(d_transf, state->depth);
 			d_transf.computeGradient(d_map_to_grad);
 			gCurTime = utime_now()/1000000.0;
-			printf("setup: %f\n",gCurTime - gPrevTime);
-			prev_time = utime_now()/1000000.0;
+			setupTime = gCurTime - gPrevTime;
+			gPrevTime = gCurTime;
 			minc_local_threshold(d_transf);
-			cur_time = utime_now()/1000000.0;
-			printf("Min-C local thresh time: %f\n",cur_time-prev_time);
-			prev_time = utime_now()/1000000.0;
-			gPrevTime = prev_time;
-			prev_time = utime_now()/1000000.0;
 			blurGradient(d_transf);
 			std::map<int,G_Node> graph = 
 				getGraphFromSkeleton(d_transf);	
-			cur_time = utime_now()/1000000.0;
-			printf("Graph from Skel time and blur: %f\n",cur_time-prev_time);
-			printf("GRAPH SIZE: %d\n",graph.size());
-			prev_time = utime_now()/1000000.0;
+			//printf("GRAPH SIZE: %d\n",graph.size());
 			state->pts = 
 				getEndPoints(d_transf, graph, 10);
-			cur_time = utime_now()/1000000.0;
-			printf("End Points time: %f\n",cur_time-prev_time);
+			gCurTime = utime_now()/1000000.0;
+			processTime = gCurTime - gPrevTime;
 			/*
 			   std::vector<line_t> dp_lines = hough_transform(d_transf);
 			   printf("Num_linos: %d\n",dp_lines.size());
@@ -374,6 +368,9 @@ void kinect_process(state_t* state){
 				state->joints[RWRIST].screen_y = imageY;
 			}
 		}
+		cur_time = utime_now()/1000000.0;
+		printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
+				setupTime, processTime, cur_time - prev_time);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 
@@ -403,10 +400,7 @@ void * kinect_analyze(void * data){
 
 	while(state->running){
 		//Process callbacks
-		double prev_time = utime_now()/1000000.0;
 		kinect_process(state);
-		double cur_time = utime_now()/1000000.0;
-		printf("TOTAL KINECT PROCESSING = %f\n",cur_time-prev_time);
 		usleep(10000);
 	}
 
