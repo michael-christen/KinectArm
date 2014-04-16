@@ -14,3 +14,7 @@
 
 #dump kinect data
 data/
+
+#performance
+cachegrind.*
+callgrind.*

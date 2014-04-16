@@ -53,3 +53,14 @@ LD_PRELOAD="/usr/local/lib64/fakenect/libfreenect.so" FAKENECT_PATH="<path-into-
 
 For some reason this doesn't work with the cpp wrapper, so we might
 want to use the c version of the code.
+
+
+Performance
+============
+
+valgrind --dsymutil=yes --tool=callgrind ../../bin/kinectvision_app
+callgrind_annotate callgrind.out.5285 
+callgrind_annotate callgrind.out.5381  filter.cpp | less
+valgrind --tool=cachegrind ../../bin/kinectvision_app
+cg_annotate --show=Dr,Dw cachegrind.out.5481 | less
+kachegrind callgrind.out.5381 
