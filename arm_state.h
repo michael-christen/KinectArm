@@ -58,6 +58,15 @@ struct layer_data_t {
     int (*destroy)(state_t *state, layer_data_t *layerData);
 };
 
+enum FSM_state_t {
+	FSM_NONE,
+	FSM_ARM,
+	FSM_WRIST,
+	FSM_GRIP,
+	FSM_ROT_LEFT,
+	FSM_ROT_RIGHT
+};
+
 struct state_t {
     getopt_options_t  getopt_options;
     vx_application_t app;
@@ -73,6 +82,7 @@ struct state_t {
 
     pthread_t lcm_handle_thread;
     pthread_t arm_commander_thread;
+	pthread_t fsm_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
     pthread_t gui_thread;
@@ -92,6 +102,11 @@ struct state_t {
     Body *body;
     RexArm *arm;
     ConfigSpace cfs;
+
+	FSM_state_t FSM_state;
+	FSM_state_t FSM_next_state;
+	bool close_gripper;
+	double last_gripper_angle;
 };
 
 

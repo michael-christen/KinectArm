@@ -114,15 +114,15 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 
 	double leftHandDist = fabs(this->joints[LWRIST].z);
 
-	if (leftHandDist < 1000) {
+	/*if (leftHandDist < 1000) {
 		printf("Left hand is close enough!\n");
 		servoAngles[3] = elbowSign*elbowAngle;
-	} else {
+	} else {*/
 		servoAngles[0] = shoulderAngle0;
 		servoAngles[1] = shoulderAngle1;
 		servoAngles[2] = elbowSign*elbowAngle;
-		servoAngles[4] = servoAngles[5] = 0;
-	}
+		servoAngles[3] = servoAngles[4] = servoAngles[5] = 0;
+	//}
 	printf("s0 - %f\n", shoulderAngle0);
 
 	matd_destroy(floor_shoulder);

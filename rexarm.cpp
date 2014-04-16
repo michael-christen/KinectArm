@@ -212,6 +212,12 @@ void RexArm::setCurAngles(double angles[]) {
 	pthread_mutex_unlock(&this->curAnglesMutex);
 }
 
+void RexArm::setTargetSpeed(double speed) {
+	pthread_mutex_lock(&this->targetSpeedMutex);
+	this->targetSpeed = speed;
+	pthread_mutex_unlock(&this->targetSpeedMutex);
+}
+
 void RexArm::getTargetAngles(double arr[]) {
 	pthread_mutex_lock(&this->targetAnglesMutex);
 	for (int i = 0; i < this->numServos; i++) {
@@ -226,6 +232,12 @@ void RexArm::getCurAngles(double arr[]) {
 		arr[i] = this->curAngles[i];
 	}
 	pthread_mutex_unlock(&this->curAnglesMutex);
+}
+
+void RexArm::getTargetSpeed(double& speed) {
+	pthread_mutex_lock(&this->targetSpeedMutex);
+	speed = this->targetSpeed;
+	pthread_mutex_unlock(&this->targetSpeedMutex);
 }
 
 void RexArm::drawCurState(vx_buffer_t *buf, const float color[]) {

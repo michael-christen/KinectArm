@@ -20,6 +20,7 @@
 #include "config_space.h"
 #include "rexarm.h"
 #include "bounding_box.h"
+#include "state_machine.h"
 
 static int64_t utime_now()
 {
@@ -65,8 +66,9 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	double angles[NUM_SERVOS];
-	state->arm->getTargetAngles(angles);
+	state->body->processMsg(msg);
+	//double angles[NUM_SERVOS];
+	//state->arm->getTargetAngles(angles);
 
 	/*for (int i = 0; i < 7; i++) {
 		if (i == HEAD || i == RSHOULDER || i == RELBOW || i == RWRIST) {
@@ -92,9 +94,9 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		}
 	}*/
 
-	state->body->processMsg(msg);
+	/*state->body->processMsg(msg);
 	state->body->getServoAngles(angles, true);
-	state->arm->setTargetAngles(angles, state->cfs);
+	state->arm->setTargetAngles(angles, state->cfs);*/
 }
 
 int angles_valid(double angles[]) {
@@ -135,6 +137,7 @@ void* arm_commander(void *data) {
 	int valid_angles;
 	state_t *state = (state_t*) data;
 	double angles[NUM_SERVOS];
+	double speed;
 
 	dynamixel_command_list_t cmds;
     cmds.len = NUM_SERVOS;
@@ -142,12 +145,13 @@ void* arm_commander(void *data) {
 
     while (state->running) {
     	state->arm->getTargetAngles(angles);
+		state->arm->getTargetSpeed(speed);
     	valid_angles = angles_valid(angles);
     	if (valid_angles) {
 	    		for (int id = 0; id < NUM_SERVOS; id++) {
 				cmds.commands[id].utime = utime_now();
 				cmds.commands[id].position_radians = angles[id];
-				cmds.commands[id].speed = 0.5;
+				cmds.commands[id].speed = speed;
 				cmds.commands[id].max_torque = 0.7;
 		    }
     	}
@@ -163,6 +167,12 @@ void* arm_commander(void *data) {
 
 	free(cmds.commands);
 
+	return NULL;
+}
+
+void* FSM(void *data){
+	state_t* state = (state_t*) data;
+	state_machine_run(state);
 	return NULL;
 }
 
@@ -216,6 +226,7 @@ int main(int argc, char ** argv)
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
 	//pthread_create(&state->gui_thread,  NULL, gui_create, state);
 	pthread_create(&state->arm_commander_thread, NULL, arm_commander, state);
+	pthread_create(&state->fsm_thread, NULL, FSM, state);
 	//pthread_join(state->gui_thread, NULL);
 	gui_create(state);
 	printf("after gui_create\n");
