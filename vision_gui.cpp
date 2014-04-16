@@ -170,6 +170,11 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
+		//Add points
+		for(size_t i = 0; i < state->pts.size(); ++i) {
+			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
+					480-state->im.getY(state->pts[i]));
+		}
 		if (state->mouseDownSet) {
 			line_t line;
 			line.ll.x = line.ru.x = state->mouseDownX;

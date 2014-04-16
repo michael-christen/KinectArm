@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Wed 16 Apr 2014 11:08:28 AM EDT
+	* Last Modified : Wed 16 Apr 2014 01:27:30 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -369,7 +369,7 @@ void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 std::vector<pixel> minc_local_threshold(
 		Image<double> & transf) {
 	const double c = -9;
-	const int num_wide = 6;
+	const int num_wide = 2;
 	std::vector<pixel> skeleton_pts;
 	double mean;
 	int num_valid;
