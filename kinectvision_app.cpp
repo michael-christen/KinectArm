@@ -269,14 +269,14 @@ void kinect_process(state_t* state){
 				}
 			}
 			*/
-			get_dist_transform(d_transf, state->depth);
-			//dtocs(d_transf, state->depth);
-			d_transf.computeGradient(d_map_to_grad);
 			gCurTime = utime_now()/1000000.0;
 			setupTime = gCurTime - gPrevTime;
 			gPrevTime = gCurTime;
+
+			get_dist_transform(d_transf, state->depth);
+			//dtocs(d_transf, state->depth);
+			d_transf.computeGradient(d_map_to_grad);
 			minc_local_threshold(d_transf);
-			blurGradient(d_transf);
 			std::map<int,G_Node> graph = 
 				getGraphFromSkeleton(d_transf);	
 			//printf("GRAPH SIZE: %d\n",graph.size());
