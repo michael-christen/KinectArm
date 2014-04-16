@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Wed 16 Apr 2014 01:27:30 PM EDT
+	* Last Modified : Wed 16 Apr 2014 05:27:16 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -369,17 +369,37 @@ void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 std::vector<pixel> minc_local_threshold(
 		Image<double> & transf) {
 	const double c = -9;
-	const int num_wide = 2;
+	const int num_wide = 1;
 	std::vector<pixel> skeleton_pts;
 	double mean;
 	int num_valid;
 	std::vector<int> neighbors;
-	std::vector<double> new_transf = transf.data;
+	//std::vector<double> new_transf = transf.data;
+	//Array that holds sum of neighbors value
+	std::vector<double> neighbor_total = 
+		std::vector<double>(num_wide*2+1, 0);
+	std::vector<int> neighbor_num_valid = 
+		std::vector<int>(num_wide*2+1, 0);
+
+	/*
 	for(int i = 0; i < transf.size(); ++i) {
-		neighbors = transf.getBlockNeighborIds(i,num_wide);
+		if(transf.isValid(i)) {
+			neighbors = transf.getRColNeighborIds(i,num_wide);
+			for(int j = 0; j < neighbors.size(); ++j) {
+				if(transf.isValid(neighbors[j])) {
+					mean += transf.gradient[neighbors[j]].mag();
+				}
+			}
+		}
+	}
+	*/
+	for(int i = 0; i < transf.size(); ++i) {
 		mean = 0;
 		num_valid = 0;
 		if(transf.isValid(i)) {
+			neighbors = transf.getBlockNeighborIds(i,num_wide);
+			mean += transf.gradient[i].mag();
+			num_valid ++;
 			for(int j = 0; j < neighbors.size(); ++j) {
 				if(transf.isValid(neighbors[j])) {
 					//mean += transf.get(neighbors[j]);
@@ -390,17 +410,17 @@ std::vector<pixel> minc_local_threshold(
 			mean /= num_valid + 0.0;
 			//printf("mean: %f\n",mean);
 			if(transf.gradient[i].mag() < mean + c) {
-				new_transf[i] = 100;
+				//new_transf[i] = 100;
 				pixel_t px = {transf.getX(i), transf.getY(i)};
 				skeleton_pts.push_back(px);
 				transf.validate(i);
 			} else {
-				new_transf[i] =  0;
+				//new_transf[i] =  0;
 				transf.invalidate(i);
 			}
 		}
 	}
-	transf.data = new_transf;
+	//transf.data = new_transf;
 	return skeleton_pts;
 }
 

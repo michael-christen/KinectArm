@@ -59,6 +59,7 @@ class Image {
 				bool(*is_neighbor)(Gradient, Gradient));
 		//Get nxn grid of id's centered at i
 		std::vector<int> getBlockNeighborIds(int i, int n);
+		std::vector<int> getRColNeighborIds(int i, int n);
 
 		size_t size();
 		bool   empty();
@@ -377,11 +378,11 @@ std::vector<int> Image<T>::getBlockNeighborIds(int i, int n) {
 	int cur_x = getX(i);
 	int cur_y = getY(i);
 
-	for(int y = -n/2; y <= n/2; ++y) { 
+	for(int y = -n; y <= n; ++y) { 
 		if(cur_y + y < 0 || cur_y + y >= height) {
 			continue;
 		}
-		for(int x = -n/2; x <= n/2; ++x) { 
+		for(int x = -n; x <= n; ++x) { 
 			//edge
 			if(cur_x + x < 0 || cur_x + x >= width) {
 				continue;
@@ -393,6 +394,25 @@ std::vector<int> Image<T>::getBlockNeighborIds(int i, int n) {
 			}
 			neighbors.push_back(id(cur_x + x, cur_y + y));
 		}
+	}
+	return neighbors;
+}
+
+template<typename T>
+std::vector<int> Image<T>::getRColNeighborIds(int i, int n) {
+	std::vector<int> neighbors;
+	int cur_x = getX(i);
+	int new_x = cur_x + 1;
+	int cur_y = getY(i);
+	if( new_x > width) {
+		return neighbors;
+	}
+	for(int j = -n; j <= n; ++j) {
+		int new_y = cur_y + j;
+		if(new_y < 0 || new_y >= height) {
+			continue;
+		}
+		neighbors.push_back(id(new_x,new_y));
 	}
 	return neighbors;
 }

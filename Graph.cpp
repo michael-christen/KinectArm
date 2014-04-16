@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 03:42:32 PM EDT
+ * Last Modified : Wed 16 Apr 2014 05:17:40 PM EDT
 
  * Created By : Michael Christen
 
@@ -24,7 +24,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,10);
+			neighbors = im.getBlockNeighborIds(i,5);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
