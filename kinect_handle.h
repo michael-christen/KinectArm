@@ -31,7 +31,9 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data);
 void make_depth_viewable(image_u32_t *im);
 
 uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int i);
+uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr, int i);
 uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int i);
+uint32_t videoToImMarkers(uint32_t video, bool valid, Gradient gr, int i);
 double   videoToGrad(uint32_t px, bool valid);
 double   depthToGrad(uint16_t depth, bool valid);
 double  d_map_to_grad(double dist, bool valid); 

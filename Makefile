@@ -44,8 +44,8 @@ skeltrack: ../../bin/skeltrack_vision
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
-../../bin/kinectvision_app: kinectvision_app.o kinect_handle.o vision_gui.o disjoint.o blob_detection.o\
-	pixel.o eecs467_util.o image_helper.o filter.o \
+../../bin/kinectvision_app: kinectvision_app.o vision_gui.o disjoint.o blob_detection.o\
+	skeleton_joint_t.o skeleton_joint_list_t.o pixel.o eecs467_util.o kinect_handle.o image_helper.o filter.o \
 	Gradient.o Line.o Image.o Graph.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS) -O3

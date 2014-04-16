@@ -25,11 +25,14 @@
 // Local Includes
 #include "Image.h"
 #include "Line.h"
+#include "joint.h"
 //////////////
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 2
 #define NUM_SERVOS 6
+
+#define NUM_JOINTS 7
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
@@ -44,8 +47,7 @@ typedef struct getopt_options_t getopt_options_t;
 
 
 struct getopt_options_t {
-    int verbose, no_video, limitKBs, autoCamera, mouseGuidance;
-    double decimate;
+    int use_markers;
 };
 
 struct layer_data_t {
@@ -75,6 +77,11 @@ struct state_t {
     lcm_t * lcm;
     pthread_mutex_t lcm_mutex;
 
+    vx_mouse_event_t last_mouse;
+
+    int init_last_mouse, mouseDownSet;
+    double mouseDownX, mouseDownY;
+
     pthread_t lcm_handle_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
@@ -102,6 +109,10 @@ struct state_t {
 	freenect_context *f_ctx;
 	freenect_device  *f_dev;
 	freenect_video_format current_format;
+
+    joint_t joints[NUM_JOINTS];
+
+    int send_data, set_hand_dist, set_open_hand, set_closed_hand;
 };
 
 

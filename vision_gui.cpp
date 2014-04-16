@@ -40,11 +40,15 @@ double arm_segment_depth = 2.5;
 
 void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char *name)
 {
-	//state_t *state = (state_t*) pl->impl;
-    if (!strcmp("s0", name)) {
-		printf("s0 changed\n");
-    } else if (!strcmp("but1", name)) {
-    	printf("but1 pressed\n");
+	state_t *state = (state_t*) pl->impl;
+    if (!strcmp("but1", name)) {
+		state->set_hand_dist = 1;
+    } else if (!strcmp("but2", name)) {
+    	state->set_open_hand = 1;
+    } else if (!strcmp("but3", name)) {
+    	state->set_closed_hand = 1;
+    } else if (!strcmp("cb1", name)) {
+    	state->send_data = pg_gb(pg, name);
     }
 }
 
@@ -128,6 +132,7 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	float upRight[2] = {640, 480};
 
 	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_add_event_handler(layerData->layer, &state->veh);
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
 	return 1;
 }
@@ -137,6 +142,7 @@ int displayInitKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	float upRight[2] = {640, 480};
 
 	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_add_event_handler(layerData->layer, &state->veh);
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
 	return 1;
 }
@@ -145,21 +151,38 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Visual map
-		vx_object_t * vo = vxo_image_from_u32(
+		vx_object_t * vo;
+
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->im.getImage(videoToImMarkers), 
+				VXO_IMAGE_FLIPY,
+				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else {
+			vo = vxo_image_from_u32(
 				state->im.getImage(videoToIm), 
 				VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+			
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
-		
+		if (state->mouseDownSet) {
+			line_t line;
+			line.ll.x = line.ru.x = state->mouseDownX;
+			line.ll.y = 0;
+			line.ru.y = 680;
+			add_line_to_buffer(vb,line);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
 }
+
 int normalize_y(int y) {
 	return 480-y;
 	//return y < 480/2 ? 480 - y : y - 480/2;
@@ -207,9 +230,17 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Depth map
-		vx_object_t * vo = vxo_image_from_u32(
+		vx_object_t * vo;
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->depth.getImage(depthToImMarkers),
+			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else { 
+			vo = vxo_image_from_u32(
 				state->depth.getImage(depthToIm),
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+		 
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
@@ -219,6 +250,13 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 		for(size_t i = 0; i < state->pts.size(); ++i) {
 			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
 					480-state->im.getY(state->pts[i]));
+		}
+		if (state->mouseDownSet) {
+			line_t line;
+			line.ll.x = line.ru.x = state->mouseDownX;
+			line.ll.y = 0;
+			line.ru.y = 680;
+			add_line_to_buffer(vb,line);
 		}
 		vx_buffer_swap(vb);
 	}
@@ -286,7 +324,8 @@ void gui_create(state_t *state) {
 	vx_remote_display_source_attr_t remote_attr;
 	vx_remote_display_source_attr_init(&remote_attr);
 	remote_attr.advertise_name = "Kinect Arm";
-
+	remote_attr.advertise_port++;
+	remote_attr.connection_port++;
 
 	// Init layer data structs
 	state->layers[0].enable = 1;
@@ -315,8 +354,11 @@ void gui_create(state_t *state) {
 
 	// Handles layer init, rendering, and destruction
 	parameter_gui_t *pg = pg_create();
-    pg_add_double_slider(pg, "s0", "A slider", -M_PI, M_PI, 0);
-    pg_add_buttons(pg, "but1", "Button 1", NULL);
+    pg_add_check_boxes(pg, "cb1", "Send Data", state->send_data, NULL);
+    pg_add_buttons(pg, "but1", "Set Hand Distance",
+    					"but2", "Set Open Hand",
+    					"but3", "Set Closed Hand",
+    					 NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
     my_listener->impl = state;

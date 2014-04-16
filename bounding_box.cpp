@@ -370,6 +370,16 @@ bool BoundingBox::intersect(BoundingBox *b) {
 	return true;
 }
 
+bool BoundingBox::pointWithinBox(double x, double y, double z) {
+	double bx = matd_get(this->pos, 0, 0);
+	double by = matd_get(this->pos, 1, 0);
+	double bz = matd_get(this->pos, 2, 0);
+
+	return (x >= bx - this->hW && x <= bx + this->hW
+		&& y >= by - this->hH && y <= by + this->hH
+		&& z >= bz - this->hD && z <= bz + this->hD);
+}
+
 void BoundingBox::draw(vx_buffer *buf, const float color[]) {
     vx_object_t *box = vxo_chain(
 	    // Base
