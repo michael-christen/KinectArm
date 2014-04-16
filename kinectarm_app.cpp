@@ -22,6 +22,8 @@
 #include "rexarm.h"
 #include "bounding_box.h"
 
+int dummyCount = 0;
+
 static int64_t utime_now()
 {
     struct timeval tv;
@@ -66,8 +68,6 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	double angles[NUM_SERVOS];
-	state->arm->getTargetAngles(angles);
 
 	/*for (int i = 0; i < 7; i++) {
 		if (i == HEAD || i == RSHOULDER || i == RELBOW || i == RWRIST) {
@@ -97,32 +97,37 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 
 	joint_t lwrist = state->body->getJoint(LWRIST);
 	joint_t rshoulder = state->body->getJoint(RSHOULDER);
-	double adjX = lwrist.x - rshoulder.x;
-	double adjY = -lwrist.y - rshoulder.y;
-	double adjZ = lwrist.z - rshoulder.z;
+	double adjX = (lwrist.x - rshoulder.x)/20;
+	double adjY = (lwrist.z - rshoulder.z)/20;
+	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
 	if (state->set_gripper_cb) {
 		state->set_gripper_cb = 0;
-		state->controlBoxes[GRIPPER]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ);
 	}
 
-	if (state->set_elbow_cb) {
-		state->set_elbow_cb = 0;
-		state->controlBoxes[ELBOW]->setPosition(adjX/20, adjZ/20, adjY/20);
+	if (state->set_wrist_cb) {
+		state->set_wrist_cb = 0;
+		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ);
 	}
 
 	if (state->set_left_rot_cb) {
 		state->set_left_rot_cb = 0;
-		state->controlBoxes[LEFT_ROT]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[LEFT_ROT]->setPosition(adjX, adjY, adjZ);
 	}
 
 	if (state->set_right_rot_cb) {
 		state->set_right_rot_cb = 0;
-		state->controlBoxes[RIGHT_ROT]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[RIGHT_ROT]->setPosition(adjX, adjY, adjZ);
 	}
 
-	state->body->getServoAngles(angles, true);
-	state->arm->setTargetAngles(angles, state->cfs);
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
+			state->controlBoxSelected[i] = true;
+		} else {
+			state->controlBoxSelected[i] = false;
+		}
+	}
 }
 
 void* lcm_handle_loop(void *data) {
@@ -203,9 +208,14 @@ int main(int argc, char ** argv)
 	state->body = new Body();
 	state->running = 1;
 	state->set_gripper_cb = 0;
-	state->set_elbow_cb = 0;
+	state->set_wrist_cb = 0;
 	state->set_left_rot_cb = 0;
 	state->set_right_rot_cb = 0;
+
+	state->controlBoxColor[GRIPPER] = vx_orange;
+	state->controlBoxColor[WRIST] = vx_purple;
+	state->controlBoxColor[LEFT_ROT] = vx_green;
+	state->controlBoxColor[RIGHT_ROT] = vx_blue;
 
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		state->controlBoxes[i] = new BoundingBox();

@@ -74,7 +74,7 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     } else if (!strcmp("but3", name)) {
     	state->set_gripper_cb = 1;
     } else if (!strcmp("but4", name)) {
-    	state->set_elbow_cb = 1;
+    	state->set_wrist_cb = 1;
     } else if (!strcmp("but5", name)) {
     	state->set_left_rot_cb = 1;
     } else if (!strcmp("but6", name)) {
@@ -209,7 +209,7 @@ int initSkeletonLayer(state_t *state, layer_data_t *layerData) {
 }
 
 int displayInitSkeletonLayer(state_t *state, layer_data_t *layerData) {
-	const float eye[3] = {-50, -50, 50};
+	const float eye[3] = {0, 50, 50};
 	const float lookat[3] = {0, 0, 25};
 	const float up[3] = {0, 0, 1};
 
@@ -238,8 +238,16 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Control Boxes
 	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
+	
+	const float* color;
+	
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
-		state->controlBoxes[i]->draw(cbBuff, vx_orange);
+		if (state->controlBoxSelected[i]) {
+			color = vx_white;
+		} else {
+			color = state->controlBoxColor[i];
+		}
+		state->controlBoxes[i]->draw(cbBuff, color);
 	}
 
 	//Swap buffers
@@ -344,7 +352,7 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
     pg_add_buttons(pg, "but3", "Set Gripper CB",
-    					"but4", "Set Elbow CB",
+    					"but4", "Set Wrist CB",
     					"but5", "Set Left Rotation CB",
     					"but6", "Set Right Rotation CB",
     					NULL);

@@ -40,7 +40,7 @@ typedef struct layer_data_t layer_data_t;
 typedef struct state_t state_t;
 typedef struct getopt_options_t getopt_options_t;
 
-enum ControlBoxes {GRIPPER, ELBOW, LEFT_ROT, RIGHT_ROT};
+enum ControlBoxes {GRIPPER, WRIST, LEFT_ROT, RIGHT_ROT};
 
 struct getopt_options_t {
     int verbose, no_video, limitKBs, autoCamera, mouseGuidance;
@@ -91,7 +91,7 @@ struct state_t {
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
 
-    int set_gripper_cb, set_elbow_cb;
+    int set_gripper_cb, set_wrist_cb;
     int set_left_rot_cb, set_right_rot_cb;
 
     Body *body;
@@ -99,6 +99,8 @@ struct state_t {
     ConfigSpace cfs;
 
     BoundingBox* controlBoxes[NUM_CONTROL_BOXES];
+    bool controlBoxSelected[NUM_CONTROL_BOXES];
+    const float* controlBoxColor[NUM_CONTROL_BOXES];
 };
 
 
