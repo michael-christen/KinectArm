@@ -212,10 +212,12 @@ void kinect_process(state_t* state){
 
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
+		double prev_time, cur_time;
+		double gPrevTime, gCurTime;
 		//Update
+		gPrevTime = utime_now()/1000000.0;
 		update_kinect(state);
 		//Do cool processing
-		double prev_time, cur_time;
 
 		//Only look at those pixels which are in the foreground
 		//of the depth field
@@ -265,40 +267,28 @@ void kinect_process(state_t* state){
 				}
 			}
 			*/
-			cur_time = utime_now()/1000000.0;
-			//printf("Im line regress time: %f\n",cur_time-prev_time);
-			prev_time = utime_now()/1000000.0;
 			get_dist_transform(d_transf, state->depth);
-			cur_time = utime_now()/1000000.0;
-			printf("Dist transf time: %f\n",cur_time-prev_time);
 			//dtocs(d_transf, state->depth);
-			prev_time = utime_now()/1000000.0;
 			d_transf.computeGradient(d_map_to_grad);
-			cur_time = utime_now()/1000000.0;
-			//printf("Depth gradient time: %f\n",cur_time-prev_time);
+			gCurTime = utime_now()/1000000.0;
+			printf("setup: %f\n",gCurTime - gPrevTime);
 			prev_time = utime_now()/1000000.0;
 			minc_local_threshold(d_transf);
 			cur_time = utime_now()/1000000.0;
 			printf("Min-C local thresh time: %f\n",cur_time-prev_time);
 			prev_time = utime_now()/1000000.0;
-			blurGradient(d_transf);
-			cur_time = utime_now()/1000000.0;
-			//printf("D-transf blur grad time: %f\n",cur_time-prev_time);
+			gPrevTime = prev_time;
 			prev_time = utime_now()/1000000.0;
+			blurGradient(d_transf);
 			std::map<int,G_Node> graph = 
 				getGraphFromSkeleton(d_transf);	
 			cur_time = utime_now()/1000000.0;
-			printf("Graph from Skel time: %f\n",cur_time-prev_time);
+			printf("Graph from Skel time and blur: %f\n",cur_time-prev_time);
 			printf("GRAPH SIZE: %d\n",graph.size());
 			prev_time = utime_now()/1000000.0;
 			state->pts = 
 				getEndPoints(d_transf, graph, 10);
 			cur_time = utime_now()/1000000.0;
-			for(int i = 0; i < state->pts.size(); ++i) {
-				int id = state->pts[i];
-				printf("i:%d id:%d x:%d y:%d\n",
-						i, id, d_transf.getX(id), d_transf.getY(id));
-			}
 			printf("End Points time: %f\n",cur_time-prev_time);
 			/*
 			   std::vector<line_t> dp_lines = hough_transform(d_transf);
