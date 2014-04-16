@@ -17,10 +17,13 @@
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
+#include "joint.h"
 #include "config_space.h"
 #include "rexarm.h"
 #include "bounding_box.h"
 #include "state_machine.h"
+
+int dummyCount = 0;
 
 static int64_t utime_now()
 {
@@ -97,10 +100,40 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	/*state->body->processMsg(msg);
 	state->body->getServoAngles(angles, true);
 	state->arm->setTargetAngles(angles, state->cfs);*/
-}
 
-int angles_valid(double angles[]) {
-	return 1;
+	joint_t lwrist = state->body->getJoint(LWRIST);
+	joint_t rshoulder = state->body->getJoint(RSHOULDER);
+	double adjX = (lwrist.x - rshoulder.x)/20;
+	double adjY = (lwrist.z - rshoulder.z)/20;
+	double adjZ = (-lwrist.y - rshoulder.y)/20;
+
+	if (state->set_gripper_cb) {
+		state->set_gripper_cb = 0;
+		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ);
+	}
+
+	if (state->set_wrist_cb) {
+		state->set_wrist_cb = 0;
+		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ);
+	}
+
+	if (state->set_left_rot_cb) {
+		state->set_left_rot_cb = 0;
+		state->controlBoxes[LEFT_ROT]->setPosition(adjX, adjY, adjZ);
+	}
+
+	if (state->set_right_rot_cb) {
+		state->set_right_rot_cb = 0;
+		state->controlBoxes[RIGHT_ROT]->setPosition(adjX, adjY, adjZ);
+	}
+
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
+			state->controlBoxSelected[i] = true;
+		} else {
+			state->controlBoxSelected[i] = false;
+		}
+	}
 }
 
 void* lcm_handle_loop(void *data) {
@@ -144,24 +177,21 @@ void* arm_commander(void *data) {
     cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
-    	state->arm->getTargetAngles(angles);
-		state->arm->getTargetSpeed(speed);
-    	valid_angles = angles_valid(angles);
-    	if (valid_angles) {
-	    		for (int id = 0; id < NUM_SERVOS; id++) {
+    	if (state->update_arm_cont) {
+    		state->arm->getTargetAngles(angles);
+			state->arm->getTargetSpeed(speed);
+			for (int id = 0; id < NUM_SERVOS; id++) {
 				cmds.commands[id].utime = utime_now();
 				cmds.commands[id].position_radians = angles[id];
 				cmds.commands[id].speed = speed;
 				cmds.commands[id].max_torque = 0.7;
 		    }
-    	}
 
-	    if (valid_angles) {
 	    	pthread_mutex_lock(&state->lcm_mutex);
 		    dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
 		    pthread_mutex_unlock(&state->lcm_mutex);
-	    }
-	   
+		}
+		   
     	usleep(1000000/hz);
 	}
 
@@ -191,6 +221,20 @@ int main(int argc, char ** argv)
 	state->arm = new RexArm();
 	state->body = new Body();
 	state->running = 1;
+	state->set_gripper_cb = 0;
+	state->set_wrist_cb = 0;
+	state->set_left_rot_cb = 0;
+	state->set_right_rot_cb = 0;
+
+	state->controlBoxColor[GRIPPER] = vx_orange;
+	state->controlBoxColor[WRIST] = vx_purple;
+	state->controlBoxColor[LEFT_ROT] = vx_green;
+	state->controlBoxColor[RIGHT_ROT] = vx_blue;
+
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		state->controlBoxes[i] = new BoundingBox();
+		state->controlBoxes[i]->setDimensions(10, 10, 10);
+	}
 
 	lcm_t * lcm = lcm_create (NULL);
 	state->lcm = lcm;
@@ -234,6 +278,9 @@ int main(int argc, char ** argv)
 	// clean up
 	delete state->arm;
 	delete state->body;
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		delete state->controlBoxes[i];
+	}
 	vx_global_destroy();
     getopt_destroy(state->gopt);
 

@@ -20,6 +20,7 @@ class BoundingBox {
 		void setDimensions(double w, double h, double d);
 		void setUnitVectors(matd_t *ux, matd_t *uy, matd_t *uz);
 		bool intersect(BoundingBox *b);
+		bool pointWithinBox(double x, double y, double z);
 		void draw(vx_buffer *buf, const float color[]);
 		double getX();
 		double getY();

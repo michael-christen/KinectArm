@@ -132,6 +132,7 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	float upRight[2] = {640, 480};
 
 	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_add_event_handler(layerData->layer, &state->veh);
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
 	return 1;
 }
@@ -150,20 +151,38 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Visual map
-		vx_object_t * vo = vxo_image_from_u32(
-				state->im.getImage(videoToIm, state->getopt_options.use_markers), 
+		vx_object_t * vo;
+
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->im.getImage(videoToImMarkers), 
 				VXO_IMAGE_FLIPY,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else {
+			vo = vxo_image_from_u32(
+				state->im.getImage(videoToIm), 
+				VXO_IMAGE_FLIPY,
+				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+			
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "viz-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->im_lines[i]);
+		}
+		if (state->mouseDownSet) {
+			line_t line;
+			line.ll.x = line.ru.x = state->mouseDownX;
+			line.ll.y = 0;
+			line.ru.y = 680;
+			add_line_to_buffer(vb,line);
 		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
 }
+
 int normalize_y(int y) {
 	return 480-y;
 	//return y < 480/2 ? 480 - y : y - 480/2;
@@ -175,6 +194,14 @@ line_t normalize_line(line_t line) {
 	return line;
 }
 
+void add_circle_to_buffer(vx_buffer_t *vb, int x, int y) {
+	vx_object_t * vo = vxo_chain(
+			vxo_mat_translate3(x,y,0),
+			vxo_mat_scale3(5,5,5),
+			vxo_circle(vxo_lines_style(vx_green, 3))
+			);
+	vx_buffer_add_back(vb,vo);
+}
 void add_line_to_buffer(vx_buffer_t *vb, line_t line) {
 	int npoints = 2;
 	float points[npoints*3];
@@ -203,13 +230,26 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
 		//Depth map
-		vx_object_t * vo = vxo_image_from_u32(
-				state->depth.getImage(depthToIm, state->getopt_options.use_markers),
+		vx_object_t * vo;
+		if (state->getopt_options.use_markers) {
+			vo = vxo_image_from_u32(
+				state->depth.getImage(depthToImMarkers),
 			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		} else { 
+			vo = vxo_image_from_u32(
+				state->depth.getImage(depthToIm),
+			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+		}
+		 
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
 		vx_buffer_add_back(vb, vo);
 		for(size_t i = 0; i < state->depth_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->depth_lines[i]);
+		}
+		//Add points
+		for(size_t i = 0; i < state->pts.size(); ++i) {
+			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
+					480-state->im.getY(state->pts[i]));
 		}
 		if (state->mouseDownSet) {
 			line_t line;
