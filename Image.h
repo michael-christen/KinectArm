@@ -25,7 +25,7 @@ class Image {
 		//Returns im, pointer, not really safe, but nice for display
 		//Sets the image and returns it
 		//Comparator takes T and valid bit, if add other things like gradient, this would take those too
-		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient));
+		image_u32_t * getImage(uint32_t(*tToPX)(T, bool, Gradient,int));
 
 		//Computes the gradient for the image
 		void computeGradient(double(*tVal)(T,bool));
@@ -33,6 +33,7 @@ class Image {
 		void invalidate(int x, int y);
 		void invalidate(int i);
 		void validate(int x, int y);
+		void validate(int i);
 		void setValid(int x, int y, bool v);
 		void setValid(int i, bool v);
 		bool isValid(int x, int y);
@@ -54,10 +55,13 @@ class Image {
 				bool(*is_neighbor)(T, T)
 		);
 		std::vector<int> getNeighborIds(int x, int y, 
-		const std::vector<bool> & u_valid,
-		bool(*is_neighbor)(Gradient, Gradient));
+				const std::vector<bool> & u_valid,
+				bool(*is_neighbor)(Gradient, Gradient));
+		//Get nxn grid of id's centered at i
+		std::vector<int> getBlockNeighborIds(int i, int n);
 
 		size_t size();
+		bool   empty();
 		int w();
 		int h();
 		void printGradient();
@@ -66,12 +70,12 @@ class Image {
 		std::vector<bool> valid;
 		//Gradient information
 		std::vector<Gradient> gradient;
+		std::vector<T> data;
 	private:
 		int width;
 		int height;
 		//Width*height vector containing our data
 		//Access to (x,y) -> x + width*y
-		std::vector<T> data;
 		//Valid bits to keep track of validness 
 		image_u32_t * im;
 };
@@ -145,6 +149,11 @@ size_t Image<T>::size() {
 }
 
 template <typename T>
+bool Image<T>::empty() {
+	return size() == 0;
+}
+
+template <typename T>
 void Image<T>::update(const std::vector<T> & ts) {
 	assert(ts.size() == data.size());
 	data = ts;
@@ -153,7 +162,8 @@ void Image<T>::update(const std::vector<T> & ts) {
 }
 
 template <typename T>
-image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
+image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient,
+			int)) {
 	for(int x = 0; x < im->width; ++x) {
 		for(int y = 0; y < im->height; ++y) {
 			/*
@@ -166,7 +176,8 @@ image_u32_t * Image<T>::getImage(uint32_t(*tToPX)(T, bool, Gradient)) {
 			im->buf[x+y*im->stride] = tToPX(
 					get(x,y),
 					valid[id(x,y)],
-					gradient[id(x,y)]
+					gradient[id(x,y)],
+					id(x,y)
 			);
 		}
 	}
@@ -211,6 +222,11 @@ void Image<T>::invalidate(int x, int y) {
 template <typename T>
 void Image<T>::validate(int x, int y) {
 	setValid(x,y,true);
+}
+
+template <typename T>
+void Image<T>::validate(int i) {
+	setValid(i,true);
 }
 
 template <typename T>
@@ -353,5 +369,31 @@ std::vector<T> Image<T>::getNeighbors(int x, int y,
 		v_neighbors.push_back(get(neighbors[i]));
 	}
 	return v_neighbors;
+}
+
+template <typename T>
+std::vector<int> Image<T>::getBlockNeighborIds(int i, int n) {
+	std::vector<int> neighbors;
+	int cur_x = getX(i);
+	int cur_y = getY(i);
+
+	for(int y = -n/2; y <= n/2; ++y) { 
+		if(cur_y + y < 0 || cur_y + y >= height) {
+			continue;
+		}
+		for(int x = -n/2; x <= n/2; ++x) { 
+			//edge
+			if(cur_x + x < 0 || cur_x + x >= width) {
+				continue;
+			}
+			//Don't return middle
+			if(cur_y == 0 && cur_x == 0) {
+				//Don't increment index
+				continue;
+			}
+			neighbors.push_back(id(cur_x + x, cur_y + y));
+		}
+	}
+	return neighbors;
 }
 #endif

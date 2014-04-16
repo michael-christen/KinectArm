@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Tue 08 Apr 2014 08:04:30 PM EDT
+	       * Last Modified : Wed 16 Apr 2014 11:40:12 AM EDT
 
 	          * Created By : Michael Christen
 
@@ -58,7 +58,6 @@ void get_rgb(std::vector<uint32_t> &rgb) {
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
 	pthread_mutex_lock(&gl_backbuf_mutex);
-	//printf("rgb calling\n");
 
 	// swap buffers
 	assert (rgb_back == rgb);
@@ -75,7 +74,6 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
 	int i;
 	uint16_t *depth = (uint16_t*)v_depth;
-	//printf("depth calling\n");
 
 	pthread_mutex_lock(&gl_backbuf_mutex);
 	for (i=0; i<640*480; i++) {
@@ -91,7 +89,6 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 		depth_mid[3*i+1] = (pval & 0xff00) >> 8;
 		depth_mid[3*i+2] = 255;
 	}
-	//printf("hi\n");
 	got_depth = true;
 	//pthread_cond_signal(&gl_frame_cond);
 	pthread_mutex_unlock(&gl_backbuf_mutex);
@@ -127,9 +124,11 @@ image_u32_t *im_from_vect(const std::vector<uint8_t> & k_data) {
 	return im;
 };
 
-uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
+uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
+	/*
 	uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
 	return px;
+	*/
 
 	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
 	/*
@@ -144,9 +143,70 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr) {
 	}
 	return 0xFF000000;
 	*/
+	//double val = gr.mag() > 50 ? 1 : 0;
+	/*
+	if(d_transf[id]) { 
+		printf("D:%f\n",d_transf[id]);
+	}
+	*/
+	if(!d_transf.empty()) {
+		//printf("id:%d, size:%d\n",id, d_transf.size());
+		//printf("d_transf -> %f\n",d_transf[id]);
+		double val = d_transf.get(id)/8000.0;
+		if(val > 1.0) {
+			printf("Val: %f\n",val);
+		}
+		val = d_transf.gradient[id].mag() / 255.0;
+		if(!d_transf.isValid(id)) {
+			val = 0;
+		} else {
+			val = 1;
+		}
+
+		/*
+		double ang_dist = 
+		 fabs(getThetaDist(d_transf.gradient[id].angle(), -M_PI));
+		if(ang_dist < 0.1) {
+			val = 1;
+		} else { 
+			val = 0;
+		}
+		*/
+		/*
+		double mag = d_transf.gradient[id].mag();
+		if(mag > 50) {
+			val = 1;
+		} else {
+			val = 0;
+		}
+		*/
+		/*
+		if(val) {
+			printf("val: %f\n",val);
+		}
+		*/
+		uint32_t px =
+			HSVtoRGB((d_transf.gradient[id].angle()+M_PI)/M_PI*180
+				,0.5,val);
+		//uint32_t px  = HSVtoRGB(90, 0.5, val);
+		//uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,val);
+		return px;
+	} else {
+		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,0.5,gr.mag()/255.0);
+		return px;
+	}
+	//if(depth > 200 && depth < 2000 && gr.mag() > 0.01)
+	/*
+	if(true || gr.mag() > 0.01 && valid)
+		return px;
+	else 
+		return 0xFF000000;
+	tmp *= 0xff;
+	scaled_down = 0xff - (uint8_t)tmp;
+	*/
 }
 
-uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr) {
+uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr, int id) {
 	uint8_t  scaled_down;
 	double   tmp;
 
@@ -158,7 +218,7 @@ uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr) {
 	if(!depth) {
 		return 0xFFFFFFFF;
 	}
-
+	
 	if(valid) {
 		return get_px(scaled_down, scaled_down, scaled_down, 0xFF);
 	}
@@ -166,7 +226,7 @@ uint32_t depthToImMarkers(uint16_t depth, bool valid, Gradient gr) {
 	return 0xFF000000;
 }
 
-uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
+uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int id) {
 	if(valid) {
 		//return dist_to_grey(gr.mag());
 		double h,s,v;
@@ -181,7 +241,7 @@ uint32_t videoToIm(uint32_t video, bool valid, Gradient gr) {
 	return 0xFF000000;	
 }
 
-uint32_t videoToImMarkers(uint32_t video, bool valid, Gradient gr) {
+uint32_t videoToImMarkers(uint32_t video, bool valid, Gradient gr, int id) {
 	return video;
 }
 
@@ -197,6 +257,17 @@ double   depthToGrad(uint16_t depth, bool valid) {
 	uint16_t MAX_DEPTH_VAL = 0x1fff;
 	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
 	*/
+	return valid ? 255.0 : 0.0;
+}
+double   d_map_v_grad(double dist, bool valid) {
+	return valid ? 255.0 : 0.0;
+}
+double   d_map_to_grad(double dist, bool valid) {
+	/*
+	uint16_t MAX_DEPTH_VAL = 0x1fff;
+	double diff =  (double) depth / (MAX_DEPTH_VAL+0.0);
+	*/
+	return dist;
 	return valid ? 255.0 : 0.0;
 }
 

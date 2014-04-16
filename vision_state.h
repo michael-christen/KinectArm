@@ -97,6 +97,7 @@ struct state_t {
 	std::vector<line_t> depth_lines;
 	Image<uint32_t> im;
 	std::vector<line_t> im_lines;
+	std::vector<int> pts;
 	/*
 	image_u32_t * depth;
 	*/

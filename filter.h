@@ -2,10 +2,15 @@
 #define __FILTER__H__
 #include "kinect_handle.h"
 #include "Image.h"
+#include "pixel.h"
 #include "Blob.h"
 #include "Gradient.h"
+#include "Line.h"
+#include "common/timestamp.h"
+#include<climits>
 #include<vector>
 #include<queue>
+#include<algorithm>
 
 #define MIN_ALLOWED_DEPTH 0x01ff
 
@@ -22,6 +27,12 @@ double sign(double val);
 
 bool grad_close_enough(Gradient cur, Gradient other);
 
+void dtocs(std::vector<double> & transf, Image<uint16_t> & im);
+
+void get_dist_transform(Image<double> & transf, Image<uint16_t> & im);
+
+std::vector<pixel> minc_local_threshold(Image<double> & transf);
+
 //Get id's of valid neighbors @ (x,y)
 /*
 std::vector<int> getNeighbors(image_u32_t *im, int x, int y);
@@ -34,6 +45,16 @@ std::vector<Blob<Gradient>> get_gradient_blobs(Image<T> &im);
 
 template <typename T>
 Blob<Gradient> get_gradient_blob(Image<T> &im, int start_id);
+
+std::vector<line_t> hough_transform(Image<double> & im);
+
+double get_radius_from_xyt(int x, int y, double theta);
+int getBox(double min, double max, int num, double val);
+double getValFromBoxNum(double min, double max, int num, int box);
+int getHoughId(double theta, double radius);
+double getThetaFromHoughId(int i);
+double getRadFromHoughId(int i);
+line_t getLineFrom_TR(double theta, double radius);
 
 template <typename T>
 void blurGradient(Image<T> &im) {
