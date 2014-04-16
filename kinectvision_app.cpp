@@ -170,16 +170,25 @@ void kinect_process(state_t* state){
 		//Update
 		update_kinect(state);
 		//Do cool processing
-		double prev_time = utime_now()/1000000.0;
+		double prev_time, cur_time;
 
 		//Only look at those pixels which are in the foreground
 		//of the depth field
 		filter_front(state->depth);
+		prev_time = utime_now()/1000000.0;
+		cur_time = utime_now()/1000000.0;
+		//printf("BG filter time: %f\n",cur_time-prev_time);
 		//Filter out image pixels which aren't in foreground
 		//state->depth.copyValid(state->im.valid);
 		//Compute the gradient of the entire image
+		prev_time = utime_now()/1000000.0;
 		state->im.computeGradient(videoToGrad);
+		cur_time = utime_now()/1000000.0;
+		//printf("Im Grad time: %f\n",cur_time-prev_time);
+		prev_time = utime_now()/1000000.0;
 		blurGradient(state->im);
+		cur_time = utime_now()/1000000.0;
+		//printf("IM Blur Grad time: %f\n",cur_time-prev_time);
 		/*
 		state->depth.computeGradient(depthToGrad);
 		blurGradient(state->depth);
@@ -188,15 +197,21 @@ void kinect_process(state_t* state){
 		blurGradient(state->depth);
 		*/
 		printf("\n\nImage\n");
+		prev_time = utime_now()/1000000.0;
 		std::vector<Blob<Gradient>> im_blobs = get_gradient_blobs(state->im);
+		cur_time = utime_now()/1000000.0;
+		//printf("Im grad blob time: %f\n",cur_time-prev_time);
 		//std::vector<line_t> im_lines;
 		state->im_lines.clear();
+		prev_time = utime_now()/1000000.0;
 		for(size_t i = 0; i < im_blobs.size(); ++i) {
 			line_t tmp_line = linear_regression(im_blobs[i]);
 			if(tmp_line.variance <= MAX_VARIANCE) {
 				state->im_lines.push_back(tmp_line);
 			}
 		}
+		cur_time = utime_now()/1000000.0;
+		//printf("Im line regress time: %f\n",cur_time-prev_time);
 		/*
 		printf("\nDepth\n");
 		std::vector<Blob<Gradient>> dp_blobs = get_gradient_blobs(state->depth);
@@ -208,19 +223,33 @@ void kinect_process(state_t* state){
 			}
 		}
 		*/
-		printf("getting d_transf\n");
+		prev_time = utime_now()/1000000.0;
 		get_dist_transform(d_transf, state->depth);
+		cur_time = utime_now()/1000000.0;
+		//printf("Dist transf time: %f\n",cur_time-prev_time);
 		//dtocs(d_transf, state->depth);
-		printf("getting gradient\n");
+		prev_time = utime_now()/1000000.0;
 		d_transf.computeGradient(d_map_to_grad);
-		printf("getting threshold\n");
+		cur_time = utime_now()/1000000.0;
+		//printf("Depth gradient time: %f\n",cur_time-prev_time);
+		prev_time = utime_now()/1000000.0;
 		minc_local_threshold(d_transf);
-		printf("done with d_transf\n");
+		cur_time = utime_now()/1000000.0;
+		//printf("Min-C local thresh time: %f\n",cur_time-prev_time);
+		prev_time = utime_now()/1000000.0;
 		blurGradient(d_transf);
+		cur_time = utime_now()/1000000.0;
+		//printf("D-transf blur grad time: %f\n",cur_time-prev_time);
+		prev_time = utime_now()/1000000.0;
 		std::map<int,G_Node> graph = 
 		   getGraphFromSkeleton(d_transf);	
+		cur_time = utime_now()/1000000.0;
+		//printf("Graph from Skel time: %f\n",cur_time-prev_time);
+		prev_time = utime_now()/1000000.0;
 		state->pts = 
 			getEndPoints(d_transf, graph, 20);
+		cur_time = utime_now()/1000000.0;
+		//printf("End Points time: %f\n",cur_time-prev_time);
 		/*
 		std::vector<line_t> dp_lines = hough_transform(d_transf);
 		printf("Num_linos: %d\n",dp_lines.size());
@@ -250,9 +279,6 @@ void kinect_process(state_t* state){
 		blob_detection(state->im, yellow_hue, 0xff830dfc,
 				10, 200);
 				*/
-		double cur_time = utime_now()/1000000.0;
-		printf("TOTAL KINECT PROCESSING = %f\n",cur_time-prev_time);
-
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 }
@@ -262,7 +288,10 @@ void * kinect_analyze(void * data){
 
 	while(state->running){
 		//Process callbacks
+		double prev_time = utime_now()/1000000.0;
 		kinect_process(state);
+		double cur_time = utime_now()/1000000.0;
+		printf("TOTAL KINECT PROCESSING = %f\n",cur_time-prev_time);
 		usleep(10000);
 	}
 

@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 03:57:31 AM EDT
+ * Last Modified : Wed 16 Apr 2014 11:11:01 AM EDT
 
  * Created By : Michael Christen
 
@@ -68,6 +68,7 @@ std::vector<int> getEndPoints(
 	}
 	start = min_id;
 	endPoints.push_back(start);
+	double prev_time, cur_time;
 	//Get end points
 	for(int i = 0; i < num_pts; ++i) {
 		clearDist(graph);
@@ -75,7 +76,10 @@ std::vector<int> getEndPoints(
 		for(int j = 0; j < i; ++j) {
 			graph[endPoints[j]].min_dist = 0;
 		}
+		prev_time = utime_now()/1000000.0;
 		int id = dijkstra(graph,im,start);
+		cur_time = utime_now()/1000000.0;
+		//printf("Dijkstra time = %f*20=%f\n",cur_time-prev_time, (cur_time-prev_time)*20);
 		endPoints.push_back(id);
 	}
 	/*
@@ -126,8 +130,10 @@ int dijkstra(
 			}
 		}
 		if(min_id < 0) {
+			/*
 			printf("numVisits: %d, size: %d\n",
 					numVisited, graph.size());
+					*/
 			break;
 		}
 		assert(min_id >= 0);
