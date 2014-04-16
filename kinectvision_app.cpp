@@ -292,8 +292,13 @@ void kinect_process(state_t* state){
 			printf("GRAPH SIZE: %d\n",graph.size());
 			prev_time = utime_now()/1000000.0;
 			state->pts = 
-				getEndPoints(d_transf, graph, 20);
+				getEndPoints(d_transf, graph, 10);
 			cur_time = utime_now()/1000000.0;
+			for(int i = 0; i < state->pts.size(); ++i) {
+				int id = state->pts[i];
+				printf("i:%d id:%d x:%d y:%d\n",
+						i, id, d_transf.getX(id), d_transf.getY(id));
+			}
 			printf("End Points time: %f\n",cur_time-prev_time);
 			/*
 			   std::vector<line_t> dp_lines = hough_transform(d_transf);

@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 01:07:39 PM EDT
+ * Last Modified : Wed 16 Apr 2014 01:42:45 PM EDT
 
  * Created By : Michael Christen
 
@@ -24,7 +24,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,8);
+			neighbors = im.getBlockNeighborIds(i,10);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
@@ -73,7 +73,7 @@ std::vector<int> getEndPoints(
 	for(int i = 0; i < num_pts; ++i) {
 		clearDist(graph);
 		graph[start].min_dist = 0;
-		for(int j = 0; j < i; ++j) {
+		for(int j = 0; j <= i; ++j) {
 			graph[endPoints[j]].min_dist = 0;
 		}
 		prev_time = utime_now()/1000000.0;
