@@ -71,13 +71,21 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
 	    } else {
     		printf("Uncheck \"Update Arm Continuously\" first\n");
 	    }
+    } else if (!strcmp("but3", name)) {
+    	state->set_gripper_cb = 1;
+    } else if (!strcmp("but4", name)) {
+    	state->set_elbow_cb = 1;
+    } else if (!strcmp("but5", name)) {
+    	state->set_left_rot_cb = 1;
+    } else if (!strcmp("but6", name)) {
+    	state->set_right_rot_cb = 1;
     } else if (!strcmp("cb1", name)) {
         state->update_arm_cont = pg_gb(pg, name);
     }
 
-    if (state->update_arm_cont || updateServoAngles) {
+    /*if (state->update_arm_cont || updateServoAngles) {
 		state->arm->setTargetAngles(state->gui_servo_angles, state->cfs);
-    }
+    }*/
 }
 
 
@@ -228,9 +236,16 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
 	state->body->draw(skeletonBuff, vx_blue, vx_yellow);
 
+	//Draw Control Boxes
+	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		state->controlBoxes[i]->draw(cbBuff, vx_orange);
+	}
+
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
 	vx_buffer_swap(skeletonBuff);
+	vx_buffer_swap(cbBuff);
 	return 1;
 }
 
@@ -324,10 +339,15 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
+    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont, NULL);
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
-    //pg_add_check_boxes(pg, "cb1", "Update Arm Continuously", state->update_arm_cont, NULL);
-    pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
+    //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
+    pg_add_buttons(pg, "but3", "Set Gripper CB",
+    					"but4", "Set Elbow CB",
+    					"but5", "Set Left Rotation CB",
+    					"but6", "Set Right Rotation CB",
+    					NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
     my_listener->impl = state;

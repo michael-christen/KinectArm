@@ -132,6 +132,7 @@ int displayInitKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	float upRight[2] = {640, 480};
 
 	vx_layer_camera_fit2D(layerData->layer, lowLeft, upRight, 1);
+	vx_layer_add_event_handler(layerData->layer, &state->veh);
 	vx_layer_set_viewport_rel(layerData->layer, layerData->position);
 	return 1;
 }
@@ -159,11 +160,19 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 		for(size_t i = 0; i < state->im_lines.size(); ++i) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
+		if (state->mouseDownSet) {
+			line_t line;
+			line.ll.x = line.ru.x = state->mouseDownX;
+			line.ll.y = 0;
+			line.ru.y = 680;
+			add_line_to_buffer(vb,line);
+		}
 		vx_buffer_swap(vb);
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 	return 1;
 }
+
 int normalize_y(int y) {
 	return 480-y;
 	//return y < 480/2 ? 480 - y : y - 480/2;

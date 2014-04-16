@@ -132,6 +132,10 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_destroy(elbow_wrist);
 }
 
+joint_t Body::getJoint(Joints joint) {
+	return this->joints[joint];
+}
+
 void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_color[]) {
 	vx_object_t *vo;
 	float scale = 1/20.0;
@@ -152,12 +156,14 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 
 	//Draw Joints
 	for (int i = 0; i < NUM_JOINTS; i++) {
-		vo = vxo_chain(
-			vxo_mat_translate3(joints[i].x*scale - joints[RSHOULDER].x*scale, joints[i].z*scale - joints[RSHOULDER].z*scale, -joints[i].y*scale+zoffset - joints[RSHOULDER].y*scale),
-			vxo_mat_scale3(1.5, 1.5, 1.5),
-			vxo_sphere(vxo_mesh_style(joint_color))
-		);
+		if (i != HEAD && i != LSHOULDER && i != LELBOW) {
+			vo = vxo_chain(
+				vxo_mat_translate3(joints[i].x*scale - joints[RSHOULDER].x*scale, joints[i].z*scale - joints[RSHOULDER].z*scale, -joints[i].y*scale - joints[RSHOULDER].y*scale),
+				vxo_mat_scale3(1.5, 1.5, 1.5),
+				vxo_sphere(vxo_mesh_style(joint_color))
+			);
 
-		vx_buffer_add_back(buf, vo);
+			vx_buffer_add_back(buf, vo);
+		}
 	}
 }
