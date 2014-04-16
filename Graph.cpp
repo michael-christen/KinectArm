@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 03:33:19 PM EDT
+ * Last Modified : Wed 16 Apr 2014 03:42:32 PM EDT
 
  * Created By : Michael Christen
 
@@ -70,15 +70,17 @@ std::vector<int> getEndPoints(
 	endPoints.push_back(start);
 	double prev_time, cur_time;
 	//Get end points
+	clearDist(graph);
 	for(int i = 0; i < num_pts; ++i) {
-		clearDist(graph);
+		//clearDist(graph);
 		for(int j = 0; j <= i; ++j) {
 			graph[endPoints[j]].min_dist = 0;
 		}
 		prev_time = utime_now()/1000000.0;
-		int id = dijkstra(graph,im,endPoints);
+		int id = dijkstra(graph,im,start);
 		cur_time = utime_now()/1000000.0;
 		//printf("Dijkstra time = %f*20=%f\n",cur_time-prev_time, (cur_time-prev_time)*20);
+		start = id;
 		endPoints.push_back(id);
 	}
 	/*
@@ -106,7 +108,7 @@ class dNodeComp {
 int dijkstra(
 		std::map<int, G_Node> & graph,
 		Image<double> &d_transf,
-		std::vector<int> stPoints
+		int start
 		)  {
 	//std::vector<bool> visited = std::vector<bool>(d_transf.size(),false);
 	std::priority_queue<dNode, std::vector<dNode>, dNodeComp> pQ;
@@ -115,9 +117,7 @@ int dijkstra(
 	int numVisited = 1;
 	//G_Node temp = graph[start];
 	//Visit all of the nodes
-	for(int i = 0; i < stPoints.size(); ++i) {
-		pQ.push(dNode(stPoints[i], 0.0));
-	}
+	pQ.push(dNode(start, 0.0));
 	while(!pQ.empty()) {
 		dNode min = pQ.top();
 		pQ.pop();

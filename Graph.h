@@ -44,7 +44,7 @@ void clearDist(std::map<int, G_Node> &graph);
 int dijkstra(
 		std::map<int, G_Node> & graph,
 		Image<double> &d_transf,
-		std::vector<int> stPoints
+		int start
 		);
 
 #endif
