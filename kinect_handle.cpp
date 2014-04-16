@@ -6,7 +6,7 @@
 
 	    * Creation Date : 27-03-2014
 
-	       * Last Modified : Wed 16 Apr 2014 11:40:12 AM EDT
+	       * Last Modified : Wed 16 Apr 2014 01:16:16 PM EDT
 
 	          * Created By : Michael Christen
 
@@ -232,6 +232,7 @@ uint32_t videoToIm(uint32_t video, bool valid, Gradient gr, int id) {
 		double h,s,v;
 		RGBtoHSV(video,&h,&s,&v);
 		uint32_t px = HSVtoRGB((gr.angle() + M_PI)/M_PI*180,s,gr.mag()/255.0);
+		px = video;
 		uint8_t r,g,b;
 		r = get_red(px);
 		g = get_green(px);
