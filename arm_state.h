@@ -40,7 +40,7 @@ typedef struct layer_data_t layer_data_t;
 typedef struct state_t state_t;
 typedef struct getopt_options_t getopt_options_t;
 
-enum ControlBoxes {GRIPPER, ELBOW, LEFT_ROT, RIGHT_ROT};
+enum ControlBoxes {GRIPPER, WRIST, LEFT_ROT, RIGHT_ROT};
 
 struct getopt_options_t {
     int verbose, no_video, limitKBs, autoCamera, mouseGuidance;
@@ -60,6 +60,15 @@ struct layer_data_t {
     int (*destroy)(state_t *state, layer_data_t *layerData);
 };
 
+enum FSM_state_t {
+	FSM_NONE,
+	FSM_ARM,
+	FSM_WRIST,
+	FSM_GRIP,
+	FSM_ROT_LEFT,
+	FSM_ROT_RIGHT
+};
+
 struct state_t {
     getopt_options_t  getopt_options;
     vx_application_t app;
@@ -75,6 +84,7 @@ struct state_t {
 
     pthread_t lcm_handle_thread;
     pthread_t arm_commander_thread;
+	pthread_t fsm_thread;
     pthread_mutex_t layer_mutex;
     pthread_mutex_t running_mutex;
     pthread_t gui_thread;
@@ -91,14 +101,21 @@ struct state_t {
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
 
-    int set_gripper_cb, set_elbow_cb;
+    int set_gripper_cb, set_wrist_cb;
     int set_left_rot_cb, set_right_rot_cb;
 
     Body *body;
     RexArm *arm;
     ConfigSpace cfs;
 
-    BoundingBox* controlBoxes[NUM_CONTROL_BOXES];
+	FSM_state_t FSM_state;
+	FSM_state_t FSM_next_state;	//Brian sets
+	bool close_gripper;	//Brian sets
+	double last_gripper_angle;
+    
+	BoundingBox* controlBoxes[NUM_CONTROL_BOXES];
+    bool controlBoxSelected[NUM_CONTROL_BOXES];
+    const float* controlBoxColor[NUM_CONTROL_BOXES];
 };
 
 

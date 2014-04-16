@@ -25,7 +25,7 @@ CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_LCMT
 LDFLAGS =  $(LDFLAGS_VX_GTK) $(LDFLAGS_VX) $(LDFLAGS_GTK) $(LDFLAGS_IMAGESOURCE) $(LDFLAGS_COMMON) $(LDFLAGS_LCMTYPES) $(LDFLAGS_LCM) $(LDFLAGS_STD) $(LDFLAGS_USRLIBDIRS) $(LDFLAGS_LIBFREENECT) $(LDFLAGS_GFREENECT) $(LDFLAGS_SKELTRACK) $(LDFLAGS_CLUTTER)
 CXXFLAGS_STD := -g -D FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D REENTRANT \
 	-Wall -Wno-unused-parameter -pthread -Wno-write-strings -Wno-error=switch
-CFLAGS_CXX = $(CXXFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_USB) $(CFLAGS_LIBFREENECT) -fPIC -O2 -std=c++11
+CFLAGS_CXX = $(CXXFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_VX) $(CFLAGS_GTK) $(CFLAGS_USB) $(CFLAGS_LIBFREENECT) -fPIC -O2 -std=c++0x
 
 BINARIES = ../../bin/kinectarm_app ../../bin/kinectvision_app ../../bin/skeltrack_vision
 LIB = ../../lib
@@ -40,7 +40,7 @@ skeltrack: ../../bin/skeltrack_vision
 
 ../../bin/kinectarm_app: kinectarm_app.o arm_gui.o body.o pid_ctrl.o eecs467_util.o\
 	skeleton_joint_t.o skeleton_joint_list_t.o config_space.o bounding_box.o rexarm.o\
-	data_smoother.o
+	data_smoother.o state_machine.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 

@@ -21,6 +21,9 @@
 #include "config_space.h"
 #include "rexarm.h"
 #include "bounding_box.h"
+#include "state_machine.h"
+
+int dummyCount = 0;
 
 static int64_t utime_now()
 {
@@ -66,8 +69,9 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	double angles[NUM_SERVOS];
-	state->arm->getTargetAngles(angles);
+	state->body->processMsg(msg);
+	//double angles[NUM_SERVOS];
+	//state->arm->getTargetAngles(angles);
 
 	/*for (int i = 0; i < 7; i++) {
 		if (i == HEAD || i == RSHOULDER || i == RELBOW || i == RWRIST) {
@@ -93,36 +97,43 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		}
 	}*/
 
-	state->body->processMsg(msg);
+	/*state->body->processMsg(msg);
+	state->body->getServoAngles(angles, true);
+	state->arm->setTargetAngles(angles, state->cfs);*/
 
 	joint_t lwrist = state->body->getJoint(LWRIST);
 	joint_t rshoulder = state->body->getJoint(RSHOULDER);
-	double adjX = lwrist.x - rshoulder.x;
-	double adjY = -lwrist.y - rshoulder.y;
-	double adjZ = lwrist.z - rshoulder.z;
+	double adjX = (lwrist.x - rshoulder.x)/20;
+	double adjY = (lwrist.z - rshoulder.z)/20;
+	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
 	if (state->set_gripper_cb) {
 		state->set_gripper_cb = 0;
-		state->controlBoxes[GRIPPER]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ);
 	}
 
-	if (state->set_elbow_cb) {
-		state->set_elbow_cb = 0;
-		state->controlBoxes[ELBOW]->setPosition(adjX/20, adjZ/20, adjY/20);
+	if (state->set_wrist_cb) {
+		state->set_wrist_cb = 0;
+		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ);
 	}
 
 	if (state->set_left_rot_cb) {
 		state->set_left_rot_cb = 0;
-		state->controlBoxes[LEFT_ROT]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[LEFT_ROT]->setPosition(adjX, adjY, adjZ);
 	}
 
 	if (state->set_right_rot_cb) {
 		state->set_right_rot_cb = 0;
-		state->controlBoxes[RIGHT_ROT]->setPosition(adjX/20, adjZ/20, adjY/20);
+		state->controlBoxes[RIGHT_ROT]->setPosition(adjX, adjY, adjZ);
 	}
 
-	state->body->getServoAngles(angles, true);
-	state->arm->setTargetAngles(angles, state->cfs);
+	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
+		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
+			state->controlBoxSelected[i] = true;
+		} else {
+			state->controlBoxSelected[i] = false;
+		}
+	}
 }
 
 void* lcm_handle_loop(void *data) {
@@ -159,6 +170,7 @@ void* arm_commander(void *data) {
 	int valid_angles;
 	state_t *state = (state_t*) data;
 	double angles[NUM_SERVOS];
+	double speed;
 
 	dynamixel_command_list_t cmds;
     cmds.len = NUM_SERVOS;
@@ -166,11 +178,12 @@ void* arm_commander(void *data) {
 
     while (state->running) {
     	if (state->update_arm_cont) {
-	    	state->arm->getTargetAngles(angles);
+    		state->arm->getTargetAngles(angles);
+			state->arm->getTargetSpeed(speed);
 			for (int id = 0; id < NUM_SERVOS; id++) {
 				cmds.commands[id].utime = utime_now();
 				cmds.commands[id].position_radians = angles[id];
-				cmds.commands[id].speed = 0.5;
+				cmds.commands[id].speed = speed;
 				cmds.commands[id].max_torque = 0.7;
 		    }
 
@@ -184,6 +197,12 @@ void* arm_commander(void *data) {
 
 	free(cmds.commands);
 
+	return NULL;
+}
+
+void* FSM(void *data){
+	state_t* state = (state_t*) data;
+	state_machine_run(state);
 	return NULL;
 }
 
@@ -203,9 +222,14 @@ int main(int argc, char ** argv)
 	state->body = new Body();
 	state->running = 1;
 	state->set_gripper_cb = 0;
-	state->set_elbow_cb = 0;
+	state->set_wrist_cb = 0;
 	state->set_left_rot_cb = 0;
 	state->set_right_rot_cb = 0;
+
+	state->controlBoxColor[GRIPPER] = vx_orange;
+	state->controlBoxColor[WRIST] = vx_purple;
+	state->controlBoxColor[LEFT_ROT] = vx_green;
+	state->controlBoxColor[RIGHT_ROT] = vx_blue;
 
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		state->controlBoxes[i] = new BoundingBox();
@@ -246,6 +270,7 @@ int main(int argc, char ** argv)
 	pthread_create(&state->lcm_handle_thread, NULL, lcm_handle_loop, state);
 	//pthread_create(&state->gui_thread,  NULL, gui_create, state);
 	pthread_create(&state->arm_commander_thread, NULL, arm_commander, state);
+	pthread_create(&state->fsm_thread, NULL, FSM, state);
 	//pthread_join(state->gui_thread, NULL);
 	gui_create(state);
 	printf("after gui_create\n");
