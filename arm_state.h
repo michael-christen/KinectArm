@@ -26,7 +26,10 @@
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 2
-#define NUM_CONTROL_BOXES 5
+#define NUM_CONTROL_BOXES 4
+#define CB_WIDTH 15
+#define CB_HEIGHT 10
+#define CB_DEPTH 15
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
@@ -40,7 +43,7 @@ typedef struct layer_data_t layer_data_t;
 typedef struct state_t state_t;
 typedef struct getopt_options_t getopt_options_t;
 
-enum ControlBoxes {GRIPPER, WRIST, ARM, LEFT_ROT, RIGHT_ROT};
+enum ControlBoxes {GRIPPER, WRIST, ARM, ROTATE};
 
 struct getopt_options_t {
     int verbose, no_video, limitKBs, autoCamera, mouseGuidance;
@@ -65,8 +68,7 @@ enum FSM_state_t {
 	FSM_ARM,
 	FSM_WRIST,
 	FSM_GRIP,
-	FSM_ROT_LEFT,
-	FSM_ROT_RIGHT
+	FSM_ROTATE
 };
 
 struct state_t {
@@ -101,9 +103,7 @@ struct state_t {
     double target_servo_angles[NUM_SERVOS];
     double gui_servo_angles[NUM_SERVOS];
     int update_arm_cont, update_arm;
-
-    int set_gripper_cb, set_wrist_cb, set_arm_cb;
-    int set_left_rot_cb, set_right_rot_cb;
+    bool set_cbs;
 
     Body *body;
     RexArm *arm;

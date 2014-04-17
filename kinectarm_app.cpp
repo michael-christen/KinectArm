@@ -107,29 +107,15 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	double adjY = (lwrist.z - rshoulder.z)/20;
 	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
-	if (state->set_gripper_cb) {
-		state->set_gripper_cb = 0;
-		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ);
-	}
 
-	if (state->set_wrist_cb) {
-		state->set_wrist_cb = 0;
-		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ);
-	}
-
-	if (state->set_arm_cb) {
-		state->set_arm_cb = 0;
-		state->controlBoxes[ARM]->setPosition(adjX, adjY, adjZ);
-	}
-
-	if (state->set_left_rot_cb) {
-		state->set_left_rot_cb = 0;
-		state->controlBoxes[LEFT_ROT]->setPosition(adjX, adjY, adjZ);
-	}
-
-	if (state->set_right_rot_cb) {
-		state->set_right_rot_cb = 0;
-		state->controlBoxes[RIGHT_ROT]->setPosition(adjX, adjY, adjZ);
+	if (state->set_cbs) {
+		double xOffset = 10;
+		double zOffset = CB_DEPTH;
+		state->set_cbs = false;
+		state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY, adjZ + 3*zOffset/2);
+		state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY, adjZ + zOffset/2);
+		state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY, adjZ - zOffset/2);
+		state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY, adjZ - 3*zOffset/2);
 	}
 
 	int activeBox = -1;
@@ -151,11 +137,8 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		case WRIST:
 			state->FSM_next_state = FSM_WRIST;
 		break;
-		case LEFT_ROT:
-			state->FSM_next_state = FSM_ROT_LEFT;
-		break;
-		case RIGHT_ROT:
-			state->FSM_next_state = FSM_ROT_RIGHT;
+		case ROTATE:
+			state->FSM_next_state = FSM_ROTATE;
 		break;
 		case ARM:
 			state->FSM_next_state = FSM_ARM;
@@ -254,20 +237,16 @@ int main(int argc, char ** argv)
 	state->arm = new RexArm();
 	state->body = new Body();
 	state->running = 1;
-	state->set_gripper_cb = 0;
-	state->set_wrist_cb = 0;
-	state->set_left_rot_cb = 0;
-	state->set_right_rot_cb = 0;
+	state->set_cbs = 0;
 
-	state->controlBoxColor[GRIPPER] = vx_orange;
-	state->controlBoxColor[WRIST] = vx_purple;
-	state->controlBoxColor[ARM] = vx_yellow;
-	state->controlBoxColor[LEFT_ROT] = vx_green;
-	state->controlBoxColor[RIGHT_ROT] = vx_blue;
+	state->controlBoxColor[GRIPPER] = vx_green;
+	state->controlBoxColor[WRIST] = vx_yellow;
+	state->controlBoxColor[ARM] = vx_orange;
+	state->controlBoxColor[ROTATE] = vx_red;
 
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		state->controlBoxes[i] = new BoundingBox();
-		state->controlBoxes[i]->setDimensions(10, 10, 10);
+		state->controlBoxes[i]->setDimensions(CB_WIDTH, CB_HEIGHT, CB_DEPTH);
 	}
 
 	lcm_t * lcm = lcm_create (NULL);

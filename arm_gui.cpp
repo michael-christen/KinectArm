@@ -71,16 +71,6 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
 	    } else {
     		printf("Uncheck \"Update Arm Continuously\" first\n");
 	    }
-    } else if (!strcmp("but3", name)) {
-    	state->set_gripper_cb = 1;
-    } else if (!strcmp("but4", name)) {
-    	state->set_wrist_cb = 1;
-    } else if (!strcmp("but5", name)) {
-    	state->set_left_rot_cb = 1;
-    } else if (!strcmp("but6", name)) {
-    	state->set_right_rot_cb = 1;
-    } else if (!strcmp("but45", name)) {
-    	state->set_arm_cb = 1;
     } else if (!strcmp("but7", name)) {
     	pthread_mutex_lock(&state->fsm_mutex);
     	state->FSM_next_state = FSM_NONE;
@@ -99,12 +89,10 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     	pthread_mutex_unlock(&state->fsm_mutex);
     } else if (!strcmp("but11", name)) {
     	pthread_mutex_lock(&state->fsm_mutex);
-    	state->FSM_next_state = FSM_ROT_LEFT;
+    	state->FSM_next_state = FSM_ROTATE;
     	pthread_mutex_unlock(&state->fsm_mutex);
-    } else if (!strcmp("but12", name)) {
-    	pthread_mutex_lock(&state->fsm_mutex);
-    	state->FSM_next_state = FSM_ROT_RIGHT;
-    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("butcb", name)) {
+    	state->set_cbs = true;
     } else if (!strcmp("cb1", name)) {
         state->update_arm_cont = pg_gb(pg, name);
     }
@@ -247,7 +235,7 @@ int displayInitSkeletonLayer(state_t *state, layer_data_t *layerData) {
 int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	//Draw Grid
 	vx_buffer_t *gridBuff = vx_world_get_buffer(layerData->world, "grid");
-	vx_buffer_add_back(gridBuff, vxo_grid());
+	//vx_buffer_add_back(gridBuff, vxo_grid());
 
 	//Draw Axes
 	float axes[12] = {-1000, 0, 0, 0, 0, 0, 0, -1000, 0, 0, 1000, 0};
@@ -377,19 +365,13 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
-    pg_add_buttons(pg, "but3", "Set Gripper CB",
-    					"but4", "Set Wrist CB",
-    					"but45", "Set Arm CB",
-    					"but5", "Set Left Rotation CB",
-    					"but6", "Set Right Rotation CB",
-    					NULL);
+    pg_add_buttons(pg, "butcb", "Set Control Boxes", NULL);
 
 	pg_add_buttons(pg, "but7", "FSM-NONE",
     					"but8", "FSM-ARM",
     					"but9", "FSM-WRIST",
     					"but10", "FSM-GRIP",
-    					"but11", "FSM-ROT_LEFT",
-    					"but12", "FSM-ROT_RIGHT",
+    					"but11", "FSM-ROTATE",
     					NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));

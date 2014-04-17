@@ -15,12 +15,23 @@ void stopArm(state_t* state){
 	return;
 }
 
-void rotateArm(state_t* state, bool left){
-	double angles[NUM_SERVOS];
-	state->arm->getTargetAngles(angles);
-	angles[0] = (M_PI-0.2)*(left ? 1 : -1);
-	state->arm->setTargetSpeed(0.05);
-	state->arm->setTargetAngles(angles, state->cfs);
+void rotateArm(state_t* state){
+	double angleSpeedThres = 0.4;
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
+	state->body->getServoAngles(angles, 1);
+	state->arm->getTargetAngles(curAngles);
+	curAngles[0] = (M_PI-0.2)*(angles[2] > 0 ? 1 : -1);
+
+	double speed = fabs(angles[2]);
+
+	if (speed > angleSpeedThres) {
+		speed = (fabs(angles[2]) - angleSpeedThres) / (2*M_PI);
+	} else {
+		speed = 0;
+	}
+
+	state->arm->setTargetSpeed(speed);
+	state->arm->setTargetAngles(curAngles, state->cfs);
 	return;
 }
 
@@ -85,13 +96,8 @@ void state_machine_run(state_t* state){
 				//left hand controls grip
 				openCloseGripper(state);
 				break;}
-			case FSM_ROT_LEFT:{
-				//rotate arm left at fixed speed
-				rotateArm(state, 1);
-				break;}
-			case FSM_ROT_RIGHT:{
-				//rotate arm right at fixed speed
-				rotateArm(state, 0);
+			case FSM_ROTATE:{
+				rotateArm(state);
 				break;}
 			case FSM_NONE:{
 				//freeze the arm
