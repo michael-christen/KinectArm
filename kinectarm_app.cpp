@@ -117,6 +117,11 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ);
 	}
 
+	if (state->set_arm_cb) {
+		state->set_arm_cb = 0;
+		state->controlBoxes[ARM]->setPosition(adjX, adjY, adjZ);
+	}
+
 	if (state->set_left_rot_cb) {
 		state->set_left_rot_cb = 0;
 		state->controlBoxes[LEFT_ROT]->setPosition(adjX, adjY, adjZ);
@@ -127,13 +132,41 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		state->controlBoxes[RIGHT_ROT]->setPosition(adjX, adjY, adjZ);
 	}
 
+	int activeBox = -1;
+
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
 			state->controlBoxSelected[i] = true;
+			activeBox = i;
 		} else {
 			state->controlBoxSelected[i] = false;
 		}
 	}
+
+	pthread_mutex_lock(&state->fsm_mutex);
+	switch(activeBox) {
+		case GRIPPER:
+			state->FSM_next_state = FSM_GRIP;
+		break;
+		case WRIST:
+			state->FSM_next_state = FSM_WRIST;
+		break;
+		case LEFT_ROT:
+			state->FSM_next_state = FSM_ROT_LEFT;
+		break;
+		case RIGHT_ROT:
+			state->FSM_next_state = FSM_ROT_RIGHT;
+		break;
+		case ARM:
+			state->FSM_next_state = FSM_ARM;
+		break;
+		default:
+			state->FSM_next_state = FSM_NONE;
+		break;
+	}
+	
+	pthread_mutex_unlock(&state->fsm_mutex);
+
 }
 
 void* lcm_handle_loop(void *data) {
@@ -228,6 +261,7 @@ int main(int argc, char ** argv)
 
 	state->controlBoxColor[GRIPPER] = vx_orange;
 	state->controlBoxColor[WRIST] = vx_purple;
+	state->controlBoxColor[ARM] = vx_yellow;
 	state->controlBoxColor[LEFT_ROT] = vx_green;
 	state->controlBoxColor[RIGHT_ROT] = vx_blue;
 
@@ -253,6 +287,7 @@ int main(int argc, char ** argv)
 	pthread_mutex_init(&state->layer_mutex, NULL);
 	pthread_mutex_init(&state->lcm_mutex, NULL);
 	pthread_mutex_init(&state->running_mutex, NULL);
+	pthread_mutex_init(&state->fsm_mutex, NULL);
 
 	state->layer_map = zhash_create(sizeof(vx_display_t*), sizeof(vx_layer_t*), zhash_uint64_hash, zhash_uint64_equals);
 

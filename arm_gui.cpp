@@ -79,6 +79,32 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     	state->set_left_rot_cb = 1;
     } else if (!strcmp("but6", name)) {
     	state->set_right_rot_cb = 1;
+    } else if (!strcmp("but45", name)) {
+    	state->set_arm_cb = 1;
+    } else if (!strcmp("but7", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_NONE;
+    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("but8", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_ARM;
+    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("but9", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_WRIST;
+    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("but10", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_GRIP;
+    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("but11", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_ROT_LEFT;
+    	pthread_mutex_unlock(&state->fsm_mutex);
+    } else if (!strcmp("but12", name)) {
+    	pthread_mutex_lock(&state->fsm_mutex);
+    	state->FSM_next_state = FSM_ROT_RIGHT;
+    	pthread_mutex_unlock(&state->fsm_mutex);
     } else if (!strcmp("cb1", name)) {
         state->update_arm_cont = pg_gb(pg, name);
     }
@@ -353,8 +379,17 @@ void gui_create(state_t *state) {
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
     pg_add_buttons(pg, "but3", "Set Gripper CB",
     					"but4", "Set Wrist CB",
+    					"but45", "Set Arm CB",
     					"but5", "Set Left Rotation CB",
     					"but6", "Set Right Rotation CB",
+    					NULL);
+
+	pg_add_buttons(pg, "but7", "FSM-NONE",
+    					"but8", "FSM-ARM",
+    					"but9", "FSM-WRIST",
+    					"but10", "FSM-GRIP",
+    					"but11", "FSM-ROT_LEFT",
+    					"but12", "FSM-ROT_RIGHT",
     					NULL);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
