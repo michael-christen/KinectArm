@@ -3,44 +3,48 @@
 #include "body.h"
 #include "math.h"
 #include "../common/math_util.h"
+#include <unistd.h>
+#include <pthread.h>
 
 void stopArm(state_t* state){
-	double angles[NUM_SERVOS];
-	state->arm->getCurAngles(angles);
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
+	state->arm->getTargetAngles(angles);
+	state->arm->getCurAngles(curAngles);
+	angles[0] = curAngles[0];
 	state->arm->setTargetAngles(angles, state->cfs);
 	return;
 }
 
 void rotateArm(state_t* state, bool left){
 	double angles[NUM_SERVOS];
-	state->arm->getCurAngles(angles);
-	angles[0] = M_PI*(left ? 1 : -1);
-	state->arm->setTargetSpeed(0.2);
+	state->arm->getTargetAngles(angles);
+	angles[0] = (M_PI-0.2)*(left ? 1 : -1);
+	state->arm->setTargetSpeed(0.05);
 	state->arm->setTargetAngles(angles, state->cfs);
 	return;
 }
 
 void commandShoulderWrist(state_t* state, bool shoulder){
-	double angles[NUM_SERVOS];
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
 	state->body->getServoAngles(angles, 1);
 	double shoulderAngle = angles[1];
 	double elbowAngle = angles[2];
 
-	state->arm->getCurAngles(angles);
+	state->arm->getTargetAngles(curAngles);
 	if(shoulder){
-		angles[1] = shoulderAngle;
-		angles[2] = elbowAngle;
+		curAngles[1] = shoulderAngle;
+		curAngles[2] = elbowAngle;
 	}else{
-		angles[3] = elbowAngle;
+		curAngles[3] = elbowAngle;
 	}
 	state->arm->setTargetSpeed(0.5);
-	state->arm->setTargetAngles(angles, state->cfs);
+	state->arm->setTargetAngles(curAngles, state->cfs);
 	return;
 }
 
 void openCloseGripper(state_t* state){
 	double angles[NUM_SERVOS];
-	state->arm->getCurAngles(angles);
+	state->arm->getTargetAngles(angles);
 	double last_gripper_angle = angles[5];
 	if(state->close_gripper){
 		double threshold = 0.2;
@@ -61,15 +65,21 @@ void openCloseGripper(state_t* state){
 }
 
 void state_machine_run(state_t* state){
+	int hz = 30;
 	while(state->running){
+		pthread_mutex_lock(&state->fsm_mutex);
+		if(state->FSM_state != state->FSM_next_state){
+			stopArm(state);
+		}
+		state->FSM_state = state->FSM_next_state;
 		switch(state->FSM_state){
 			case FSM_ARM:{
 				//right hand controls shoulder and elbow
-				commandShoulderWrist(state, 1);
+				commandShoulderWrist(state, true);
 				break;}
 			case FSM_WRIST:{
 				//right hand controls wrist
-				commandShoulderWrist(state, 0);
+				commandShoulderWrist(state, false);
 				break;}
 			case FSM_GRIP:{
 				//left hand controls grip
@@ -87,9 +97,7 @@ void state_machine_run(state_t* state){
 				//freeze the arm
 				break;}
 		}
-		if(state->FSM_state != state->FSM_next_state){
-			stopArm(state);
-		}
-		state->FSM_state = state->FSM_next_state;
+		pthread_mutex_unlock(&state->fsm_mutex);
+		usleep(1000000/hz);
 	}
 }

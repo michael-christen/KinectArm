@@ -138,21 +138,6 @@ bool BoundingBox::intersect(BoundingBox *b) {
 	matd_t *cross;
 	matd_t *T = matd_subtract(b->pos, a->pos);
 
-	//printf("\nT\n");
-	//matd_print(T, "%f");
-
-	/*printf("\na pos\n");
-	matd_print(a->pos, "%f");
-
-	printf("\nb pos\n");
-	matd_print(b->pos, "%f");*/
-	/*printf("\nb ux\n");
-	matd_print(b->ux, "%f");
-	printf("\nb uy\n");
-	matd_print(b->uy, "%f");
-	printf("\nb uz\n");
-	matd_print(b->uz, "%f");*/
-
 	// Case 1
 	checkL = fabs(matd_vec_dot_product(T, a->ux));
 	sum = a->hW;
