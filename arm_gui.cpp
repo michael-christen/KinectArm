@@ -173,7 +173,7 @@ int initArmsLayer(state_t *state, layer_data_t *layerData) {
 }
 
 int displayInitArmsLayer(state_t *state, layer_data_t *layerData) {
-	const float eye[3] = {0, -50, 25};
+	const float eye[3] = {0, -100, 50};
 	const float lookat[3] = {0, 0, 25};
 	const float up[3] = {0, 0, 1};
 
@@ -223,7 +223,7 @@ int initSkeletonLayer(state_t *state, layer_data_t *layerData) {
 }
 
 int displayInitSkeletonLayer(state_t *state, layer_data_t *layerData) {
-	const float eye[3] = {0, 50, 50};
+	const float eye[3] = {0, 125, 50};
 	const float lookat[3] = {0, 0, 25};
 	const float up[3] = {0, 0, 1};
 

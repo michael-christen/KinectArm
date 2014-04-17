@@ -189,7 +189,7 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 	vo = vxo_chain(
 		vxo_mat_translate3(lWristX, lWristY, lWristZ),
 		vxo_mat_scale3(1.5, 1.5, 1.5),
-		vxo_sphere(vxo_mesh_style(vx_red))
+		vxo_sphere(vxo_mesh_style(vx_black))
 	);
 
 	vx_buffer_add_back(buf, vo);
