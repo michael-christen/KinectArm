@@ -30,7 +30,7 @@ void Body::processMsg(const skeleton_joint_list_t *msg) {
 void Body::getServoAngles(double servoAngles[], bool right_side){
 	matd_t* floor_shoulder;
 	matd_t* shoulder_elbow;
-	//matd_t* shoulder_elbow0;
+	matd_t* shoulder_elbow0;
 	matd_t* shoulder_elbow1;
 	matd_t* elbow_wrist;
 	joint_t shoulder, elbow, wrist;
@@ -56,31 +56,17 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 		elbow.z - shoulder.z};
 
 	//Shoulder rotation in the yz plane (forward/backward)
-	/*double shoulder_elbow_data0[3] = {
+	double shoulder_elbow_data0[3] = {
 		0,
 		elbow.y - shoulder.y,
-		elbow.z - shoulder.z}; */
+		elbow.z - shoulder.z}; 
 
 	//Shoulder rotation in the xy plane (left/right)
-	double shoulder_elbow_data1[3];
+	double shoulder_elbow_data1[3] = {
+		elbow.x - shoulder.x,
+		elbow.y - shoulder.y,
+		0};
 
-	if (sgn(elbow.y) == -1 && sgn(shoulder.y) == -1) {
-		shoulder_elbow_data1[0] = elbow.x + shoulder.x;
-		shoulder_elbow_data1[1] = elbow.y - shoulder.y;
-		shoulder_elbow_data1[2] = 0;
-	} else if (sgn(elbow.y) != sgn(shoulder.y)) {
-		shoulder_elbow_data1[0] = shoulder.x - elbow.x;
-		shoulder_elbow_data1[1] = shoulder.y - elbow.y;
-		shoulder_elbow_data1[2] = 0;
-	} else {
-		shoulder_elbow_data1[0] = elbow.x - shoulder.x;
-		shoulder_elbow_data1[1] = elbow.y - shoulder.y;
-		shoulder_elbow_data1[2] = 0;
-	}
-
-	//printf("sx - %f, sy - %f\n", shoulder.x, shoulder.y);
-	//printf("ex - %f, ey - %f\n", elbow.x, elbow.y);
-		
 	double elbow_wrist_data[3] = {
 		wrist.x - elbow.x,
 		wrist.y - elbow.y,
@@ -105,7 +91,7 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	//printf("Elbow: %g\n", elbowValue);
 
 	//double shoulderAngle0 = (acos(shoulderValue0));
-	double shoulderAngle1 = (acos(shoulderValue1) - M_PI/2);
+	double shoulderAngle1 = sgn(elbow.y - shoulder.y)*(acos(shoulderValue1) - M_PI/2);
 	double elbowAngle = acos(elbowValue);
 
 	/*if (elbow.z - shoulder.z < 0) {
@@ -121,7 +107,7 @@ void Body::getServoAngles(double servoAngles[], bool right_side){
 	double unitZ_data[3] = {0, 0, 1};
 	matd_t *unitZ = matd_create_data(3, 1, unitZ_data);
 	matd_t *elbowCheck = matd_crossproduct(elbow_wrist, shoulder_elbow);
-	double elbowSign = -sgn(matd_vec_dot_product(elbowCheck, unitZ));
+	double elbowSign = sgn(matd_vec_dot_product(elbowCheck, unitZ));
 
 	matd_destroy(unitZ);
 	matd_destroy(elbowCheck);
