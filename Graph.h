@@ -5,6 +5,9 @@
 #include "Blob.h"
 #include "Gradient.h"
 #include "Line.h"
+#include "joint.h"
+#include "body.h"
+#include "vision_state.h"
 #include "common/timestamp.h"
 #include<climits>
 #include<map>
@@ -17,6 +20,7 @@ class G_Node {
 	public:
 		int id;
 		double min_dist;
+		int parent;
 		std::vector<int> nodes;
 		G_Node() {
 			id = 0;
@@ -37,6 +41,15 @@ std::vector<int> getEndPoints(
 		Image<double> &d_transf,
 		std::map<int,G_Node> & graph, 
 		int num_pts);
+
+void getBodyPoints(state_t * state,
+		Image<double> &d_transf,
+		std::map<int, G_Node> & graph);
+
+void getBodyFromEndPoints(state_t * state,
+		Image<double> &d_transf,
+		std::map<int, G_Node> & graph,
+		std::vector<int> & points);
 
 void clearDist(std::map<int, G_Node> &graph);
 

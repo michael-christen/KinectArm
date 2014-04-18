@@ -6,7 +6,7 @@
 #include "vx/vx.h"
 #include "joint.h"
 
-#define NUM_JOINTS 7
+#define NUM_JOINTS 10
 
 class Body {
 	public:

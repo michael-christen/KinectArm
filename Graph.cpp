@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Wed 16 Apr 2014 05:17:40 PM EDT
+ * Last Modified : Fri 18 Apr 2014 01:24:45 AM EDT
 
  * Created By : Michael Christen
 
@@ -24,7 +24,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,5);
+			neighbors = im.getBlockNeighborIds(i,25);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
@@ -35,6 +35,115 @@ std::map<int, G_Node > getGraphFromSkeleton(
 		}
 	}
 	return graph;
+}
+
+void getBodyFromEndPoints(state_t * state,
+		Image<double> &im,
+		std::map<int, G_Node> & graph,
+		std::vector<int> & points) {
+
+	//Calculate paths
+	int midpoint = points[0];
+	points.erase(points.begin()+0);
+	//Get lowest points and call those the feet
+	int lowest_id = 0;
+	int lowest_val = 0;
+	for(int i = 0; i < points.size(); ++i) {
+		if(im.getY(points[i]) > lowest_val) {
+			lowest_val = im.getY(points[i]);
+			lowest_id  = points[i];
+		}
+	}
+	//Get similar y
+	int closest_id = 0; 
+	int closest_val = 480;
+	for(int i = 0; i < points.size(); ++i) {
+		if(points[i] == lowest_id) {
+			continue;
+		}
+		int dist = abs(im.getY(points[i]) - lowest_val);
+		if(dist < closest_val) {
+			closest_id = points[i];
+			closest_val = dist;
+		}
+	}
+	int left_is_lowest = im.getX(closest_id) > im.getX(lowest_id);
+	int left_foot = left_is_lowest ? lowest_id : closest_id; 
+	int right_foot = left_is_lowest ? closest_id : lowest_id;
+	points.erase(std::find(points.begin(),points.end(),left_foot));
+	points.erase(std::find(points.begin(),points.end(),right_foot));
+	//Head is in the middle
+	closest_val = 320;
+	for(int i = 0; i < points.size(); ++i) {
+		int dist = abs(im.getX(points[i])-320);
+		if(dist < closest_val) {
+			closest_id = points[i];
+		}	
+	}
+	int head = closest_id;
+	points.erase(std::find(points.begin(),points.end(),head));
+	int left_is_first = im.getX(points[0]) < im.getX(points[1]);
+	int left_wrist = left_is_first ? 
+		points[0] : points[1];
+	int right_wrist = left_is_first ? 
+		points[1] : points[0];
+	points.erase(std::find(points.begin(),points.end(),left_wrist));
+	points.erase(std::find(points.begin(),points.end(),right_wrist));
+
+	int start = midpoint;
+	clearDist(graph);
+	graph[start].min_dist = 0;
+	//Perform dijkstra again to get dists
+	dijkstra(graph,im,start);
+	int parent = left_wrist;
+	int oldParent = parent;
+	while(graph.find(parent) != graph.end() && parent != start) {
+		parent = graph[parent].parent;
+		if(parent == oldParent) { 
+			break;
+		}
+		oldParent = parent;
+		points.push_back(parent);
+	}
+	int left_elbow, left_shoulder;
+	left_elbow    = points[points.size()/3];
+	left_shoulder = points[points.size()/2];
+	state->pts = points;
+	/*
+	for(int i = 0; i < points.size(); ++i) {
+		if(i == points.size()/3) {
+			left_elbow = points[i];
+		}
+		if(i == points.size()/2) {
+			left_shoulder = points[i];
+		}
+	}
+	*/
+	//state->pts = points;
+	//Assign
+	state->joints[MIDPOINT] = getReal(state->depth,midpoint);
+	state->joints[HEAD]     = getReal(state->depth,head);
+	state->joints[RWRIST]   = getReal(state->depth,right_wrist);
+	//state->joints[RELBOW]   = getReal(state->depth,points[5]);
+	//state->joints[RSHOULDER]= getReal(state->depth,points[5]);
+	state->joints[LWRIST]   = getReal(state->depth,left_wrist);
+	state->joints[LELBOW]   = getReal(state->depth,left_elbow);
+	state->joints[LSHOULDER]= getReal(state->depth,left_shoulder);
+	state->joints[LFOOT]    = getReal(state->depth,left_foot);
+	state->joints[RFOOT]    = getReal(state->depth,right_foot);
+}
+
+void getBodyPoints(state_t * state,
+		Image<double> &d_transf,
+		std::map<int, G_Node> & graph) {
+
+	std::vector<int> points =
+		getEndPoints(d_transf, graph, 5);
+	//state->pts = points;
+	getBodyFromEndPoints(
+			state,
+			d_transf,
+			graph, points);
 }
 
 std::vector<int> getEndPoints(
@@ -83,6 +192,7 @@ std::vector<int> getEndPoints(
 		start = id;
 		endPoints.push_back(id);
 	}
+	
 	/*
 	if(!endPoints.empty()) {
 		printf("FOUND IT size: %d\n", endPoints.size());
@@ -131,6 +241,7 @@ int dijkstra(
 				if(dist < graph[temp.nodes[i]].min_dist) {
 					graph[temp.nodes[i]].min_dist =
 						dist;
+					graph[temp.nodes[i]].parent = min.first;
 					pQ.push(dNode(temp.nodes[i],dist));
 				}
 	//		}

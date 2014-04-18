@@ -280,8 +280,7 @@ void kinect_process(state_t* state){
 			std::map<int,G_Node> graph = 
 				getGraphFromSkeleton(d_transf);	
 			//printf("GRAPH SIZE: %d\n",graph.size());
-			state->pts = 
-				getEndPoints(d_transf, graph, 10);
+			getBodyPoints(state, d_transf, graph);
 			gCurTime = utime_now()/1000000.0;
 			processTime = gCurTime - gPrevTime;
 			/*

@@ -147,6 +147,53 @@ int displayInitKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 	return 1;
 }
 
+void render_pts(vx_buffer_t *vb, state_t *state) {
+	for(size_t i = 0; i < state->pts.size(); ++i) {
+		add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
+				480-state->im.getY(state->pts[i]));
+	}
+	for(size_t i = 0; i < NUM_JOINTS; ++i) {
+		const float * color;
+		switch(i) {
+			case HEAD:
+				color = vx_red;
+				break;
+			case MIDPOINT:
+				color = vx_blue;
+				break;
+			case RWRIST:
+				color = vx_orange;
+				break;
+			case RELBOW:
+				color = vx_purple;
+				break;
+			case RSHOULDER:
+				color = vx_magenta;
+				break;
+			case LWRIST:
+				color = vx_maroon;
+				break;
+			case LELBOW:
+				color = vx_forest;
+				break;
+			case LSHOULDER:
+				color = vx_plum;
+				break;
+			case LFOOT:
+				color = vx_olive;
+				break;
+			case RFOOT:
+				color = vx_cyan;
+				break;
+			default:
+				color = vx_white;
+				break;
+		}
+		add_circle_to_buffer(vb, state->joints[i].screen_x,
+				480-state->joints[i].screen_y, color);
+	}
+}
+
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 	pthread_mutex_lock(&state->kinect_mutex);
 	{
@@ -171,10 +218,8 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
 		//Add points
-		for(size_t i = 0; i < state->pts.size(); ++i) {
-			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
-					480-state->im.getY(state->pts[i]));
-		}
+		//render_pts(vb,state);
+		
 		if (state->mouseDownSet) {
 			line_t line;
 			line.ll.x = line.ru.x = state->mouseDownX;
@@ -199,11 +244,12 @@ line_t normalize_line(line_t line) {
 	return line;
 }
 
-void add_circle_to_buffer(vx_buffer_t *vb, int x, int y) {
+void add_circle_to_buffer(vx_buffer_t *vb, int x, int y,
+		const float * color) {
 	vx_object_t * vo = vxo_chain(
 			vxo_mat_translate3(x,y,0),
 			vxo_mat_scale3(5,5,5),
-			vxo_circle(vxo_lines_style(vx_green, 3))
+			vxo_circle(vxo_lines_style(color, 3))
 			);
 	vx_buffer_add_back(vb,vo);
 }
@@ -252,10 +298,7 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 			add_line_to_buffer(vb,state->depth_lines[i]);
 		}
 		//Add points
-		for(size_t i = 0; i < state->pts.size(); ++i) {
-			add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
-					480-state->im.getY(state->pts[i]));
-		}
+		//render_pts(vb,state);
 		if (state->mouseDownSet) {
 			line_t line;
 			line.ll.x = line.ru.x = state->mouseDownX;
