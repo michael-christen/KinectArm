@@ -218,7 +218,7 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 			add_line_to_buffer(vb,state->im_lines[i]);
 		}
 		//Add points
-		//render_pts(vb,state);
+		render_pts(vb,state);
 		
 		if (state->mouseDownSet) {
 			line_t line;
@@ -298,7 +298,7 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 			add_line_to_buffer(vb,state->depth_lines[i]);
 		}
 		//Add points
-		//render_pts(vb,state);
+		render_pts(vb,state);
 		if (state->mouseDownSet) {
 			line_t line;
 			line.ll.x = line.ru.x = state->mouseDownX;

@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Fri 18 Apr 2014 01:24:45 AM EDT
+ * Last Modified : Fri 18 Apr 2014 01:45:02 PM EDT
 
  * Created By : Michael Christen
 
@@ -24,7 +24,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,25);
+			neighbors = im.getBlockNeighborIds(i,20);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
@@ -82,55 +82,52 @@ void getBodyFromEndPoints(state_t * state,
 	}
 	int head = closest_id;
 	points.erase(std::find(points.begin(),points.end(),head));
-	int left_is_first = im.getX(points[0]) < im.getX(points[1]);
-	int left_wrist = left_is_first ? 
-		points[0] : points[1];
-	int right_wrist = left_is_first ? 
-		points[1] : points[0];
-	points.erase(std::find(points.begin(),points.end(),left_wrist));
-	points.erase(std::find(points.begin(),points.end(),right_wrist));
+	int left_wrist, right_wrist;
+	bool got_wrists  = false;
+	if(points.size() > 1) {
+		got_wrists = true;
+		int left_is_first = im.getX(points[0]) < im.getX(points[1]);
+		left_wrist = left_is_first ? 
+			points[0] : points[1];
+		right_wrist = left_is_first ? 
+			points[1] : points[0];
+		points.erase(std::find(points.begin(),points.end(),left_wrist));
+		points.erase(std::find(points.begin(),points.end(),right_wrist));
+	}
 
-	int start = midpoint;
-	clearDist(graph);
-	graph[start].min_dist = 0;
-	//Perform dijkstra again to get dists
-	dijkstra(graph,im,start);
-	int parent = left_wrist;
-	int oldParent = parent;
-	while(graph.find(parent) != graph.end() && parent != start) {
-		parent = graph[parent].parent;
-		if(parent == oldParent) { 
-			break;
+	if(got_wrists) {
+		int start = midpoint;
+		clearDist(graph);
+		graph[start].min_dist = 0;
+		//Perform dijkstra again to get dists
+		dijkstra(graph,im,start);
+		int parent = left_wrist;
+		int oldParent = parent;
+		while(graph.find(parent) != graph.end() && parent != start) {
+			parent = graph[parent].parent;
+			if(parent == oldParent) { 
+				break;
+			}
+			oldParent = parent;
+			points.push_back(parent);
 		}
-		oldParent = parent;
-		points.push_back(parent);
+		int left_elbow, left_shoulder;
+		left_elbow    = points[points.size()/3];
+		left_shoulder = points[5*points.size()/8];
+		state->pts = points;
+		//state->pts = points;
+		//Assign
+		state->joints[MIDPOINT] = getReal(state->depth,midpoint);
+		state->joints[HEAD]     = getReal(state->depth,head);
+		state->joints[RWRIST]   = getReal(state->depth,right_wrist);
+		//state->joints[RELBOW]   = getReal(state->depth,points[5]);
+		//state->joints[RSHOULDER]= getReal(state->depth,points[5]);
+		state->joints[LWRIST]   = getReal(state->depth,left_wrist);
+		state->joints[LELBOW]   = getReal(state->depth,left_elbow);
+		state->joints[LSHOULDER]= getReal(state->depth,left_shoulder);
+		state->joints[LFOOT]    = getReal(state->depth,left_foot);
+		state->joints[RFOOT]    = getReal(state->depth,right_foot);
 	}
-	int left_elbow, left_shoulder;
-	left_elbow    = points[points.size()/3];
-	left_shoulder = points[points.size()/2];
-	state->pts = points;
-	/*
-	for(int i = 0; i < points.size(); ++i) {
-		if(i == points.size()/3) {
-			left_elbow = points[i];
-		}
-		if(i == points.size()/2) {
-			left_shoulder = points[i];
-		}
-	}
-	*/
-	//state->pts = points;
-	//Assign
-	state->joints[MIDPOINT] = getReal(state->depth,midpoint);
-	state->joints[HEAD]     = getReal(state->depth,head);
-	state->joints[RWRIST]   = getReal(state->depth,right_wrist);
-	//state->joints[RELBOW]   = getReal(state->depth,points[5]);
-	//state->joints[RSHOULDER]= getReal(state->depth,points[5]);
-	state->joints[LWRIST]   = getReal(state->depth,left_wrist);
-	state->joints[LELBOW]   = getReal(state->depth,left_elbow);
-	state->joints[LSHOULDER]= getReal(state->depth,left_shoulder);
-	state->joints[LFOOT]    = getReal(state->depth,left_foot);
-	state->joints[RFOOT]    = getReal(state->depth,right_foot);
 }
 
 void getBodyPoints(state_t * state,
