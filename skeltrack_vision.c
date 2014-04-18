@@ -12,7 +12,9 @@
 #include <lcm/lcm.h>
 #include "skeleton_joint_t.h"
 #include "skeleton_joint_list_t.h"
+#include "gripper_lcm_t.h"
 
+#include "gripperc.h"
 
 static SkeltrackSkeleton *skeleton = NULL;
 static GFreenectDevice *kinect = NULL;
@@ -40,6 +42,10 @@ typedef struct
   gint reduced_width;
   gint reduced_height;
 } BufferInfo;
+
+struct Hand{
+  int x, y, screen_x, screen_y;
+} LeftHand;
 
 typedef struct state_t state_t;
 
@@ -232,6 +238,18 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
                                    on_track_joints,
                                    buffer_info);
 
+  /*Gripper code ADDED BY JOSH*/
+  state_t* state = (state_t*) user_data;
+
+  int gripperIsClosed = gripperClosed(LeftHand.screen_x, LeftHand.screen_y,
+	buffer_info->reduced_buffer, buffer_info->reduced_width, buffer_info->reduced_height);
+
+  gripper_lcm_t griplcm;
+  griplcm.closed = gripperIsClosed;
+
+  gripper_lcm_t_publish(state->lcm, "GRIPPER", &griplcm);
+	
+  /*END of gripper code*/
 
   content = clutter_actor_get_content (depth_tex);
   if (!SHOW_SKELETON)
@@ -373,6 +391,12 @@ on_skeleton_draw (ClutterCanvas *canvas,
                                                SKELTRACK_JOINT_ID_LEFT_ELBOW);
   right_elbow = skeltrack_joint_list_get_joint (list,
                                                 SKELTRACK_JOINT_ID_RIGHT_ELBOW);
+
+  //Added by Josh to keep track of left hand
+  LeftHand.x = left_hand->x;
+  LeftHand.y = left_hand->y;
+  LeftHand.screen_x = left_hand->screen_x;
+  LeftHand.screen_y = left_hand->screen_y;
 
 
   /* SEND LCM - ADDED BY BRIAN */

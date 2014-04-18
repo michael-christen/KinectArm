@@ -44,13 +44,13 @@ skeltrack: ../../bin/skeltrack_vision
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
-../../bin/kinectvision_app: kinectvision_app.o vision_gui.o disjoint.o blob_detection.o\
+../../bin/kinectvision_app: kinectvision_app.o vision_gui.o disjoint.o gripper.o blob_detection.o\
 	skeleton_joint_t.o skeleton_joint_list_t.o pixel.o eecs467_util.o kinect_handle.o image_helper.o filter.o \
 	Gradient.o Line.o Image.o Graph.o joint.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS) -O3
 
-../../bin/skeltrack_vision: skeltrack_vision.o skeleton_joint_t.o skeleton_joint_list_t.o
+../../bin/skeltrack_vision: skeltrack_vision.o skeleton_joint_t.o skeleton_joint_list_t.o gripperc.o gripper_lcm_t.o
 	@echo "\t$@"
 	@$(CC) -o $@ $^ $(LDFLAGS)
 
