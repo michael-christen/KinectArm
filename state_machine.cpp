@@ -54,16 +54,17 @@ void commandShoulderWrist(state_t* state, bool shoulder){
 }
 
 void openCloseGripper(state_t* state){
-	double angles[NUM_SERVOS];
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
+	double maxAngle = 2.355;
+	double threshold = 0.2;
+	state->arm->getCurAngles(curAngles);
 	state->arm->getTargetAngles(angles);
-	double last_gripper_angle = angles[5];
+	double last_gripper_angle = curAngles[5];
+
 	if(state->close_gripper){
-		double threshold = 0.2;
-		if(fabs(angles[5] - state->last_gripper_angle) < threshold){//slowing down
-			angles[5] = angles[5] + 0.1;
-			state->arm->setTargetSpeed(0.2);
-		}else{
-			angles[5] = 2.0*M_PI/3.0;
+		if (fabs(curAngles[5] - maxAngle) > threshold || fabs(curAngles[5] - state->last_gripper_angle) > threshold) {
+			// Not completely closed or stopped closing
+			angles[5] = curAngles[5] + 0.1;
 			state->arm->setTargetSpeed(0.3);
 		}
 	}else{

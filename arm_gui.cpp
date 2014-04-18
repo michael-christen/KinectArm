@@ -95,6 +95,8 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     	state->set_cbs = true;
     } else if (!strcmp("cb1", name)) {
         state->update_arm_cont = pg_gb(pg, name);
+    } else if (!strcmp("cb2", name)) {
+        state->close_gripper = pg_gb(pg, name);
     }
 
     /*if (state->update_arm_cont || updateServoAngles) {
@@ -361,7 +363,7 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
-    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont, NULL);
+    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont, "cb2", "Close Gripper", state->close_gripper, NULL);
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
