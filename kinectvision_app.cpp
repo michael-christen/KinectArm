@@ -281,6 +281,10 @@ void kinect_process(state_t* state){
 				getGraphFromSkeleton(d_transf);	
 			//printf("GRAPH SIZE: %d\n",graph.size());
 			getBodyPoints(state, d_transf, graph);
+
+			for (int i = 0; i < 7; i++) {
+				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);
+			}
 			gCurTime = utime_now()/1000000.0;
 			processTime = gCurTime - gPrevTime;
 			/*
@@ -368,8 +372,8 @@ void kinect_process(state_t* state){
 			}
 		}
 		cur_time = utime_now()/1000000.0;
-		printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
-				setupTime, processTime, cur_time - prev_time);
+		/*printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
+				setupTime, processTime, cur_time - prev_time);*/
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 
@@ -377,7 +381,7 @@ void kinect_process(state_t* state){
 
 	if (state->send_data) {
 		skeleton_joint_list_t lcm_skeleton;
-		lcm_skeleton.len = NUM_JOINTS;
+		lcm_skeleton.len = 7;
 		lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
 
 		for (int i = 0; i < lcm_skeleton.len; i++) {

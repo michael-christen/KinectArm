@@ -27,8 +27,8 @@
 //////////////
 #define NUM_LAYERS 2
 #define NUM_CONTROL_BOXES 4
-#define CB_WIDTH 15
-#define CB_HEIGHT 10
+#define CB_WIDTH 40
+#define CB_HEIGHT 40
 #define CB_DEPTH 15
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"

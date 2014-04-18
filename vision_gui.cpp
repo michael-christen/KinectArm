@@ -171,7 +171,7 @@ void render_pts(vx_buffer_t *vb, state_t *state) {
 				color = vx_magenta;
 				break;
 			case LWRIST:
-				color = vx_maroon;
+				color = vx_white;
 				break;
 			case LELBOW:
 				color = vx_forest;
@@ -186,7 +186,7 @@ void render_pts(vx_buffer_t *vb, state_t *state) {
 				color = vx_cyan;
 				break;
 			default:
-				color = vx_white;
+				color = vx_maroon;
 				break;
 		}
 		add_circle_to_buffer(vb, state->joints[i].screen_x,

@@ -119,14 +119,14 @@ void getBodyFromEndPoints(state_t * state,
 		//Assign
 		state->joints[MIDPOINT] = getReal(state->depth,midpoint);
 		state->joints[HEAD]     = getReal(state->depth,head);
-		state->joints[RWRIST]   = getReal(state->depth,right_wrist);
-		//state->joints[RELBOW]   = getReal(state->depth,points[5]);
-		//state->joints[RSHOULDER]= getReal(state->depth,points[5]);
-		state->joints[LWRIST]   = getReal(state->depth,left_wrist);
-		state->joints[LELBOW]   = getReal(state->depth,left_elbow);
-		state->joints[LSHOULDER]= getReal(state->depth,left_shoulder);
-		state->joints[LFOOT]    = getReal(state->depth,left_foot);
-		state->joints[RFOOT]    = getReal(state->depth,right_foot);
+		state->joints[LWRIST]   = getReal(state->depth,right_wrist);
+		//state->joints[LELBOW]   = getReal(state->depth,points[5]);
+		//state->joints[LSHOULDER]= getReal(state->depth,points[5]);
+		state->joints[RWRIST]   = getReal(state->depth,left_wrist);
+		state->joints[RELBOW]   = getReal(state->depth,left_elbow);
+		state->joints[RSHOULDER]= getReal(state->depth,left_shoulder);
+		state->joints[RFOOT]    = getReal(state->depth,left_foot);
+		state->joints[LFOOT]    = getReal(state->depth,right_foot);
 	}
 }
 

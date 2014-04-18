@@ -53,7 +53,7 @@ void filter_front(Image<uint16_t> & im) {
 		}
 	}
 	//min_id = im.id(320,240);
-	printf("Min depth: %d\n", min_depth);
+	//printf("Min depth: %d\n", min_depth);
 	blob_merging(im, min_id);
 }
 
@@ -167,7 +167,7 @@ bool get_all(uint16_t a, uint16_t b) {
 
 
 void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
-	printf("in dtocs\n");
+	//printf("in dtocs\n");
 	std::vector<unsigned int> dist_map = 
 		std::vector<unsigned int>(im.size(), 0);
 	std::vector<bool> search1 = {
@@ -238,8 +238,8 @@ void dtocs(std::vector<double> & dist, Image<uint16_t> &im) {
 		dist.push_back( (double) dist_map[i]);
 	}
 	double cur_time = utime_now()/1000000.0;
-	printf("dtocs took: %f(s)\n",cur_time-prev_time);
-	printf("done hagar\n");
+	//printf("dtocs took: %f(s)\n",cur_time-prev_time);
+	//printf("done hagar\n");
 }
 
 #define INF 1E20
@@ -363,8 +363,8 @@ void get_dist_transform(Image<double> & dist, Image<uint16_t> & im) {
 		toVisit = newToVisit;
 	}
 	double new_time = utime_now()/1000000.0;
-	printf("time = %f ",new_time-cur_time);
-	printf("num_times = %d\n",num_times);
+	//printf("time = %f ",new_time-cur_time);
+	//printf("num_times = %d\n",num_times);
 }
 
 std::vector<pixel> minc_local_threshold(
@@ -496,10 +496,10 @@ std::vector<line_t> hough_transform(Image<double> & im) {
 			tmp_line.ru.x = max_x[i];
 			tmp_line.ru.y = tmp_line.ru.x*tmp_line.m + tmp_line.b;
 			lines.push_back(tmp_line);
-			printf("line %d, m = %f, b = %f, <x=%d, >x=%d, theta:%f, r:%f, houghId:%d\n",
+			/*printf("line %d, m = %f, b = %f, <x=%d, >x=%d, theta:%f, r:%f, houghId:%d\n",
 					lines.size()-1,tmp_line.m,tmp_line.b,
 					tmp_line.ll.x, tmp_line.ru.x,
-					theta, radius, i);
+					theta, radius, i);*/
 		}
 	}
 	
@@ -537,8 +537,8 @@ int getHoughId(double theta, double radius) {
 			theta);
 	int id = theta_box*r_num + radius_box; 
 	if(id >= theta_num*r_num || id < 0) {
-		printf("sucks to suck: t:%f,r:%f,id:%d,t_box:%d,r_box:%d,t_num:%d,r_num:%d",
-				theta, radius, id, theta_box, radius_box,theta_num,r_num);
+		/*printf("sucks to suck: t:%f,r:%f,id:%d,t_box:%d,r_box:%d,t_num:%d,r_num:%d",
+				theta, radius, id, theta_box, radius_box,theta_num,r_num);*/
 	}
 	assert(radius_box >= 0 && radius_box < r_num);
 	assert(theta_box  >= 0 &&  theta_box < theta_num);

@@ -70,36 +70,10 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            void *user) {
 	state_t *state = (state_t*) user;
 	state->body->processMsg(msg);
-	//double angles[NUM_SERVOS];
-	//state->arm->getTargetAngles(angles);
 
-	/*for (int i = 0; i < 7; i++) {
-		if (i == HEAD || i == RSHOULDER || i == RELBOW || i == RWRIST) {
-			switch (i) {
-				case HEAD:
-					printf("HEAD - ");
-				break;
-
-				case RSHOULDER:
-					printf("RSHOULDER - ");
-				break;
-
-				case RELBOW:
-					printf("RELBOW - ");
-				break;
-
-				case RWRIST:
-					printf("RWRIST - ");
-				break;
-			}
-
-			printf("%d, %d, %d\n", msg->joints[i].x, msg->joints[i].y, msg->joints[i].z);
-		}
-	}*/
-
-	/*state->body->processMsg(msg);
-	state->body->getServoAngles(angles, true);
-	state->arm->setTargetAngles(angles, state->cfs);*/
+	for (int i = 0; i < msg->len; i++) {
+		printf("%d - %d, %d, %d\n", i, msg->joints[i].x, msg->joints[i].y, msg->joints[i].z);
+	}
 
 	joint_t lwrist = state->body->getJoint(LWRIST);
 	joint_t rshoulder = state->body->getJoint(RSHOULDER);
@@ -109,13 +83,12 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 
 
 	if (state->set_cbs) {
-		double xOffset = 10;
 		double zOffset = CB_DEPTH;
 		state->set_cbs = false;
-		state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY, adjZ + 3*zOffset/2);
-		state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY, adjZ + zOffset/2);
-		state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY, adjZ - zOffset/2);
-		state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY, adjZ - 3*zOffset/2);
+		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ + 3*zOffset/2);
+		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ + zOffset/2);
+		state->controlBoxes[ARM]->setPosition(adjX, adjY, adjZ - zOffset/2);
+		state->controlBoxes[ROTATE]->setPosition(adjX, adjY, adjZ - 3*zOffset/2);
 	}
 
 	int activeBox = -1;

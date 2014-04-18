@@ -100,8 +100,8 @@ void update_im_from_vect(const std::vector<uint8_t> & k_data,
 		image_u32_t *im) {
 	int v_width = 640;
 	int v_height= 480;
-	printf("i_w: %d,v_w: %d, i_h: %d, v_h: %d\n",
-			im->width, v_width, im->height, v_height);
+	/*printf("i_w: %d,v_w: %d, i_h: %d, v_h: %d\n",
+			im->width, v_width, im->height, v_height);*/
 	assert(im->width == v_width && im->height == v_height);
 	for(int y = 0; y < v_height; ++y) {
 		for(int x = 0; x < v_width; ++x) {
@@ -153,9 +153,9 @@ uint32_t depthToIm(uint16_t depth, bool valid, Gradient gr, int id) {
 		//printf("id:%d, size:%d\n",id, d_transf.size());
 		//printf("d_transf -> %f\n",d_transf[id]);
 		double val = d_transf.get(id)/8000.0;
-		if(val > 1.0) {
+		/*if(val > 1.0) {
 			printf("Val: %f\n",val);
-		}
+		}*/
 		val = d_transf.gradient[id].mag() / 255.0;
 		if(!d_transf.isValid(id)) {
 			val = 0;
