@@ -1,6 +1,7 @@
 #include "gripperc.h"
 #include "../common/math_util.h"
 #include <glib-object.h>
+#include <stdio.h>
 
 int qpush(Pixel* q[], Pixel *p, int back){
 	q[back] = p;
@@ -85,6 +86,8 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 			}
 		}
 	}
+
+	printf("hand_pixels %d\n", hand_pixels);
 
 	return (hand_pixels < PIXEL_THRESHOLD);
 }

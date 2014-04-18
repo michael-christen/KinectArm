@@ -7,6 +7,7 @@
 #include <clutter/clutter.h>
 #include <clutter/clutter-keysyms.h>
 #include <pthread.h>
+#include <stdio.h>
 
 // LCM
 #include <lcm/lcm.h>
@@ -244,6 +245,8 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   int gripperIsClosed = gripperClosed(LeftHand.screen_x, LeftHand.screen_y,
 	buffer_info->reduced_buffer, buffer_info->reduced_width, buffer_info->reduced_height);
 
+  printf("Gripper closed - %d\n", gripperIsClosed);
+
   gripper_lcm_t griplcm;
   griplcm.closed = gripperIsClosed;
 
@@ -392,13 +395,6 @@ on_skeleton_draw (ClutterCanvas *canvas,
   right_elbow = skeltrack_joint_list_get_joint (list,
                                                 SKELTRACK_JOINT_ID_RIGHT_ELBOW);
 
-  //Added by Josh to keep track of left hand
-  LeftHand.x = left_hand->x;
-  LeftHand.y = left_hand->y;
-  LeftHand.screen_x = left_hand->screen_x;
-  LeftHand.screen_y = left_hand->screen_y;
-
-
   /* SEND LCM - ADDED BY BRIAN */
 
   // First make sure all of the joints that we care about are present
@@ -479,6 +475,13 @@ on_skeleton_draw (ClutterCanvas *canvas,
       lcm_skeleton.joints[6].z = left_hand->z;
       lcm_skeleton.joints[6].screen_x = left_hand->screen_x;
       lcm_skeleton.joints[6].screen_y = left_hand->screen_y;
+
+      //Added by Josh to keep track of left hand
+      LeftHand.x = left_hand->x;
+      LeftHand.y = left_hand->y;
+      LeftHand.screen_x = left_hand->screen_x;
+      LeftHand.screen_y = left_hand->screen_y;
+
   }
 
   skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
@@ -720,7 +723,7 @@ on_new_kinect_device (GObject      *obj,
   g_signal_connect (kinect,
                     "depth-frame",
                     G_CALLBACK (on_depth_frame),
-                    NULL);
+                    user_data);
 
   g_signal_connect (kinect,
                     "video-frame",
