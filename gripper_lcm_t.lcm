@@ -1,0 +1,4 @@
+struct gripper_lcm_t
+{
+	int8_t closed;
+}
