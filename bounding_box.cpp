@@ -366,12 +366,19 @@ bool BoundingBox::pointWithinBox(double x, double y, double z) {
 }
 
 void BoundingBox::draw(vx_buffer *buf, const float color[]) {
+	float translucentColor[4];
+
+	for (int i = 0; i < 3; i++) {
+		translucentColor[i] = color[i];
+	}
+	translucentColor[3] = 0.3f;
+
     vx_object_t *box = vxo_chain(
 	    // Base
 	    vxo_mat_scale3(CM_TO_VX, CM_TO_VX, CM_TO_VX),
 	    vxo_mat_translate3(this->getX(), this->getY(), this->getZ()),
 	    vxo_mat_scale3(this->getW(), this->getH(), this->getD()),
-	    vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f))
+	    vxo_box(vxo_mesh_style(translucentColor), vxo_lines_style(vx_black, 2.0f))
 	);
 	
 	vx_buffer_add_back(buf, box);

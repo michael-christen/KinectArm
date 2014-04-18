@@ -156,7 +156,6 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 
 	vx_resc_t *verts = vx_resc_copyf(axes, 12);
 	vo = vxo_chain(
-		vxo_mat_scale3(scale, scale, scale),
 		vxo_lines(verts, 4, GL_LINES, vxo_points_style(bone_color, 2.0f))
 	);
 
@@ -172,7 +171,7 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 	vx_buffer_add_back(buf, vo);
 
 	vo = vxo_chain(
-		vxo_mat_translate3(rElbowX, rElbowY, rShoulderZ),
+		vxo_mat_translate3(rElbowX, rElbowY, rElbowZ),
 		vxo_mat_scale3(1.5, 1.5, 1.5),
 		vxo_sphere(vxo_mesh_style(vx_blue))
 	);
@@ -190,7 +189,7 @@ void Body::draw(vx_buffer_t *buf, const float bone_color[], const float joint_co
 	vo = vxo_chain(
 		vxo_mat_translate3(lWristX, lWristY, lWristZ),
 		vxo_mat_scale3(1.5, 1.5, 1.5),
-		vxo_sphere(vxo_mesh_style(vx_red))
+		vxo_sphere(vxo_mesh_style(vx_black))
 	);
 
 	vx_buffer_add_back(buf, vo);

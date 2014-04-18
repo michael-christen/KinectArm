@@ -15,12 +15,23 @@ void stopArm(state_t* state){
 	return;
 }
 
-void rotateArm(state_t* state, bool left){
-	double angles[NUM_SERVOS];
-	state->arm->getTargetAngles(angles);
-	angles[0] = (M_PI-0.2)*(left ? 1 : -1);
-	state->arm->setTargetSpeed(0.05);
-	state->arm->setTargetAngles(angles, state->cfs);
+void rotateArm(state_t* state){
+	double angleSpeedThres = 0.4;
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
+	state->body->getServoAngles(angles, 1);
+	state->arm->getTargetAngles(curAngles);
+	curAngles[0] = (M_PI-0.2)*(angles[2] > 0 ? 1 : -1);
+
+	double speed = fabs(angles[2]);
+
+	if (speed > angleSpeedThres) {
+		speed = (fabs(angles[2]) - angleSpeedThres) / (2*M_PI);
+	} else {
+		speed = 0;
+	}
+
+	state->arm->setTargetSpeed(speed);
+	state->arm->setTargetAngles(curAngles, state->cfs);
 	return;
 }
 
@@ -43,16 +54,17 @@ void commandShoulderWrist(state_t* state, bool shoulder){
 }
 
 void openCloseGripper(state_t* state){
-	double angles[NUM_SERVOS];
+	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
+	double maxAngle = 2.355;
+	double threshold = 0.2;
+	state->arm->getCurAngles(curAngles);
 	state->arm->getTargetAngles(angles);
-	double last_gripper_angle = angles[5];
+	double last_gripper_angle = curAngles[5];
+
 	if(state->close_gripper){
-		double threshold = 0.2;
-		if(fabs(angles[5] - state->last_gripper_angle) < threshold){//slowing down
-			angles[5] = angles[5] + 0.1;
-			state->arm->setTargetSpeed(0.2);
-		}else{
-			angles[5] = 2.0*M_PI/3.0;
+		if (fabs(curAngles[5] - maxAngle) > threshold || fabs(curAngles[5] - state->last_gripper_angle) > threshold) {
+			// Not completely closed or stopped closing
+			angles[5] = curAngles[5] + 0.1;
 			state->arm->setTargetSpeed(0.3);
 		}
 	}else{
@@ -85,13 +97,8 @@ void state_machine_run(state_t* state){
 				//left hand controls grip
 				openCloseGripper(state);
 				break;}
-			case FSM_ROT_LEFT:{
-				//rotate arm left at fixed speed
-				rotateArm(state, 1);
-				break;}
-			case FSM_ROT_RIGHT:{
-				//rotate arm right at fixed speed
-				rotateArm(state, 0);
+			case FSM_ROTATE:{
+				rotateArm(state);
 				break;}
 			case FSM_NONE:{
 				//freeze the arm
