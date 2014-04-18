@@ -21,6 +21,7 @@
 #include "body.h"
 #include "rexarm.h"
 #include "config_space.h"
+#include "data_smoother.h"
 
 //////////////
 // CONSTANTS
@@ -107,6 +108,7 @@ struct state_t {
 
     Body *body;
     RexArm *arm;
+    DataSmoother *ds;
     ConfigSpace cfs;
 
 	FSM_state_t FSM_state;

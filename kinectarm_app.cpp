@@ -17,6 +17,7 @@
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
+#include "body_utility.h"
 #include "joint.h"
 #include "config_space.h"
 #include "rexarm.h"
@@ -69,11 +70,11 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	state->body->processMsg(msg);
+	body_processMsg(state->body, msg, state->ds);
 
-	for (int i = 0; i < msg->len; i++) {
+	/*for (int i = 0; i < msg->len; i++) {
 		printf("%d - %d, %d, %d\n", i, msg->joints[i].x, msg->joints[i].y, msg->joints[i].z);
-	}
+	}*/
 
 	joint_t lwrist = state->body->getJoint(LWRIST);
 	joint_t rshoulder = state->body->getJoint(RSHOULDER);
@@ -156,7 +157,6 @@ void* lcm_handle_loop(void *data) {
 
 void* arm_commander(void *data) {
 	int hz = 30;
-	int valid_angles;
 	state_t *state = (state_t*) data;
 	double angles[NUM_SERVOS];
 	double speed;
@@ -209,6 +209,7 @@ int main(int argc, char ** argv)
 	state->update_arm = 0;
 	state->arm = new RexArm();
 	state->body = new Body();
+	state->ds = new DataSmoother(0.4, 0.3, 0, 0);
 	state->running = 1;
 	state->set_cbs = 0;
 
@@ -265,6 +266,7 @@ int main(int argc, char ** argv)
 	// clean up
 	delete state->arm;
 	delete state->body;
+	delete state->ds;
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		delete state->controlBoxes[i];
 	}

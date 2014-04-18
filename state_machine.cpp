@@ -1,6 +1,6 @@
 #include "arm_state.h"
 #include "rexarm.h"
-#include "body.h"
+#include "body_utility.h"
 #include "math.h"
 #include "../common/math_util.h"
 #include <unistd.h>
@@ -18,7 +18,7 @@ void stopArm(state_t* state){
 void rotateArm(state_t* state){
 	double angleSpeedThres = 0.4;
 	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
-	state->body->getServoAngles(angles, 1);
+	body_getServoAngles(state->body, angles, 1);
 	state->arm->getTargetAngles(curAngles);
 	curAngles[0] = (M_PI-0.2)*(angles[2] > 0 ? 1 : -1);
 
@@ -37,7 +37,7 @@ void rotateArm(state_t* state){
 
 void commandShoulderWrist(state_t* state, bool shoulder){
 	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
-	state->body->getServoAngles(angles, 1);
+	body_getServoAngles(state->body, angles, 1);
 	double shoulderAngle = angles[1];
 	double elbowAngle = angles[2];
 

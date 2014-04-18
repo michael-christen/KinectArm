@@ -151,7 +151,7 @@ std::vector<int> getNeighbors(image_u32_t *im, int x, int y) {
 }
 
 bool px_close_enough(uint16_t depth_0, uint16_t depth_1) {
-	return abs(depth_0 - depth_1) < 700;
+	return abs(depth_0 - depth_1) < 1200;
 }
 
 bool grad_close_enough(Gradient cur, Gradient other) {

@@ -24,7 +24,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,20);
+			neighbors = im.getBlockNeighborIds(i,15);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
