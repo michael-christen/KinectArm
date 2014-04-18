@@ -26,13 +26,12 @@
 #include "Image.h"
 #include "Line.h"
 #include "joint.h"
+#include "body.h"
 //////////////
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 2
 #define NUM_SERVOS 6
-
-#define NUM_JOINTS 10
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
@@ -110,6 +109,7 @@ struct state_t {
 	freenect_device  *f_dev;
 	freenect_video_format current_format;
 
+    Body body;
     joint_t joints[NUM_JOINTS];
 
     int send_data, set_hand_dist, set_open_hand, set_closed_hand;

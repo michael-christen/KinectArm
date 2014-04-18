@@ -8,6 +8,7 @@
 #include "data_smoother.h"
 #include "vx/vxo_drawables.h"
 #include <stdio.h>
+#include "data_smoother.h"
 
 void body_processMsg(Body *body, const skeleton_joint_list_t *msg, DataSmoother *ds) {
 	/*double distThresh = 1000;
@@ -24,9 +25,9 @@ void body_processMsg(Body *body, const skeleton_joint_list_t *msg, DataSmoother 
 	printf("dist - %f\n", dist);*/
 
 	//if (dist < distThresh) {
-	joint_t joint;
 	for (int i = 0; i < msg->len; i++) {
 		if (msg->joints[i].valid) {
+			joint_t joint;
 			joint.x = ds->getNewVal(i * 5, (double) msg->joints[i].x);
 			joint.y = ds->getNewVal(i * 5 + 1, (double) msg->joints[i].y);
 			joint.z = ds->getNewVal(i * 5 + 2, (double) msg->joints[i].z);

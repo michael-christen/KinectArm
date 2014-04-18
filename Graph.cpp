@@ -12,6 +12,7 @@
 
  _._._._._._._._._._._._._._._._._._._._._.*/
 #include "Graph.h"
+#include "body.h"
 
 std::map<int, G_Node > getGraphFromSkeleton(
 		Image<double> &im) {
@@ -117,16 +118,16 @@ void getBodyFromEndPoints(state_t * state,
 		state->pts = points;
 		//state->pts = points;
 		//Assign
-		state->joints[MIDPOINT] = getReal(state->depth,midpoint);
-		state->joints[HEAD]     = getReal(state->depth,head);
-		state->joints[LWRIST]   = getReal(state->depth,right_wrist);
-		//state->joints[LELBOW]   = getReal(state->depth,points[5]);
-		//state->joints[LSHOULDER]= getReal(state->depth,points[5]);
-		state->joints[RWRIST]   = getReal(state->depth,left_wrist);
-		state->joints[RELBOW]   = getReal(state->depth,left_elbow);
-		state->joints[RSHOULDER]= getReal(state->depth,left_shoulder);
-		state->joints[RFOOT]    = getReal(state->depth,left_foot);
-		state->joints[LFOOT]    = getReal(state->depth,right_foot);
+		state->body.setJoint(MIDPOINT, getReal(state->depth,midpoint));
+		state->body.setJoint(HEAD, getReal(state->depth,head));
+		state->body.setJoint(LWRIST, getReal(state->depth,right_wrist));
+		//state->body.setJoint(LELBOW, getReal(state->depth,points[5]));
+		//state->body.setJoint(LSHOULDER, getReal(state->depth,points[5]));
+		state->body.setJoint(RWRIST, getReal(state->depth,left_wrist));
+		state->body.setJoint(RELBOW, getReal(state->depth,left_elbow));
+		state->body.setJoint(RSHOULDER, getReal(state->depth,left_shoulder));
+		state->body.setJoint(RFOOT, getReal(state->depth,left_foot));
+		state->body.setJoint(LFOOT, getReal(state->depth,right_foot));
 	}
 }
 

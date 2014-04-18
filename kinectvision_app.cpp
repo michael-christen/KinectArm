@@ -317,7 +317,7 @@ void kinect_process(state_t* state){
 			   10, 200);
 			 */
 		} else {
-			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
+			/*blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
 			blob_type_t blue_blob_type = {209.0, 0xfff8ff21, 10, 200};
 			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 200};
 			std::vector<blob_type_t> blob_types;
@@ -369,7 +369,7 @@ void kinect_process(state_t* state){
 				state->joints[RWRIST].z = sZ;
 				state->joints[RWRIST].screen_x = imageX;
 				state->joints[RWRIST].screen_y = imageY;
-			}
+			}*/
 		}
 		cur_time = utime_now()/1000000.0;
 		/*printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
@@ -381,16 +381,17 @@ void kinect_process(state_t* state){
 
 	if (state->send_data) {
 		skeleton_joint_list_t lcm_skeleton;
-		lcm_skeleton.len = 7;
+		lcm_skeleton.len = NUM_JOINTS;
 		lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
 
 		for (int i = 0; i < lcm_skeleton.len; i++) {
+			joint_t bodyJoint = state->body.getJoint((Joints) i);
 			lcm_skeleton.joints[i].valid = 1;
-			lcm_skeleton.joints[i].x = state->joints[i].x;
-			lcm_skeleton.joints[i].y = state->joints[i].y;
-			lcm_skeleton.joints[i].z = state->joints[i].z;
-			lcm_skeleton.joints[i].screen_x = state->joints[i].screen_x;
-			lcm_skeleton.joints[i].screen_y = state->joints[i].screen_y;
+			lcm_skeleton.joints[i].x = bodyJoint.x;
+			lcm_skeleton.joints[i].y = bodyJoint.y;
+			lcm_skeleton.joints[i].z = bodyJoint.z;
+			lcm_skeleton.joints[i].screen_x = bodyJoint.screen_x;
+			lcm_skeleton.joints[i].screen_y = bodyJoint.screen_y;
 		}
 
 		skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);

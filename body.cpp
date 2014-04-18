@@ -5,5 +5,5 @@ joint_t Body::getJoint(Joints jointid) {
 }
 
 void Body::setJoint(Joints jointid, joint_t joint) {
-	this->joints[jointid] = joint;
+	this->joints[(int)jointid] = joint;
 }

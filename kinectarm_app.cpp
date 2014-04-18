@@ -95,11 +95,12 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	int activeBox = -1;
 
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
-		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
-			state->controlBoxSelected[i] = true;
-			activeBox = i;
+		ControlBoxes cbi = (ControlBoxes) i;
+		if (state->controlBoxes[cbi]->pointWithinBox(adjX, adjY, adjZ)) {
+			state->controlBoxSelected[cbi] = true;
+			activeBox = cbi;
 		} else {
-			state->controlBoxSelected[i] = false;
+			state->controlBoxSelected[cbi] = false;
 		}
 	}
 
