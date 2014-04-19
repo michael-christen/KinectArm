@@ -36,6 +36,7 @@
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
 #define ARM_COMMAND_CHANNEL "ARM_COMMAND"
 #define SKELETON_DATA_CHANNEL "KA_SKELETON"
+#define GRIPPER_CHANNEL "GRIPPER"
 
 //////////////
 // STRUCTS
@@ -105,8 +106,8 @@ struct state_t {
     ConfigSpace cfs;
 
 	FSM_state_t FSM_state;
-	FSM_state_t FSM_next_state;	//Brian sets
-	bool close_gripper;	//Brian sets
+	FSM_state_t FSM_next_state;
+	bool close_gripper, past_close_gripper;
 	double last_gripper_angle;
     
 	BoundingBox* controlBoxes[NUM_CONTROL_BOXES];

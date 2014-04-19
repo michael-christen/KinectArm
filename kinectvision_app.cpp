@@ -7,6 +7,7 @@
 #include <lcm/lcm.h>
 #include "skeleton_joint_t.h"
 #include "skeleton_joint_list_t.h"
+#include "gripper_lcm_t.h"
 
 // Local Includes
 #include "vision_state.h"
@@ -240,6 +241,17 @@ void kinect_process(state_t* state){
 
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
+			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
+			std::vector<blob_type_t> blob_types;
+			blob_types.push_back(green_blob_type);
+			std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
+
+			if (markers[0].size() > 0) {
+				state->close_gripper = false;
+			} else {
+				state->close_gripper = true;
+			}
+
 			filter_front(state->depth);
 			state->depth.copyValid(state->im.valid);
 			/*
@@ -396,6 +408,14 @@ void kinect_process(state_t* state){
 
 		skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
 		free(lcm_skeleton.joints);
+
+		gripper_lcm_t lcm_gripper;
+		if (state->close_gripper) {
+			lcm_gripper.closed = 1;
+		} else {
+			lcm_gripper.closed = 0;
+		}
+		gripper_lcm_t_publish(state->lcm, "GRIPPER", &lcm_gripper);
 	}
 }
 

@@ -40,13 +40,13 @@ skeltrack: ../../bin/skeltrack_vision
 
 ../../bin/kinectarm_app: kinectarm_app.o arm_gui.o body_utility.o body.o pid_ctrl.o eecs467_util.o\
 	skeleton_joint_t.o skeleton_joint_list_t.o config_space.o bounding_box.o rexarm.o\
-	data_smoother.o state_machine.o
+	data_smoother.o state_machine.o gripper_lcm_t.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 ../../bin/kinectvision_app: kinectvision_app.o vision_gui.o body.o disjoint.o blob_detection.o\
 	skeleton_joint_t.o skeleton_joint_list_t.o pixel.o eecs467_util.o kinect_handle.o image_helper.o filter.o \
-	Gradient.o Line.o Image.o Graph.o joint.o
+	Gradient.o Line.o Image.o Graph.o joint.o gripper_lcm_t.o
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS) -O3
 

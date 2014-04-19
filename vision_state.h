@@ -113,6 +113,8 @@ struct state_t {
     joint_t joints[NUM_JOINTS];
 
     int send_data, set_hand_dist, set_open_hand, set_closed_hand;
+
+    bool close_gripper;
 };
 
 

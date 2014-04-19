@@ -10,6 +10,7 @@
 #include "lcmtypes/dynamixel_status_t.h"
 #include "skeleton_joint_t.h"
 #include "skeleton_joint_list_t.h"
+#include "gripper_lcm_t.h"
 
 
 // Local Includes
@@ -82,16 +83,19 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	double adjY = (lwrist.z - rshoulder.z)/20;
 	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
+	bool gripper_changed = state->past_close_gripper ^ state->close_gripper;
 
 	if (state->set_cbs) {
-		double zOffset = CB_DEPTH;
-		double yOffset = 5;
-		double xOffset = 40;
-		state->set_cbs = false;
-		state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + 3*zOffset/2);
-		state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + zOffset/2);
-		state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - zOffset/2);
-		state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - 3*zOffset/2);
+		if (gripper_changed && state->close_gripper) {
+			double zOffset = CB_DEPTH;
+			double yOffset = 5;
+			double xOffset = 40;
+			state->set_cbs = false;
+			state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + 3*zOffset/2);
+			state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + zOffset/2);
+			state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - zOffset/2);
+			state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - 3*zOffset/2);
+		}
 	}
 
 	int activeBox = -1;
@@ -106,27 +110,41 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		}
 	}
 
-	pthread_mutex_lock(&state->fsm_mutex);
-	switch(activeBox) {
-		case GRIPPER:
-			state->FSM_next_state = FSM_GRIP;
-		break;
-		case WRIST:
-			state->FSM_next_state = FSM_WRIST;
-		break;
-		case ROTATE:
-			state->FSM_next_state = FSM_ROTATE;
-		break;
-		case ARM:
-			state->FSM_next_state = FSM_ARM;
-		break;
-		default:
-			state->FSM_next_state = FSM_NONE;
-		break;
+	if (gripper_changed && state->close_gripper) {
+		pthread_mutex_lock(&state->fsm_mutex);
+		switch(activeBox) {
+			case GRIPPER:
+				state->FSM_next_state = FSM_GRIP;
+			break;
+			case WRIST:
+				state->FSM_next_state = FSM_WRIST;
+			break;
+			case ROTATE:
+				state->FSM_next_state = FSM_ROTATE;
+			break;
+			case ARM:
+				state->FSM_next_state = FSM_ARM;
+			break;
+			default:
+				state->FSM_next_state = FSM_NONE;
+			break;
+		}		
+		pthread_mutex_unlock(&state->fsm_mutex);
 	}
-	
-	pthread_mutex_unlock(&state->fsm_mutex);
 
+}
+
+static void gripper_handler( const lcm_recv_buf_t *rbuf,
+                           const char *channel,
+                           const gripper_lcm_t *msg,
+                           void *user) {
+	state_t *state = (state_t*) user;
+	state->past_close_gripper = state->close_gripper;
+	if (msg->closed == 1) {
+		state->close_gripper = true;
+	} else {
+		state->close_gripper = false;
+	}
 }
 
 void* lcm_handle_loop(void *data) {
@@ -143,6 +161,11 @@ void* lcm_handle_loop(void *data) {
                                       skeleton_data_handler,
                                       state);
 
+	gripper_lcm_t_subscription_t *gripper_sub = gripper_lcm_t_subscribe(state->lcm,
+                                      GRIPPER_CHANNEL,
+                                      gripper_handler,
+                                      state);
+
 	while (state->running) {
 		// Set up the LCM file descriptor for waiting. This lets us monitor it
 		// until somethign is "ready" to happen. In this case, we are ready to
@@ -154,6 +177,7 @@ void* lcm_handle_loop(void *data) {
 	// ..._unsubscribe(...)
 	dynamixel_status_list_t_unsubscribe(state->lcm, arm_sub);
 	skeleton_joint_list_t_unsubscribe(state->lcm, skeleton_sub);
+	gripper_lcm_t_unsubscribe(state->lcm, gripper_sub);
 
 	return NULL;
 }
