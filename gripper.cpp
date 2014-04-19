@@ -1,5 +1,6 @@
 #include "gripper.h"
 #include "../common/math_util.h"
+#include "math.h"
 #include <queue>
 #include <vector>
 
@@ -8,6 +9,7 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 
 	int cornerx = x - XY_THRESHOLD;
 	int cornery = y - XY_THRESHOLD;
+	int boxsize = XY_THRESHOLD * 2;
 	int tempx, tempy;
 	if(cornerx < 0){
 		cornerx = 0;
@@ -15,12 +17,19 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 	if(cornery < 0){
 		cornery = 0;
 	}
+	if(cornerx + boxsize >= reduced_width && cornery + boxsize >= reduced_height){
+		boxsize = std::min(reduced_width - cornerx, reduced_height - cornery);
+	}else if(cornerx + boxsize >= reduced_width){
+		boxsize = reduced_width - cornerx;
+	}else if(cornery + boxsize >= reduced_height){
+		boxsize = reduced_height - cornery;
+	}
 		
 	//Create a map of the pixels around the hand
 	std::vector<std::vector<Pixel>> map;
 
-	for(int i = 0; i < XY_THRESHOLD*2; i++){
-		for(int k = 0; k < XY_THRESHOLD*2; k++){
+	for(int i = 0; i < boxsize; i++){
+		for(int k = 0; k < boxsize; k++){
 			//O((XY_THRESHOLD*2)^2)
 			tempx = cornerx + i;
 			tempy = cornery + k;
@@ -67,8 +76,8 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 						 tempy = cur.y;
 			}
 
-			if(tempx >= 0 && (unsigned) tempx < map.size() && 
-				tempy >= 0 && (unsigned) tempy < map.at(tempx).size()){
+			if(tempx >= cornerx && tempx < (cornerx + boxsize) && 
+				tempy >= cornery && tempy < (cornery + boxsize)){
 				next = &map.at(tempx).at(tempy);
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
 					hand_pixels++;

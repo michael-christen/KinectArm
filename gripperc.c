@@ -21,6 +21,13 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 	if(cornery < 0){
 		cornery = 0;
 	}
+	if(cornerx + boxsize >= reduced_width && cornery + boxsize >= reduced_height){
+		boxsize = imin(reduced_width - cornerx, reduced_height - cornery);
+	}else if(cornerx + boxsize >= reduced_width){
+		boxsize = reduced_width - cornerx;
+	}else if(cornery + boxsize >= reduced_height){
+		boxsize = reduced_height - cornery;
+	}
 		
 	//Create a map of the pixels around the hand
 	Pixel map[4 * XY_THRESHOLD * XY_THRESHOLD];
@@ -75,8 +82,8 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 						 tempy = cur.y;
 			}
 
-			if(tempx >= 0 && (unsigned) tempx < boxsize && 
-				tempy >= 0 && (unsigned) tempy < boxsize){
+			if(tempx >= cornerx && tempx < (cornerx + boxsize) && 
+				tempy >= cornery && tempy < (cornery + boxsize)){
 				next = &map[tempy * boxsize + tempx];
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
 					hand_pixels++;
