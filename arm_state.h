@@ -22,14 +22,15 @@
 #include "rexarm.h"
 #include "config_space.h"
 #include "data_smoother.h"
+#include "fsm_state.h"
 
 //////////////
 // CONSTANTS
 //////////////
 #define NUM_LAYERS 2
 #define NUM_CONTROL_BOXES 4
-#define CB_WIDTH 40
-#define CB_HEIGHT 40
+#define CB_WIDTH 80
+#define CB_HEIGHT 80
 #define CB_DEPTH 15
 
 #define ARM_STATUS_CHANNEL "ARM_STATUS"
@@ -62,14 +63,6 @@ struct layer_data_t {
     int (*displayInit)(state_t *state, layer_data_t *layerData);
     int (*render)(state_t *state, layer_data_t *layerData);
     int (*destroy)(state_t *state, layer_data_t *layerData);
-};
-
-enum FSM_state_t {
-	FSM_NONE,
-	FSM_ARM,
-	FSM_WRIST,
-	FSM_GRIP,
-	FSM_ROTATE
 };
 
 struct state_t {

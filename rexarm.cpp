@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "arm_gui.h"
 #include "vx/vxo_drawables.h"
+#include "fsm_state.h"
 
 int colCount = 0;
 
@@ -240,19 +241,57 @@ void RexArm::getTargetSpeed(double& speed) {
 	pthread_mutex_unlock(&this->targetSpeedMutex);
 }
 
-void RexArm::drawCurState(vx_buffer_t *buf, const float color[]) {
+void RexArm::drawCurState(vx_buffer_t *buf, const float color[], FSM_state_t state) {
 	pthread_mutex_lock(&this->curAnglesMutex);
-	this->drawState(buf, color, this->curAngles);
+	this->drawState(buf, color, this->curAngles, state);
 	pthread_mutex_unlock(&this->curAnglesMutex);
 }
 
-void RexArm::drawTargetState(vx_buffer_t *buf, const float color[]) {
+void RexArm::drawTargetState(vx_buffer_t *buf, const float color[], FSM_state_t state) {
 	pthread_mutex_lock(&this->targetAnglesMutex);
-	this->drawState(buf, color, this->targetAngles);
+	this->drawState(buf, color, this->targetAngles, state);
 	pthread_mutex_unlock(&this->targetAnglesMutex);
 }
 
-void RexArm::drawState(vx_buffer_t *buf, const float color[], double angles[]) {
+void RexArm::drawState(vx_buffer_t *buf, const float color[], double angles[], FSM_state_t state) {
+	const float* colors[5];
+
+	for (int i = 0; i < 5; i++) {
+		switch (state) {
+			case FSM_NONE:
+				colors[i] = color;
+			break;
+			case FSM_ARM:
+				if (i < 2) {
+					colors[i] = vx_red;
+				} else {
+					colors[i] = color;
+				}
+			break;
+			case FSM_WRIST:
+				if (i == 2) {
+					colors[i] = vx_red;
+				} else {
+					colors[i] = color;
+				}
+			break;
+			case FSM_GRIP:
+				if (i > 2) {
+					colors[i] = vx_red;
+				} else {
+					colors[i] = color;
+				}
+			break;
+			case FSM_ROTATE:
+				if (i == 0) {
+					colors[i] = vx_red;
+				} else {
+					colors[i] = color;
+				}
+			break;
+		}
+	}
+
 	vx_object_t *segment = vxo_chain(
 		// Base
 		vxo_mat_rotate_z(angles[0]),
@@ -262,21 +301,21 @@ void RexArm::drawState(vx_buffer_t *buf, const float color[], double angles[]) {
 		vxo_mat_rotate_y(angles[1]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[0]/2),
 		vxo_mat_scale3(this->segmentWidth[0], this->segmentHeight[0], this->segmentDepth[0]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f)),
+		vxo_box(vxo_mesh_style(colors[0]), vxo_lines_style(vx_black, 2.0f)),
 		vxo_mat_scale3(1/this->segmentWidth[0], 1/this->segmentHeight[0], 1/this->segmentDepth[0]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[0]/2),
 		// Lower Arm
 		vxo_mat_rotate_y(angles[2]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[1]/2),
 		vxo_mat_scale3(this->segmentWidth[1], this->segmentHeight[1], this->segmentDepth[1]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f)),
+		vxo_box(vxo_mesh_style(colors[1]), vxo_lines_style(vx_black, 2.0f)),
 		vxo_mat_scale3(1/this->segmentWidth[1], 1/this->segmentHeight[1], 1/this->segmentDepth[1]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[1]/2),
 		// Wrist
 		vxo_mat_rotate_y(angles[3]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[2]/2),
 		vxo_mat_scale3(this->segmentWidth[2], this->segmentHeight[2], this->segmentDepth[2]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f)),
+		vxo_box(vxo_mesh_style(colors[2]), vxo_lines_style(vx_black, 2.0f)),
 		vxo_mat_scale3(1/this->segmentWidth[2], 1/this->segmentHeight[2], 1/this->segmentDepth[2]),
 		vxo_mat_translate3(0, 0, this->segmentDepth[2]/2),
 		// Gripper
@@ -284,14 +323,14 @@ void RexArm::drawState(vx_buffer_t *buf, const float color[], double angles[]) {
 		// Static Gripper
 		vxo_mat_translate3(0, 0, this->segmentDepth[3]/2),
 		vxo_mat_scale3(this->segmentWidth[2], this->segmentHeight[3]/2, this->segmentDepth[3]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f)),
+		vxo_box(vxo_mesh_style(colors[3]), vxo_lines_style(vx_black, 2.0f)),
 		vxo_mat_scale3(1/this->segmentWidth[2], 2/this->segmentHeight[3], 1/this->segmentDepth[3]),
 		vxo_mat_translate3(0, -this->segmentHeight[3]/2, -this->segmentDepth[3]/2),
 		// Dynamic Gripper
 		vxo_mat_rotate_x(-angles[5] + M_PI/2),
 		vxo_mat_translate3(0, 0, this->segmentDepth[3]/2),
 		vxo_mat_scale3(this->segmentWidth[3], this->segmentHeight[3]/2, this->segmentDepth[3]),
-		vxo_box(vxo_mesh_style(color), vxo_lines_style(vx_black, 2.0f)),
+		vxo_box(vxo_mesh_style(colors[4]), vxo_lines_style(vx_black, 2.0f)),
 		vxo_mat_scale3(1/this->segmentWidth[3], 2/this->segmentHeight[3], 1/this->segmentDepth[3])
 	);
 

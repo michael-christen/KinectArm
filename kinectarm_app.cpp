@@ -85,11 +85,13 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 
 	if (state->set_cbs) {
 		double zOffset = CB_DEPTH;
+		double yOffset = 5;
+		double xOffset = 40;
 		state->set_cbs = false;
-		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ + 3*zOffset/2);
-		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ + zOffset/2);
-		state->controlBoxes[ARM]->setPosition(adjX, adjY, adjZ - zOffset/2);
-		state->controlBoxes[ROTATE]->setPosition(adjX, adjY, adjZ - 3*zOffset/2);
+		state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + 3*zOffset/2);
+		state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + zOffset/2);
+		state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - zOffset/2);
+		state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - 3*zOffset/2);
 	}
 
 	int activeBox = -1;

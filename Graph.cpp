@@ -74,12 +74,19 @@ void getBodyFromEndPoints(state_t * state,
 	points.erase(std::find(points.begin(),points.end(),left_foot));
 	points.erase(std::find(points.begin(),points.end(),right_foot));
 	//Head is in the middle
-	closest_val = 320;
+	int middleX = im.getX(midpoint);
+	int middleY = im.getY(midpoint);
+	int closest_x = 320;
+	int closest_y = 0;
+	closest_id = points.front();
 	for(int i = 0; i < points.size(); ++i) {
-		int dist = abs(im.getX(points[i])-320);
-		if(dist < closest_val) {
+		int xDist = abs(im.getX(points[i])-middleX);
+		int yDist = abs(im.getY(points[i])-middleY);
+		if(xDist < closest_x && im.getY(points[i]) < middleY) {
+			closest_x = xDist;
+			closest_y = yDist;
 			closest_id = points[i];
-		}	
+		}
 	}
 	int head = closest_id;
 	points.erase(std::find(points.begin(),points.end(),head));
@@ -106,7 +113,7 @@ void getBodyFromEndPoints(state_t * state,
 		int oldParent = parent;
 		while(graph.find(parent) != graph.end() && parent != start) {
 			parent = graph[parent].parent;
-			if(parent == oldParent) { 
+			if(parent == oldParent) {
 				break;
 			}
 			oldParent = parent;

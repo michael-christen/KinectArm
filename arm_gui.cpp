@@ -205,8 +205,8 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
-	state->arm->drawTargetState(armBuff, vx_yellow);
-	state->arm->drawCurState(armBuff, vx_blue);
+	state->arm->drawTargetState(armBuff, vx_yellow, state->FSM_state);
+	state->arm->drawCurState(armBuff, vx_blue, state->FSM_state);
 	
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
@@ -249,12 +249,13 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	verts = vx_resc_copyf(posAxes, 6);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 2, GL_LINES, vxo_points_style(vx_green, 2.0f)));
 	
+	//Draw Control Boxes
+	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
+
 	//Draw Skeleton
 	vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
 	body_draw(state->body, skeletonBuff);
 
-	//Draw Control Boxes
-	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
 	
 	const float* color;
 	
@@ -269,8 +270,8 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
-	vx_buffer_swap(skeletonBuff);
 	vx_buffer_swap(cbBuff);
+	vx_buffer_swap(skeletonBuff);
 	return 1;
 }
 

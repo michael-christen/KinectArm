@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include "config_space.h"
 #include "bounding_box.h"
+#include "fsm_state.h"
 
 class RexArm {
 	public:
@@ -18,8 +19,8 @@ class RexArm {
 		void getTargetAngles(double arr[]);
 		void getCurAngles(double arr[]);
 		void getTargetSpeed(double& speed);
-		void drawCurState(vx_buffer_t *buf, const float color[]);
-		void drawTargetState(vx_buffer_t *buf, const float color[]);
+		void drawCurState(vx_buffer_t *buf, const float color[], FSM_state_t state);
+		void drawTargetState(vx_buffer_t *buf, const float color[], FSM_state_t state);
 
 	private:
 		pthread_mutex_t curAnglesMutex, targetAnglesMutex, targetSpeedMutex;
@@ -36,7 +37,7 @@ class RexArm {
 		double targetSpeed;
 	    double dsf, tsf;
 	    ConfigSpace *cfs;
-	    void drawState(vx_buffer_t *buf, const float color[], double angles[]);
+	    void drawState(vx_buffer_t *buf, const float color[], double angles[], FSM_state_t state);
 	    void setBoundingBoxes(BoundingBox boxes[]);
 };
 
