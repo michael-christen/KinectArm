@@ -15,6 +15,7 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 	int cornery = y - XY_THRESHOLD;
 	int boxsize = XY_THRESHOLD * 2;
 	int tempx, tempy;
+	int centerx, centery;
 	if(cornerx < 0){
 		cornerx = 0;
 	}
@@ -28,6 +29,7 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 	}else if(cornery + boxsize >= reduced_height){
 		boxsize = reduced_height - cornery;
 	}
+	centerx = centery = boxsize / 2;
 		
 	//Create a map of the pixels around the hand
 	Pixel map[4 * XY_THRESHOLD * XY_THRESHOLD];
@@ -47,19 +49,21 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 			map[k * boxsize + i].visited = 0;
 		}
 	}
-	map[(y-cornery) * boxsize + (x-cornerx)].visited = 1;
+	map[centery * boxsize + centerx].visited = 1;
+	printf("Thinks hand is: x: %d, y: %d\n", centerx, centery);
 	
 	int hand_pixels = 1;
 
 	Pixel* q[4 * XY_THRESHOLD * XY_THRESHOLD];
 	int index = 0;
 	int back = 0;
-	back = qpush(q, &map[(y-cornery) * boxsize + (x-cornerx)], back);
-
+	back = qpush(q, &map[centery * boxsize + centerx], back);
+	int count = 0;
 	Pixel *next;
 	while(index != back){
 		Pixel cur = *q[index];	//q.front()
 		index++; //q.pop()
+		printf("Test: x: %d, y: %d\n", cur.x, cur.y);
 		for(int i = 0; i < 4; i++){
 			switch(i){
 				case 0: //LEFT
@@ -81,10 +85,11 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 				default: tempx = cur.x;
 						 tempy = cur.y;
 			}
-
+			count++;
 			if(tempx >= cornerx && tempx < (cornerx + boxsize) && 
 				tempy >= cornery && tempy < (cornery + boxsize)){
 				next = &map[tempy * boxsize + tempx];
+				//problem in next line
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
 					hand_pixels++;
 					back = qpush(q, next, back);
@@ -94,7 +99,7 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 		}
 	}
 
-	printf("hand_pixels %d\n", hand_pixels);
+	printf("hand_pixels %d\ncount %d\n", hand_pixels, count);
 
 	return (hand_pixels < PIXEL_THRESHOLD);
 }

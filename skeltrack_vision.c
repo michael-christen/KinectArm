@@ -243,8 +243,8 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   state_t* state = (state_t*) user_data;
 
   int gripperIsClosed = gripperClosed(LeftHand.screen_x, LeftHand.screen_y,
-	buffer_info->reduced_buffer, buffer_info->reduced_width, buffer_info->reduced_height);
-
+  depth, buffer_info->width, buffer_info->height);
+  printf("Hand: x: %d, y: %d\n", LeftHand.screen_x, LeftHand.screen_y);
   printf("Gripper closed - %d\n", gripperIsClosed);
 
   gripper_lcm_t griplcm;
