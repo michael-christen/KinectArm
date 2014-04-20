@@ -242,14 +242,22 @@ void kinect_process(state_t* state){
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
 			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
+			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
 			std::vector<blob_type_t> blob_types;
 			blob_types.push_back(green_blob_type);
+			blob_types.push_back(yellow_blob_type);
 			std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
 
 			if (markers[0].size() > 0) {
-				state->close_gripper = false;
+				state->close_left_gripper = false;
 			} else {
-				state->close_gripper = true;
+				state->close_left_gripper = true;
+			}
+
+			if (markers[1].size() > 0) {
+				state->close_right_gripper = false;
+			} else {
+				state->close_right_gripper = true;
 			}
 
 			filter_front(state->depth);
@@ -410,10 +418,15 @@ void kinect_process(state_t* state){
 		free(lcm_skeleton.joints);
 
 		gripper_lcm_t lcm_gripper;
-		if (state->close_gripper) {
-			lcm_gripper.closed = 1;
+		if (state->close_left_gripper) {
+			lcm_gripper.left_closed = 1;
 		} else {
-			lcm_gripper.closed = 0;
+			lcm_gripper.left_closed = 0;
+		}
+		if (state->close_right_gripper) {
+			lcm_gripper.right_closed = 1;
+		} else {
+			lcm_gripper.right_closed = 0;
 		}
 		gripper_lcm_t_publish(state->lcm, "GRIPPER", &lcm_gripper);
 	}

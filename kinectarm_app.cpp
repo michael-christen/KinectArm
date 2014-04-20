@@ -83,10 +83,11 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	double adjY = (lwrist.z - rshoulder.z)/20;
 	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
-	bool gripper_changed = state->past_close_gripper ^ state->close_gripper;
+	bool left_gripper_changed = state->past_close_left_gripper ^ state->close_left_gripper;
+	bool right_gripper_changed = state->past_close_right_gripper ^ state->close_right_gripper;
 
 	if (state->set_cbs) {
-		if (gripper_changed && state->close_gripper) {
+		if (left_gripper_changed && state->close_left_gripper) {
 			double zOffset = CB_DEPTH;
 			double yOffset = 5;
 			double xOffset = 40;
@@ -110,7 +111,7 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		}
 	}
 
-	if (gripper_changed && state->close_gripper) {
+	if (left_gripper_changed && state->close_left_gripper) {
 		pthread_mutex_lock(&state->fsm_mutex);
 		switch(activeBox) {
 			case GRIPPER:
@@ -139,11 +140,17 @@ static void gripper_handler( const lcm_recv_buf_t *rbuf,
                            const gripper_lcm_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	state->past_close_gripper = state->close_gripper;
-	if (msg->closed == 1) {
-		state->close_gripper = true;
+	state->past_close_left_gripper = state->close_left_gripper;
+	state->past_close_right_gripper = state->close_right_gripper;
+	if (msg->left_closed == 1) {
+		state->close_left_gripper = true;
 	} else {
-		state->close_gripper = false;
+		state->close_left_gripper = false;
+	}
+	if (msg->right_closed == 1) {
+		state->close_right_gripper = true;
+	} else {
+		state->close_right_gripper = false;
 	}
 }
 

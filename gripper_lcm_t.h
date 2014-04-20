@@ -19,7 +19,8 @@ extern "C" {
 typedef struct _gripper_lcm_t gripper_lcm_t;
 struct _gripper_lcm_t
 {
-    int8_t     closed;
+    int8_t     left_closed;
+    int8_t     right_closed;
 };
 
 gripper_lcm_t   *gripper_lcm_t_copy(const gripper_lcm_t *p);

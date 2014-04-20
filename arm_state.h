@@ -107,7 +107,8 @@ struct state_t {
 
 	FSM_state_t FSM_state;
 	FSM_state_t FSM_next_state;
-	bool close_gripper, past_close_gripper;
+	bool close_left_gripper, past_close_left_gripper;
+	bool close_right_gripper, past_close_right_gripper;
 	double last_gripper_angle;
     
 	BoundingBox* controlBoxes[NUM_CONTROL_BOXES];

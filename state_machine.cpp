@@ -61,7 +61,7 @@ void openCloseGripper(state_t* state){
 	state->arm->getTargetAngles(angles);
 	double last_gripper_angle = curAngles[5];
 
-	if(state->close_gripper){
+	if(state->close_right_gripper){
 		if (fabs(curAngles[5] - maxAngle) > threshold || fabs(curAngles[5] - state->last_gripper_angle) > threshold) {
 			// Not completely closed or stopped closing
 			angles[5] = curAngles[5] + 0.1;

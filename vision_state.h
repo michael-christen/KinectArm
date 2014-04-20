@@ -114,7 +114,7 @@ struct state_t {
 
     int send_data, set_hand_dist, set_open_hand, set_closed_hand;
 
-    bool close_gripper;
+    bool close_left_gripper, close_right_gripper;
 };
 
 
