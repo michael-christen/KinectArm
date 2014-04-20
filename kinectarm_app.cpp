@@ -90,7 +90,7 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		if (left_gripper_changed && state->close_left_gripper) {
 			double zOffset = CB_DEPTH;
 			double yOffset = 5;
-			double xOffset = 40;
+			double xOffset = 30;
 			state->set_cbs = false;
 			state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + 3*zOffset/2);
 			state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + zOffset/2);

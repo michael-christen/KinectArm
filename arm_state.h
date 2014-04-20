@@ -114,6 +114,8 @@ struct state_t {
 	BoundingBox* controlBoxes[NUM_CONTROL_BOXES];
     bool controlBoxSelected[NUM_CONTROL_BOXES];
     const float* controlBoxColor[NUM_CONTROL_BOXES];
+
+    bool interpolate_angles;
 };
 
 
