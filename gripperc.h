@@ -5,7 +5,7 @@
 
 #define DEPTH_THRESHOLD 20 //assuming mm, but not sure
 #define XY_THRESHOLD 50 //defines bounding box of (XY_THRESHOLD*2)^2
-#define DELTA_THRESHOLD 300//used to classify open/closed
+#define DELTA_THRESHOLD 600//used to classify open/closed
 #define CHANGE_SAMPLES 10
 
 typedef struct Pixel Pixel;
