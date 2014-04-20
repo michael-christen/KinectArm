@@ -15,6 +15,7 @@
 #include "skeleton_joint_list_t.h"
 #include "gripper_lcm_t.h"
 
+#include "../common/math_util.h"
 #include "gripperc.h"
 
 static SkeltrackSkeleton *skeleton = NULL;
@@ -37,6 +38,8 @@ static guint THRESHOLD_END   = 1500;
 
 int leftHistory[CHANGE_SAMPLES];
 int rightHistory[CHANGE_SAMPLES];
+double leftPosHistory[CHANGE_SAMPLES];
+double rightPosHistory[CHANGE_SAMPLES];
 
 typedef struct
 {
@@ -260,31 +263,44 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   for(int i = 0; i < CHANGE_SAMPLES-1; i++){
     leftHistory[i] = leftHistory[i+1];
     rightHistory[i] = rightHistory[i+1];
+	leftPosHistory[i] = leftPosHistory[i+1];
+	rightPosHistory[i] = rightPosHistory[i+1];
   }
   leftHistory[CHANGE_SAMPLES-1] = left_pixels;
   rightHistory[CHANGE_SAMPLES-1] = right_pixels;
+  leftPosHistory[CHANGE_SAMPLES-1] = sqrt(sq(LeftHand.screen_x)+sq(LeftHand.screen_y));
+  rightPosHistory[CHANGE_SAMPLES-1] = sqrt(sq(RightHand.screen_x)+sq(RightHand.screen_y));
 
   int leftChange = 0;
   int rightChange = 0;
+  int leftPosChange = 0;
+  int rightPosChange = 0;
 
   for(int i = 0; i < CHANGE_SAMPLES-1; i++){
     leftChange += leftHistory[i+1] - leftHistory[i];
     rightChange += rightHistory[i+1] - rightHistory[i];
+	leftPosChange += leftPosHistory[i+1] - leftPosHistory[i];
+	rightPosChange += rightPosHistory[i+1] - rightPosHistory[i];
   }
 
   int leftClosing = 0;
   int rightClosing = 0;
+  int posChangeThresh = 75;
 
-  if(leftChange >= DELTA_THRESHOLD){
-    leftHandClosed = 0;
-  }else if(leftChange <= -DELTA_THRESHOLD){
-    leftHandClosed = 1;
+  if(leftPosChange < posChangeThresh){
+  	if(leftChange >= DELTA_THRESHOLD){
+   	  leftHandClosed = 0;
+	}else if(leftChange <= -DELTA_THRESHOLD){
+   	  leftHandClosed = 1;
+ 	}
   }
 
-  if(rightChange >= DELTA_THRESHOLD){
-    rightHandClosed = 0;
-  }else if(rightChange <= -DELTA_THRESHOLD){
-    rightHandClosed = 1;
+  if(rightPosChange < posChangeThresh){
+    if(rightChange >= DELTA_THRESHOLD){
+      rightHandClosed = 0;
+    }else if(rightChange <= -DELTA_THRESHOLD){
+      rightHandClosed = 1;
+    }
   }
 
 
