@@ -242,7 +242,7 @@ void kinect_process(state_t* state){
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
 			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
-			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
+			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 300};
 			std::vector<blob_type_t> blob_types;
 			blob_types.push_back(green_blob_type);
 			blob_types.push_back(yellow_blob_type);
