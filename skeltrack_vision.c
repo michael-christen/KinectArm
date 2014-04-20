@@ -290,7 +290,7 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
 
 
   printf("Left Closed: %d, Right Closed: %d, Left Change: %d, Right Change: %d\n", leftHandClosed, rightHandClosed, leftChange, rightChange);
-  printf("Left Theta: %f, Right Theta: %f\n", left_theta, right_theta);
+  //printf("Left Theta: %f, Right Theta: %f\n", left_theta, right_theta);
 
   gripper_lcm_t griplcm;
   griplcm.closed = leftHandClosed;
