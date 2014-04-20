@@ -6,12 +6,13 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Fri 18 Apr 2014 01:45:02 PM EDT
+ * Last Modified : Sun 20 Apr 2014 09:05:30 AM EDT
 
  * Created By : Michael Christen
 
  _._._._._._._._._._._._._._._._._._._._._.*/
 #include "Graph.h"
+#include "body.h"
 
 std::map<int, G_Node > getGraphFromSkeleton(
 		Image<double> &im) {
@@ -24,7 +25,7 @@ std::map<int, G_Node > getGraphFromSkeleton(
 			//Insert into graph
 			graph[i] = G_Node(i);
 			//Just get immediate neighbors for now
-			neighbors = im.getBlockNeighborIds(i,20);
+			neighbors = im.getBlockNeighborIds(i,15);
 			for(size_t j = 0; j < neighbors.size(); ++j) {
 				int id = neighbors[j];
 				//If valid, add edge
@@ -44,7 +45,9 @@ void getBodyFromEndPoints(state_t * state,
 
 	//Calculate paths
 	int midpoint = points[0];
-	points.erase(points.begin()+0);
+	if(points.begin() != points.end()) {
+		points.erase(points.begin()+0);
+	}
 	//Get lowest points and call those the feet
 	int lowest_id = 0;
 	int lowest_val = 0;
@@ -70,18 +73,34 @@ void getBodyFromEndPoints(state_t * state,
 	int left_is_lowest = im.getX(closest_id) > im.getX(lowest_id);
 	int left_foot = left_is_lowest ? lowest_id : closest_id; 
 	int right_foot = left_is_lowest ? closest_id : lowest_id;
-	points.erase(std::find(points.begin(),points.end(),left_foot));
-	points.erase(std::find(points.begin(),points.end(),right_foot));
+	auto it = std::find(points.begin(),points.end(),left_foot);
+	if(it != points.end()) {
+		points.erase(it);
+	}
+	it = std::find(points.begin(),points.end(),right_foot);
+	if(it != points.end()) {
+		points.erase(it);
+	}
 	//Head is in the middle
-	closest_val = 320;
+	int middleX = im.getX(midpoint);
+	int middleY = im.getY(midpoint);
+	int closest_x = 320;
+	int closest_y = 0;
+	closest_id = points.front();
 	for(int i = 0; i < points.size(); ++i) {
-		int dist = abs(im.getX(points[i])-320);
-		if(dist < closest_val) {
+		int xDist = abs(im.getX(points[i])-middleX);
+		int yDist = abs(im.getY(points[i])-middleY);
+		if(xDist < closest_x && im.getY(points[i]) < middleY) {
+			closest_x = xDist;
+			closest_y = yDist;
 			closest_id = points[i];
-		}	
+		}
 	}
 	int head = closest_id;
-	points.erase(std::find(points.begin(),points.end(),head));
+	it = std::find(points.begin(),points.end(),head);
+	if(it != points.end()) {
+		points.erase(it);
+	}
 	int left_wrist, right_wrist;
 	bool got_wrists  = false;
 	if(points.size() > 1) {
@@ -91,8 +110,14 @@ void getBodyFromEndPoints(state_t * state,
 			points[0] : points[1];
 		right_wrist = left_is_first ? 
 			points[1] : points[0];
-		points.erase(std::find(points.begin(),points.end(),left_wrist));
-		points.erase(std::find(points.begin(),points.end(),right_wrist));
+		it = std::find(points.begin(),points.end(),left_wrist);
+		if(it != points.end()) {
+			points.erase(it);
+		}
+		it = std::find(points.begin(),points.end(),right_wrist);
+		if(it != points.end()) {
+			points.erase(it);
+		}
 	}
 
 	if(got_wrists) {
@@ -105,7 +130,7 @@ void getBodyFromEndPoints(state_t * state,
 		int oldParent = parent;
 		while(graph.find(parent) != graph.end() && parent != start) {
 			parent = graph[parent].parent;
-			if(parent == oldParent) { 
+			if(parent == oldParent) {
 				break;
 			}
 			oldParent = parent;
@@ -117,16 +142,16 @@ void getBodyFromEndPoints(state_t * state,
 		state->pts = points;
 		//state->pts = points;
 		//Assign
-		state->joints[MIDPOINT] = getReal(state->depth,midpoint);
-		state->joints[HEAD]     = getReal(state->depth,head);
-		state->joints[LWRIST]   = getReal(state->depth,right_wrist);
-		//state->joints[LELBOW]   = getReal(state->depth,points[5]);
-		//state->joints[LSHOULDER]= getReal(state->depth,points[5]);
-		state->joints[RWRIST]   = getReal(state->depth,left_wrist);
-		state->joints[RELBOW]   = getReal(state->depth,left_elbow);
-		state->joints[RSHOULDER]= getReal(state->depth,left_shoulder);
-		state->joints[RFOOT]    = getReal(state->depth,left_foot);
-		state->joints[LFOOT]    = getReal(state->depth,right_foot);
+		state->body.setJoint(MIDPOINT, getReal(state->depth,midpoint));
+		state->body.setJoint(HEAD, getReal(state->depth,head));
+		state->body.setJoint(LWRIST, getReal(state->depth,right_wrist));
+		//state->body.setJoint(LELBOW, getReal(state->depth,points[5]));
+		//state->body.setJoint(LSHOULDER, getReal(state->depth,points[5]));
+		state->body.setJoint(RWRIST, getReal(state->depth,left_wrist));
+		state->body.setJoint(RELBOW, getReal(state->depth,left_elbow));
+		state->body.setJoint(RSHOULDER, getReal(state->depth,left_shoulder));
+		state->body.setJoint(RFOOT, getReal(state->depth,left_foot));
+		state->body.setJoint(LFOOT, getReal(state->depth,right_foot));
 	}
 }
 

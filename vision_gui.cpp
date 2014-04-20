@@ -189,8 +189,9 @@ void render_pts(vx_buffer_t *vb, state_t *state) {
 				color = vx_maroon;
 				break;
 		}
-		add_circle_to_buffer(vb, state->joints[i].screen_x,
-				480-state->joints[i].screen_y, color);
+		joint_t joint = state->body.getJoint((Joints) i);
+		add_circle_to_buffer(vb, joint.screen_x,
+				480-joint.screen_y, color);
 	}
 }
 
