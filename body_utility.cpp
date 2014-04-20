@@ -25,6 +25,8 @@ void body_processMsg(Body *body, const skeleton_joint_list_t *msg, DataSmoother 
 	printf("dist - %f\n", dist);*/
 
 	//if (dist < distThresh) {
+	body->setWristRotation(msg->wrist_rotation);
+
 	for (int i = 0; i < msg->len; i++) {
 		if (msg->joints[i].valid) {
 			joint_t joint;

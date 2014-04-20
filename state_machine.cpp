@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-void stopArm(state_t* state){
+void stopArm(state_t* state) {
 	double angles[NUM_SERVOS], curAngles[NUM_SERVOS];
 	state->arm->getTargetAngles(angles);
 	state->arm->getCurAngles(curAngles);
@@ -71,6 +71,7 @@ void openCloseGripper(state_t* state){
 		angles[5] = 0;
 		state->arm->setTargetSpeed(0.5);
 	}
+	angles[4] = state->body->getWristRotation();
 	state->last_gripper_angle = last_gripper_angle;
 	state->arm->setTargetAngles(angles, state->cfs);
 	return;

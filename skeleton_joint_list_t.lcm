@@ -2,4 +2,5 @@ struct skeleton_joint_list_t
 {
 	int32_t len;
 	skeleton_joint_t joints[len];
+	double wrist_rotation;
 }

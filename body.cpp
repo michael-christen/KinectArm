@@ -11,6 +11,14 @@ void Body::setJoint(Joints jointid, joint_t joint) {
 	this->joints[(int)jointid] = joint;
 }
 
+void Body::setWristRotation(double rotation) {
+	this->wrist_rotation = rotation;
+}
+
+double Body::getWristRotation() {
+	return this->wrist_rotation;
+}
+
 void Body::setJointDistThresh(double jointDistThresh) {
 	this->jointDistThresh = jointDistThresh;
 }
