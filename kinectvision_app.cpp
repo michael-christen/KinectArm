@@ -337,8 +337,8 @@ void kinect_process(state_t* state){
 			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);
-			}
-			*/
+			}*/
+
 			gCurTime = utime_now()/1000000.0;
 			processTime = gCurTime - gPrevTime;
 			/*
@@ -511,6 +511,9 @@ int main(int argc, char ** argv)
 	state->veh.impl  = state;
 	state->init_last_mouse = 0;
 	state->mouseDownSet = 0;
+
+	state->body.setJointDistThresh(1000);
+	state->body.setInvalidJointTimeout(2000000);
 
 	state->running = 1;
 

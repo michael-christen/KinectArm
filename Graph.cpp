@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Sun 20 Apr 2014 05:44:20 PM EDT
+ * Last Modified : Sun 20 Apr 2014 05:45:32 PM EDT
 
  * Created By : Michael Christen
 
@@ -147,17 +147,33 @@ void getBodyFromEndPoints(state_t * state,
 		state->pts = points;
 		//state->pts = points;
 		//Assign
-		state->body.setJoint(MIDPOINT, getReal(state->depth,midpoint));
-		state->body.setJoint(HEAD, getReal(state->depth,head));
-		state->body.setJoint(LWRIST, getReal(state->depth,right_wrist));
-		//state->body.setJoint(LWRIST, getReal(state->depth,left_fake_wrist));
+		//if (state->body.getValidJointPosition(MIDPOINT, getReal(state->depth,midpoint))) {
+			state->body.setJoint(MIDPOINT, getReal(state->depth,midpoint));
+		//}
+		//if (state->body.getValidJointPosition(HEAD, getReal(state->depth,head))) {
+			state->body.setJoint(HEAD, getReal(state->depth,head));
+		//}
+		//if (state->body.getValidJointPosition(LWRIST, getReal(state->depth,right_wrist))) {
+			state->body.setJoint(LWRIST, getReal(state->depth,right_wrist));
+		//}
 		//state->body.setJoint(LELBOW, getReal(state->depth,points[5]));
 		//state->body.setJoint(LSHOULDER, getReal(state->depth,points[5]));
-		state->body.setJoint(RWRIST, getReal(state->depth,left_wrist));
-		state->body.setJoint(RELBOW, getReal(state->depth,left_elbow));
-		state->body.setJoint(RSHOULDER, getReal(state->depth,left_shoulder));
-		state->body.setJoint(RFOOT, getReal(state->depth,left_foot));
-		state->body.setJoint(LFOOT, getReal(state->depth,right_foot));
+
+		//if (state->body.getValidJointPosition(RWRIST, getReal(state->depth,left_wrist))) {
+			state->body.setJoint(RWRIST, getReal(state->depth,left_wrist));
+		//}	
+		//if (state->body.getValidJointPosition(RELBOW, getReal(state->depth,left_elbow))) {
+			state->body.setJoint(RELBOW, getReal(state->depth,left_elbow));
+		//}
+		//if (state->body.getValidJointPosition(RSHOULDER, getReal(state->depth,left_shoulder))) {
+			state->body.setJoint(RSHOULDER, getReal(state->depth,left_shoulder));
+		//}
+		//if (state->body.getValidJointPosition(RFOOT, getReal(state->depth,left_foot))) {
+			state->body.setJoint(RFOOT, getReal(state->depth,left_foot));
+		//}
+		//if (state->body.getValidJointPosition(LFOOT, getReal(state->depth,right_foot))) {
+			state->body.setJoint(LFOOT, getReal(state->depth,right_foot));
+		//}
 	}
 }
 
