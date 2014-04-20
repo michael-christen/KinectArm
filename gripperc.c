@@ -8,7 +8,7 @@ int qpush(Pixel* q[], Pixel *p, int back){
 	return back + 1;
 }
 
-int handPixels(int x, int y, guint16 *reduced_buffer,
+Hand_t handPixels(int x, int y, guint16 *reduced_buffer,
 	int reduced_width, int reduced_height){
 
 	int cornerx = x - XY_THRESHOLD;
@@ -54,16 +54,19 @@ int handPixels(int x, int y, guint16 *reduced_buffer,
 	map[centery * boxsize + centerx].visited = 1;
 	
 	int hand_pixels = 1;
+	int averagex = 0;
+	int averagey = 0;
 
 	Pixel* q[4 * XY_THRESHOLD * XY_THRESHOLD];
 	int index = 0;
 	int back = 0;
 	back = qpush(q, &map[centery * boxsize + centerx], back);
-	int count = 0;
+
 	Pixel *next;
 	while(index != back){
 		Pixel cur = *q[index];	//q.front()
 		index++; //q.pop()
+		
 		for(int i = 0; i < 4; i++){
 			switch(i){
 				case 0: //LEFT
@@ -85,21 +88,29 @@ int handPixels(int x, int y, guint16 *reduced_buffer,
 				default: tempx = cur.i;
 						 tempy = cur.k;
 			}
-			count++;
+
 			if(tempx >= 0 && tempx < boxsize && 
 				tempy >= 0 && tempy < boxsize){
 				next = &map[tempy * boxsize + tempx];
 				//problem in next line
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
 					hand_pixels++;
+					averagex += next->x;
+					averagey += next->y;
 					back = qpush(q, next, back);
 				}
 				next->visited = 1;
 			}
 		}
 	}
+	averagex /= hand_pixels;
+	averagey /= hand_pixels;
 
-	//printf("hand_pixels %d\ncount %d\n", hand_pixels, count);
+	int xdif = x - averagex;
+	int ydif = y - averagey;
 
-	return hand_pixels;
+	double theta = atan2(ydif, xdif);
+
+	Hand_t hand = {hand_pixels, theta};
+	return hand;
 }

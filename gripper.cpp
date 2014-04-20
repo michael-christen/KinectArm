@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdio>
 
-bool gripperClosed(int x, int y, int *reduced_buffer,
+Hand_t handPixels(int x, int y, int *reduced_buffer,
 	int reduced_width, int reduced_height){
 
 	int cornerx = x - XY_THRESHOLD;
@@ -38,6 +38,8 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 			tempy = cornery + k;
 			map.at(i).at(k).x = tempx;
 			map.at(i).at(k).y = tempy;
+			map.at(i).at(k).i = i;
+			map.at(i).at(k).k = k;
 			if(tempx < reduced_width && tempy < reduced_height){
 				map.at(i).at(k).z = reduced_buffer[tempy * reduced_width + tempx];
 			}else{
@@ -50,6 +52,8 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 	printf("Thinks hand is: x: %d, y: %d\n", centerx, centery);
 	
 	int hand_pixels = 1;
+	int averagex = 0;
+	int averagey = 0;
 
 	std::queue<Pixel> q;
 	q.push(map.at(centerx).at(centery));
@@ -80,11 +84,13 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 						 tempy = cur.y;
 			}
 
-			if(tempx >= cornerx && tempx < (cornerx + boxsize) && 
-				tempy >= cornery && tempy < (cornery + boxsize)){
+			if(tempx >= 0 && tempx < boxsize && 
+				tempy >= 0 && tempy < boxsize){
 				next = &map.at(tempx).at(tempy);
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
 					hand_pixels++;
+					averagex += next->x;
+					averagey += next->y;
 					next->visited = true; //because we're pushing by value
 					q.push(*next);
 				}
@@ -92,6 +98,15 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 			}
 		}
 	}
+	averagex /= hand_pixels;
+	averagey /= hand_pixels;
 
-	return (hand_pixels < PIXEL_THRESHOLD);
+	int xdif = x - averagex;
+	int ydif = y - averagey;
+
+	double theta = atan2(ydif, xdif);
+
+	Hand_t hand = {hand_pixels, theta};
+
+	return hand;
 }

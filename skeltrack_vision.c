@@ -247,17 +247,22 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   /*Gripper code ADDED BY JOSH*/
   state_t* state = (state_t*) user_data;
 
-  int leftGripper = handPixels(LeftHand.screen_x, LeftHand.screen_y,
+  Hand_t leftGripper = handPixels(LeftHand.screen_x, LeftHand.screen_y,
   depth, buffer_info->width, buffer_info->height);
-  int rightGripper = handPixels(RightHand.screen_x, RightHand.screen_y,
+  Hand_t rightGripper = handPixels(RightHand.screen_x, RightHand.screen_y,
     depth, buffer_info->width, buffer_info->height);
+
+  int left_pixels = leftGripper.hand_pixels;
+  int right_pixels = rightGripper.hand_pixels;
+  double left_theta = leftGripper.theta;
+  double right_theta = leftGripper.theta;
 
   for(int i = 0; i < CHANGE_SAMPLES-1; i++){
     leftHistory[i] = leftHistory[i+1];
     rightHistory[i] = rightHistory[i+1];
   }
-  leftHistory[CHANGE_SAMPLES-1] = leftGripper;
-  rightHistory[CHANGE_SAMPLES-1] = rightGripper;
+  leftHistory[CHANGE_SAMPLES-1] = left_pixels;
+  rightHistory[CHANGE_SAMPLES-1] = right_pixels;
 
   int leftChange = 0;
   int rightChange = 0;
@@ -284,7 +289,8 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
 
 
 
-  printf("Left Gripper Closed: %d, Right Gripper Closed: %d\n", leftHandClosed, rightHandClosed);
+  printf("Left Closed: %d, Right Closed: %d\n", leftHandClosed, rightHandClosed);
+  printf("Left Theta: %f, Right Theta: %f\n", left_theta, right_theta);
 
   gripper_lcm_t griplcm;
   griplcm.closed = leftHandClosed;
