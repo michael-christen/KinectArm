@@ -35,6 +35,8 @@ extern "C" {
 
 typedef struct eecs467_default_implementation eecs467_default_implementation_t;
 
+int64_t utime_now();
+
 eecs467_default_implementation_t *eecs467_default_implementation_create(vx_world_t *world, zhash_t *layers);
 
 void eecs467_default_display_started(vx_application_t *app, vx_display_t *disp);

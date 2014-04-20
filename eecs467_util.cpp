@@ -8,6 +8,13 @@ struct eecs467_default_implementation
     zhash_t *layers;
 };
 
+int64_t utime_now()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (int64_t) tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
 eecs467_default_implementation_t *eecs467_default_implementation_create(vx_world_t *world, zhash_t *layers)
 {
     eecs467_default_implementation_t *impl = (eecs467_default_implementation_t*) calloc(1, sizeof(eecs467_default_implementation_t));
