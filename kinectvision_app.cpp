@@ -246,7 +246,9 @@ void kinect_process(state_t* state){
 			std::vector<blob_type_t> blob_types;
 			blob_types.push_back(green_blob_type);
 			blob_types.push_back(yellow_blob_type);
-			std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
+			//std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
+			std::vector<std::vector<blob_t>> markers =
+				std::vector<std::vector<blob_t>>(2,std::vector<blob_t>(0));
 
 			if (markers[0].size() > 0) {
 				state->close_left_gripper = false;
