@@ -193,19 +193,44 @@ void* arm_commander(void *data) {
     cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
-    	if (state->update_arm_cont) {
-    		state->arm->getTargetAngles(angles);
-			state->arm->getTargetSpeed(speed);
-			for (int id = 0; id < NUM_SERVOS; id++) {
-				cmds.commands[id].utime = utime_now();
-				cmds.commands[id].position_radians = angles[id];
-				cmds.commands[id].speed = speed;
-				cmds.commands[id].max_torque = 0.7;
-		    }
+        if(!state->interpolate_angles) {
 
-	    	pthread_mutex_lock(&state->lcm_mutex);
-		    dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
-		    pthread_mutex_unlock(&state->lcm_mutex);
+            if (state->update_arm_cont) {
+                state->arm->getTargetAngles(angles);
+                state->arm->getTargetSpeed(speed);
+                for (int id = 0; id < NUM_SERVOS; id++) {
+                    cmds.commands[id].utime = utime_now();
+                    cmds.commands[id].position_radians = angles[id];
+                    cmds.commands[id].speed = speed;
+                    cmds.commands[id].max_torque = 0.7;
+                }
+
+                pthread_mutex_lock(&state->lcm_mutex);
+                dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
+                pthread_mutex_unlock(&state->lcm_mutex);
+            } else {
+                if (state->update_arm_cont) {
+                    double old_angles[NUM_SERVOS];
+                    memcpy(old_angles, angles, sizeof(angles));
+                    state->arm->getTargetAngles(angles);
+                    state->arm->getTargetSpeed(speed);
+                    const int steps = 5;
+
+                    for(int i = 1; i <= steps; ++i) {
+                        for(int id = 0; id < NUM_SERVOS; ++id) {
+                            cmds.commands[id].utime = utime_now();
+                            cmds.commands[id].position_radians = old_angles[id] + (i * (angles[id] - old_angles[id])) / steps;
+                            cmds.commands[id].speed = speed;
+                            cmds.commands[id].max_torque = 0.7;
+                        }
+                        usleep(100000);
+                    }
+                    
+                }
+                pthread_mutex_lock(&state->lcm_mutex);
+                dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
+                pthread_mutex_unlock(&state->lcm_mutex);
+            }
 		}
 		   
     	usleep(1000000/hz);

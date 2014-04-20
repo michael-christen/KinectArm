@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Fri 18 Apr 2014 01:45:02 PM EDT
+ * Last Modified : Sun 20 Apr 2014 09:05:30 AM EDT
 
  * Created By : Michael Christen
 
@@ -45,7 +45,9 @@ void getBodyFromEndPoints(state_t * state,
 
 	//Calculate paths
 	int midpoint = points[0];
-	points.erase(points.begin()+0);
+	if(points.begin() != points.end()) {
+		points.erase(points.begin()+0);
+	}
 	//Get lowest points and call those the feet
 	int lowest_id = 0;
 	int lowest_val = 0;
@@ -71,8 +73,14 @@ void getBodyFromEndPoints(state_t * state,
 	int left_is_lowest = im.getX(closest_id) > im.getX(lowest_id);
 	int left_foot = left_is_lowest ? lowest_id : closest_id; 
 	int right_foot = left_is_lowest ? closest_id : lowest_id;
-	points.erase(std::find(points.begin(),points.end(),left_foot));
-	points.erase(std::find(points.begin(),points.end(),right_foot));
+	auto it = std::find(points.begin(),points.end(),left_foot);
+	if(it != points.end()) {
+		points.erase(it);
+	}
+	it = std::find(points.begin(),points.end(),right_foot);
+	if(it != points.end()) {
+		points.erase(it);
+	}
 	//Head is in the middle
 	int middleX = im.getX(midpoint);
 	int middleY = im.getY(midpoint);
@@ -89,7 +97,10 @@ void getBodyFromEndPoints(state_t * state,
 		}
 	}
 	int head = closest_id;
-	points.erase(std::find(points.begin(),points.end(),head));
+	it = std::find(points.begin(),points.end(),head);
+	if(it != points.end()) {
+		points.erase(it);
+	}
 	int left_wrist, right_wrist;
 	bool got_wrists  = false;
 	if(points.size() > 1) {
@@ -99,8 +110,14 @@ void getBodyFromEndPoints(state_t * state,
 			points[0] : points[1];
 		right_wrist = left_is_first ? 
 			points[1] : points[0];
-		points.erase(std::find(points.begin(),points.end(),left_wrist));
-		points.erase(std::find(points.begin(),points.end(),right_wrist));
+		it = std::find(points.begin(),points.end(),left_wrist);
+		if(it != points.end()) {
+			points.erase(it);
+		}
+		it = std::find(points.begin(),points.end(),right_wrist);
+		if(it != points.end()) {
+			points.erase(it);
+		}
 	}
 
 	if(got_wrists) {
