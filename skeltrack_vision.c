@@ -36,10 +36,13 @@ static guint THRESHOLD_BEGIN = 500;
    the threshold */
 static guint THRESHOLD_END   = 1500;
 
+int leftPixels, rightPixels, leftTheta, rightTheta;
 int leftHistory[CHANGE_SAMPLES];
 int rightHistory[CHANGE_SAMPLES];
-double leftPosHistory[CHANGE_SAMPLES];
-double rightPosHistory[CHANGE_SAMPLES];
+int leftx[CHANGE_SAMPLES];
+int lefty[CHANGE_SAMPLES];
+int rightx[CHANGE_SAMPLES];
+int righty[CHANGE_SAMPLES];
 
 typedef struct
 {
@@ -250,44 +253,68 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   /*Gripper code ADDED BY JOSH*/
   state_t* state = (state_t*) user_data;
 
-  Hand_t leftGripper = handPixels(LeftHand.screen_x, LeftHand.screen_y,
-  depth, buffer_info->width, buffer_info->height);
-  Hand_t rightGripper = handPixels(RightHand.screen_x, RightHand.screen_y,
-    depth, buffer_info->width, buffer_info->height);
+  
+  Hand_t leftGripper;
+  double left_theta;
+  if(LeftHand.screen_x < buffer_info->width && LeftHand.screen_y < buffer_info->height){
+      leftGripper = handPixels(LeftHand.screen_x, LeftHand.screen_y,
+      depth, buffer_info->width, buffer_info->height);
+      leftPixels = leftGripper.hand_pixels;
+      left_theta = leftTheta = leftGripper.theta;
+  }else{
+      leftGripper.hand_pixels = leftPixels;
+      left_theta = leftTheta;
+  }
+  Hand_t rightGripper;
+  int right_theta;
+  if(RightHand.screen_x < buffer_info->width && RightHand.screen_y < buffer_info->height){
+      rightGripper =  handPixels(RightHand.screen_x, RightHand.screen_y,
+        depth, buffer_info->width, buffer_info->height);
+      rightPixels = rightGripper.hand_pixels;
+      right_theta = rightTheta = rightGripper.theta;
+  }else{
+      rightGripper.hand_pixels = rightPixels;
+      right_theta = rightTheta;
+  }
 
   int left_pixels = leftGripper.hand_pixels;
   int right_pixels = rightGripper.hand_pixels;
-  double left_theta = leftGripper.theta;
-  double right_theta = leftGripper.theta;
 
   for(int i = 0; i < CHANGE_SAMPLES-1; i++){
     leftHistory[i] = leftHistory[i+1];
     rightHistory[i] = rightHistory[i+1];
-	leftPosHistory[i] = leftPosHistory[i+1];
-	rightPosHistory[i] = rightPosHistory[i+1];
+	leftx[i] = leftx[i+1];
+    lefty[i] = lefty[i+1];
+	rightx[i] = rightx[i+1];
+    righty[i] = righty[i+1];
   }
   leftHistory[CHANGE_SAMPLES-1] = left_pixels;
   rightHistory[CHANGE_SAMPLES-1] = right_pixels;
-  leftPosHistory[CHANGE_SAMPLES-1] = sqrt(sq(LeftHand.screen_x)+sq(LeftHand.screen_y));
-  rightPosHistory[CHANGE_SAMPLES-1] = sqrt(sq(RightHand.screen_x)+sq(RightHand.screen_y));
+  leftx[CHANGE_SAMPLES-1] = LeftHand.screen_x;
+  lefty[CHANGE_SAMPLES-1] = LeftHand.screen_y;
+  rightx[CHANGE_SAMPLES-1] = RightHand.screen_x;
+  righty[CHANGE_SAMPLES-1] = RightHand.screen_y;
+  //printf("%f\n", sqrt(sq(LeftHand.screen_x) + sq(LeftHand.screen_y)));
 
   int leftChange = 0;
   int rightChange = 0;
-  int leftPosChange = 0;
-  int rightPosChange = 0;
+  int leftxChange = 0;
+  int leftyChange = 0;
+  int rightxChange = 0;
+  int rightyChange = 0;
 
   for(int i = 0; i < CHANGE_SAMPLES-1; i++){
     leftChange += leftHistory[i+1] - leftHistory[i];
     rightChange += rightHistory[i+1] - rightHistory[i];
-	leftPosChange += leftPosHistory[i+1] - leftPosHistory[i];
-	rightPosChange += rightPosHistory[i+1] - rightPosHistory[i];
+	leftxChange += leftx[i+1] - leftx[i];
+    leftyChange += lefty[i+1] - lefty[i];
+	rightxChange += rightx[i+1] - rightx[i];
+    rightyChange += righty[i+1] - righty[i];
   }
 
-  int leftClosing = 0;
-  int rightClosing = 0;
-  int posChangeThresh = 75;
+  int posChangeThresh = 45;
 
-  if(leftPosChange < posChangeThresh){
+  if(abs(leftxChange) < posChangeThresh && abs(leftyChange) < posChangeThresh){
   	if(leftChange >= DELTA_THRESHOLD){
    	  leftHandClosed = 0;
 	}else if(leftChange <= -DELTA_THRESHOLD){
@@ -295,14 +322,13 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
  	}
   }
 
-  if(rightPosChange < posChangeThresh){
+  if((rightxChange) < posChangeThresh && (rightyChange) < posChangeThresh){
     if(rightChange >= DELTA_THRESHOLD){
       rightHandClosed = 0;
     }else if(rightChange <= -DELTA_THRESHOLD){
       rightHandClosed = 1;
     }
   }
-
 
 
   printf("Left Closed: %d, Right Closed: %d, Left Change: %d, Right Change: %d\n", leftHandClosed, rightHandClosed, leftChange, rightChange);
