@@ -104,7 +104,7 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 		}
 	}
 
-	if (left_gripper_changed && state->close_left_gripper) {
+	if (!state->force_state && left_gripper_changed && state->close_left_gripper) {
 		pthread_mutex_lock(&state->fsm_mutex);
 		switch(activeBox) {
 			case GRIPPER:

@@ -116,6 +116,7 @@ struct state_t {
     const float* controlBoxColor[NUM_CONTROL_BOXES];
 
     bool interpolate_angles;
+    bool force_state;
 };
 
 

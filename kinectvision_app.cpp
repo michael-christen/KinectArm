@@ -153,7 +153,7 @@ void kinect_init(state_t* state) {
 	rgb_front = (uint8_t*)malloc(640*480*3);
 
 
-	freenect_set_tilt_degs(state->f_dev,7);
+	freenect_set_tilt_degs(state->f_dev,state->kinect_angle);
 	freenect_set_led(state->f_dev,LED_RED);
 	printf("setting up\n");
 	freenect_set_depth_callback(state->f_dev, depth_cb);
@@ -229,43 +229,13 @@ void kinect_process(state_t* state){
 
 		//Only look at those pixels which are in the foreground
 		//of the depth field
-		if (state->set_hand_dist) {
-			printf("Setting hand distance threshold to trigger hand tracking\n");
-			state->set_hand_dist = 0;
-		}
-
-		if (state->set_open_hand) {
-			printf("Setting open hand threshold\n");
-			state->set_open_hand = 0;
-		}
-
-		if (state->set_closed_hand) {
-			printf("Setting closed hand threshold\n");
-			state->set_closed_hand = 0;
+		if (state->update_kinect_angle) {
+			state->update_kinect_angle = 0;
+			freenect_set_tilt_degs(state->f_dev,state->kinect_angle);
 		}
 
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
-			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
-			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 300};
-			std::vector<blob_type_t> blob_types;
-			blob_types.push_back(green_blob_type);
-			blob_types.push_back(yellow_blob_type);
-			//std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
-			std::vector<std::vector<blob_t>> markers =
-				std::vector<std::vector<blob_t>>(2,std::vector<blob_t>(0));
-
-			if (markers[0].size() > 0) {
-				state->close_left_gripper = false;
-			} else {
-				state->close_left_gripper = true;
-			}
-
-			if (markers[1].size() > 0) {
-				state->close_right_gripper = false;
-			} else {
-				state->close_right_gripper = true;
-			}
 
 			filter_front(state->depth);
 			state->depth.copyValid(state->im.valid);
@@ -309,31 +279,55 @@ void kinect_process(state_t* state){
 			//printf("GRAPH SIZE: %d\n",graph.size());
 			getBodyPoints(state, d_transf, graph);
 
-			joint_t lwrist = state->body.getJoint(LWRIST);
-			Hand_t lhand = altHandPx(
-					state->im.id(lwrist.screen_x,
-						lwrist.screen_y),
-					state->depth, state->im);
-			int num_pxs = lhand.hand_pixels;
-			int old_val = lhand_lp.get();
-			num_pxs = lhand_lp.getVal(num_pxs);
-			printf("Hand pxs: %d, x:%d, y:%d\n",
-					num_pxs, lwrist.screen_x,
-					lwrist.screen_y);
-			bool open = num_pxs > 2200;
-			state->close_left_gripper = !open;
-			joint_t rwrist = state->body.getJoint(RWRIST);
-			Hand_t rhand = altHandPx(
-					state->im.id(rwrist.screen_x,
-						rwrist.screen_y),
-					state->depth, state->im);
-			num_pxs = rhand.hand_pixels;
-			num_pxs = rhand_lp.getVal(num_pxs);
-			printf("Hand pxs: %d, x:%d, y:%d\n",
-					num_pxs, rwrist.screen_x,
-					rwrist.screen_y);
-			open = num_pxs > 2200;
-			state->close_right_gripper = !open;
+
+			if (state->use_gripper_markers) {
+				blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
+				blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 300};
+				std::vector<blob_type_t> blob_types;
+				blob_types.push_back(green_blob_type);
+				blob_types.push_back(yellow_blob_type);
+				std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
+				/*std::vector<std::vector<blob_t>> markers =
+					std::vector<std::vector<blob_t>>(2,std::vector<blob_t>(0));*/
+
+				if (markers[0].size() > 0) {
+					state->close_left_gripper = false;
+				} else {
+					state->close_left_gripper = true;
+				}
+
+				if (markers[1].size() > 0) {
+					state->close_right_gripper = false;
+				} else {
+					state->close_right_gripper = true;
+				}
+			} else {
+				joint_t lwrist = state->body.getJoint(LWRIST);
+				Hand_t lhand = altHandPx(
+						state->im.id(lwrist.screen_x,
+							lwrist.screen_y),
+						state->depth, state->im);
+				int num_pxs = lhand.hand_pixels;
+				int old_val = lhand_lp.get();
+				num_pxs = lhand_lp.getVal(num_pxs);
+				printf("Hand pxs: %d, x:%d, y:%d\n",
+						num_pxs, lwrist.screen_x,
+						lwrist.screen_y);
+				bool open = num_pxs > 2200;
+				state->close_left_gripper = !open;
+				joint_t rwrist = state->body.getJoint(RWRIST);
+				Hand_t rhand = altHandPx(
+						state->im.id(rwrist.screen_x,
+							rwrist.screen_y),
+						state->depth, state->im);
+				num_pxs = rhand.hand_pixels;
+				num_pxs = rhand_lp.getVal(num_pxs);
+				printf("Hand pxs: %d, x:%d, y:%d\n",
+						num_pxs, rwrist.screen_x,
+						rwrist.screen_y);
+				open = num_pxs > 2200;
+				state->close_right_gripper = !open;
+			}
 			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);
@@ -511,6 +505,7 @@ int main(int argc, char ** argv)
 	state->veh.impl  = state;
 	state->init_last_mouse = 0;
 	state->mouseDownSet = 0;
+	state->kinect_angle = 7;
 
 	state->body.setJointDistThresh(1000);
 	state->body.setInvalidJointTimeout(2000000);

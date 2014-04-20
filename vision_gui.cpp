@@ -49,6 +49,11 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     	state->set_closed_hand = 1;
     } else if (!strcmp("cb1", name)) {
     	state->send_data = pg_gb(pg, name);
+    } else if (!strcmp("cb2", name)) {
+    	state->use_gripper_markers = pg_gb(pg, name);
+    } else if (!strcmp("s0", name)) {
+    	state->kinect_angle = pg_gd(pg, name);
+    	state->update_kinect_angle = true;
     }
 }
 
@@ -426,11 +431,9 @@ void gui_create(state_t *state) {
 
 	// Handles layer init, rendering, and destruction
 	parameter_gui_t *pg = pg_create();
-    pg_add_check_boxes(pg, "cb1", "Send Data", state->send_data, NULL);
-    pg_add_buttons(pg, "but1", "Set Hand Distance",
-    					"but2", "Set Open Hand",
-    					"but3", "Set Closed Hand",
-    					 NULL);
+    pg_add_check_boxes(pg, "cb1", "Send Data", state->send_data, 
+    						"cb2", "Use Gripper Markers", state->use_gripper_markers, NULL);
+    pg_add_double_slider(pg, "s0", "Kinect Angle", -25, 25, state->kinect_angle);
 
     parameter_listener_t *my_listener = (parameter_listener_t*) calloc(1,sizeof(parameter_listener_t*));
     my_listener->impl = state;

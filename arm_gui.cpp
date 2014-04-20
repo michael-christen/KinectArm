@@ -100,6 +100,8 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
         state->close_right_gripper = pg_gb(pg, name);
     } else if (!strcmp("cb3", name)) {
     	state->interpolate_angles = pg_gb(pg, name);
+    } else if (!strcmp("cb4", name)) {
+    	state->force_state = pg_gb(pg, name);
     }
 
     /*if (state->update_arm_cont || updateServoAngles) {
@@ -262,10 +264,47 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	const float* color;
 	
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
-		if (state->controlBoxSelected[i]) {
-			color = vx_white;
-		} else {
-			color = state->controlBoxColor[i];
+		
+		switch (i) {
+			case GRIPPER:
+				if (state->controlBoxSelected[i]) {
+					color = vx_white;
+				} else if (state->FSM_state == FSM_GRIP) {
+					color = vx_black;
+				} else {
+					color = state->controlBoxColor[i];
+				}
+			break;
+
+			case WRIST:
+				if (state->controlBoxSelected[i]) {
+					color = vx_white;
+				} else if (state->FSM_state == FSM_WRIST) {
+					color = vx_black;
+				} else {
+					color = state->controlBoxColor[i];
+				}
+			break;
+
+			case ARM:
+				if (state->controlBoxSelected[i]) {
+					color = vx_white;
+				} else if (state->FSM_state == FSM_ARM) {
+					color = vx_black;
+				} else {
+					color = state->controlBoxColor[i];
+				}
+			break;
+
+			case ROTATE:
+				if (state->controlBoxSelected[i]) {
+					color = vx_white;
+				} else if (state->FSM_state == FSM_ROTATE) {
+					color = vx_black;
+				} else {
+					color = state->controlBoxColor[i];
+				}
+			break;
 		}
 		state->controlBoxes[i]->draw(cbBuff, color);
 	}
@@ -369,7 +408,8 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
     pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont,
     						"cb2", "Close Gripper", state->close_right_gripper,
-    						"cb3", "Interpolate Arm Angles", state->interpolate_angles, NULL);
+    						"cb3", "Interpolate Arm Angles", state->interpolate_angles,
+    						"cb4", "Force State", state->force_state, NULL);
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);

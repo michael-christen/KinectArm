@@ -64,7 +64,7 @@ void openCloseGripper(state_t* state){
 	if(state->close_right_gripper){
 		if (fabs(curAngles[5] - maxAngle) > threshold || fabs(curAngles[5] - state->last_gripper_angle) > threshold) {
 			// Not completely closed or stopped closing
-			angles[5] = curAngles[5] + 0.1;
+			angles[5] = curAngles[5] + 0.2;
 			state->arm->setTargetSpeed(0.3);
 		}
 	}else{
