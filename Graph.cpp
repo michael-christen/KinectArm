@@ -139,6 +139,10 @@ void getBodyFromEndPoints(state_t * state,
 		int left_elbow, left_shoulder;
 		left_elbow    = points[points.size()/3];
 		left_shoulder = points[5*points.size()/8];
+
+        if(left_elbow < 0) left_elbow = 0;
+        if(left_shoulder < 0) left_shoulder = 0;
+
 		state->pts = points;
 		//state->pts = points;
 		//Assign
