@@ -18,3 +18,8 @@ data/
 #performance
 cachegrind.*
 callgrind.*
+
+#lcm stuff
+gripper_lcm_t.{c,h}
+skeleton_joint_t.{c,h}
+skeleton_joint_list_t.{c,h}
