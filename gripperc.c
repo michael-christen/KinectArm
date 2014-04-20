@@ -8,7 +8,7 @@ int qpush(Pixel* q[], Pixel *p, int back){
 	return back + 1;
 }
 
-int gripperClosed(int x, int y, guint16 *reduced_buffer,
+int handPixels(int x, int y, guint16 *reduced_buffer,
 	int reduced_width, int reduced_height){
 
 	int cornerx = x - XY_THRESHOLD;
@@ -41,6 +41,8 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 			tempy = cornery + k;
 			map[k * boxsize + i].x = tempx;
 			map[k * boxsize + i].y = tempy;
+			map[k * boxsize + i].i = i;
+			map[k * boxsize + i].k = k;
 			if(tempx < reduced_width && tempy < reduced_height){
 				map[k * boxsize + i].z = reduced_buffer[tempy * reduced_width + tempx];
 			}else{
@@ -50,7 +52,6 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 		}
 	}
 	map[centery * boxsize + centerx].visited = 1;
-	printf("Thinks hand is: x: %d, y: %d\n", centerx, centery);
 	
 	int hand_pixels = 1;
 
@@ -63,31 +64,30 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 	while(index != back){
 		Pixel cur = *q[index];	//q.front()
 		index++; //q.pop()
-		printf("Test: x: %d, y: %d\n", cur.x, cur.y);
 		for(int i = 0; i < 4; i++){
 			switch(i){
 				case 0: //LEFT
-						tempx = cur.x - 1;
-						tempy = cur.y;
+						tempx = cur.i - 1;
+						tempy = cur.k;
 						break;
 				case 1:	//DOWN
-						tempx = cur.x;
-						tempy = cur.y -1;
+						tempx = cur.i;
+						tempy = cur.k -1;
 						break;
 				case 2:	//RIGHT
-						tempx = cur.x + 1;
-						tempy = cur.y;
+						tempx = cur.i + 1;
+						tempy = cur.k;
 						break;
 				case 3:	//UP
-						tempx = cur.x;
-						tempy = cur.y + 1;
+						tempx = cur.i;
+						tempy = cur.k + 1;
 						break;
-				default: tempx = cur.x;
-						 tempy = cur.y;
+				default: tempx = cur.i;
+						 tempy = cur.k;
 			}
 			count++;
-			if(tempx >= cornerx && tempx < (cornerx + boxsize) && 
-				tempy >= cornery && tempy < (cornery + boxsize)){
+			if(tempx >= 0 && tempx < boxsize && 
+				tempy >= 0 && tempy < boxsize){
 				next = &map[tempy * boxsize + tempx];
 				//problem in next line
 				if(!next->visited && abs(cur.z - next->z) < DEPTH_THRESHOLD){
@@ -99,7 +99,7 @@ int gripperClosed(int x, int y, guint16 *reduced_buffer,
 		}
 	}
 
-	printf("hand_pixels %d\ncount %d\n", hand_pixels, count);
+	//printf("hand_pixels %d\ncount %d\n", hand_pixels, count);
 
-	return (hand_pixels < PIXEL_THRESHOLD);
+	return hand_pixels;
 }

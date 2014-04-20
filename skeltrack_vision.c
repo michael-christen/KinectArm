@@ -35,6 +35,9 @@ static guint THRESHOLD_BEGIN = 500;
    the threshold */
 static guint THRESHOLD_END   = 1500;
 
+int leftHistory[CHANGE_SAMPLES];
+int rightHistory[CHANGE_SAMPLES];
+
 typedef struct
 {
   guint16 *reduced_buffer;
@@ -46,7 +49,9 @@ typedef struct
 
 struct Hand{
   int x, y, screen_x, screen_y;
-} LeftHand;
+} LeftHand, RightHand;
+
+int leftHandClosed, rightHandClosed;
 
 typedef struct state_t state_t;
 
@@ -242,13 +247,47 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   /*Gripper code ADDED BY JOSH*/
   state_t* state = (state_t*) user_data;
 
-  int gripperIsClosed = gripperClosed(LeftHand.screen_x, LeftHand.screen_y,
+  int leftGripper = handPixels(LeftHand.screen_x, LeftHand.screen_y,
   depth, buffer_info->width, buffer_info->height);
-  printf("Hand: x: %d, y: %d\n", LeftHand.screen_x, LeftHand.screen_y);
-  printf("Gripper closed - %d\n", gripperIsClosed);
+  int rightGripper = handPixels(RightHand.screen_x, RightHand.screen_y,
+    depth, buffer_info->width, buffer_info->height);
+
+  for(int i = 0; i < CHANGE_SAMPLES-1; i++){
+    leftHistory[i] = leftHistory[i+1];
+    rightHistory[i] = rightHistory[i+1];
+  }
+  leftHistory[CHANGE_SAMPLES-1] = leftGripper;
+  rightHistory[CHANGE_SAMPLES-1] = rightGripper;
+
+  int leftChange = 0;
+  int rightChange = 0;
+
+  for(int i = 0; i < CHANGE_SAMPLES-1; i++){
+    leftChange += leftHistory[i+1] - leftHistory[i];
+    rightChange += rightHistory[i+1] - rightHistory[i];
+  }
+
+  int leftClosing = 0;
+  int rightClosing = 0;
+
+  if(leftChange >= DELTA_THRESHOLD){
+    leftHandClosed = 0;
+  }else if(leftChange <= -DELTA_THRESHOLD){
+    leftHandClosed = 1;
+  }
+
+  if(rightChange >= DELTA_THRESHOLD){
+    rightHandClosed = 0;
+  }else if(rightChange <= -DELTA_THRESHOLD){
+    rightHandClosed = 1;
+  }
+
+
+
+  printf("Left Gripper Closed: %d, Right Gripper Closed: %d\n", leftHandClosed, rightHandClosed);
 
   gripper_lcm_t griplcm;
-  griplcm.closed = gripperIsClosed;
+  griplcm.closed = leftHandClosed;
 
   gripper_lcm_t_publish(state->lcm, "GRIPPER", &griplcm);
 	
@@ -477,11 +516,19 @@ on_skeleton_draw (ClutterCanvas *canvas,
       lcm_skeleton.joints[6].screen_y = left_hand->screen_y;
 
       //Added by Josh to keep track of left hand
-      LeftHand.x = left_hand->x;
-      LeftHand.y = left_hand->y;
-      LeftHand.screen_x = left_hand->screen_x;
-      LeftHand.screen_y = left_hand->screen_y;
+      if(left_hand){
+        LeftHand.x = left_hand->x;
+        LeftHand.y = left_hand->y;
+        LeftHand.screen_x = left_hand->screen_x;
+        LeftHand.screen_y = left_hand->screen_y;
+      }
 
+      if(right_hand){
+        RightHand.x = right_hand->x;
+        RightHand.y = right_hand->y;
+        RightHand.screen_x = right_hand->screen_x;
+        RightHand.screen_y = right_hand->screen_y;
+      }
   }
 
   skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
