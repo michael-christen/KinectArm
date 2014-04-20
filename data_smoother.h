@@ -1,7 +1,7 @@
 #ifndef DATA_SMOOTHER_H
 #define DATA_SMOOTHER_H
 
-#define DS_NUMVALS 35
+#define DS_NUMVALS 50
 
 class DataSmoother {
 	public:

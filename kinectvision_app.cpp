@@ -7,6 +7,7 @@
 #include <lcm/lcm.h>
 #include "skeleton_joint_t.h"
 #include "skeleton_joint_list_t.h"
+#include "gripper_lcm_t.h"
 
 // Local Includes
 #include "vision_state.h"
@@ -240,6 +241,27 @@ void kinect_process(state_t* state){
 
 		if (!state->getopt_options.use_markers) {
 			//Filter out image pixels which aren't in foreground
+			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 300};
+			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 300};
+			std::vector<blob_type_t> blob_types;
+			blob_types.push_back(green_blob_type);
+			blob_types.push_back(yellow_blob_type);
+			//std::vector<std::vector<blob_t>> markers = blob_detection(state->im, blob_types);
+			std::vector<std::vector<blob_t>> markers =
+				std::vector<std::vector<blob_t>>(2,std::vector<blob_t>(0));
+
+			if (markers[0].size() > 0) {
+				state->close_left_gripper = false;
+			} else {
+				state->close_left_gripper = true;
+			}
+
+			if (markers[1].size() > 0) {
+				state->close_right_gripper = false;
+			} else {
+				state->close_right_gripper = true;
+			}
+
 			filter_front(state->depth);
 			state->depth.copyValid(state->im.valid);
 			/*
@@ -282,9 +304,11 @@ void kinect_process(state_t* state){
 			//printf("GRAPH SIZE: %d\n",graph.size());
 			getBodyPoints(state, d_transf, graph);
 
+			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);
 			}
+			*/
 			gCurTime = utime_now()/1000000.0;
 			processTime = gCurTime - gPrevTime;
 			/*
@@ -317,7 +341,7 @@ void kinect_process(state_t* state){
 			   10, 200);
 			 */
 		} else {
-			blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
+			/*blob_type_t yellow_blob_type = {50.0, 0xff21fff8, 10, 200};
 			blob_type_t blue_blob_type = {209.0, 0xfff8ff21, 10, 200};
 			blob_type_t green_blob_type = {73.0, 0xff00ff15, 10, 200};
 			std::vector<blob_type_t> blob_types;
@@ -369,11 +393,13 @@ void kinect_process(state_t* state){
 				state->joints[RWRIST].z = sZ;
 				state->joints[RWRIST].screen_x = imageX;
 				state->joints[RWRIST].screen_y = imageY;
-			}
+			}*/
 		}
 		cur_time = utime_now()/1000000.0;
-		/*printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
-				setupTime, processTime, cur_time - prev_time);*/
+		/*
+		printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
+				setupTime, processTime, cur_time - prev_time);
+				*/
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 
@@ -381,20 +407,34 @@ void kinect_process(state_t* state){
 
 	if (state->send_data) {
 		skeleton_joint_list_t lcm_skeleton;
-		lcm_skeleton.len = 7;
+		lcm_skeleton.len = NUM_JOINTS;
 		lcm_skeleton.joints = (skeleton_joint_t*) malloc(sizeof(skeleton_joint_t)*lcm_skeleton.len);
 
 		for (int i = 0; i < lcm_skeleton.len; i++) {
+			joint_t bodyJoint = state->body.getJoint((Joints) i);
 			lcm_skeleton.joints[i].valid = 1;
-			lcm_skeleton.joints[i].x = state->joints[i].x;
-			lcm_skeleton.joints[i].y = state->joints[i].y;
-			lcm_skeleton.joints[i].z = state->joints[i].z;
-			lcm_skeleton.joints[i].screen_x = state->joints[i].screen_x;
-			lcm_skeleton.joints[i].screen_y = state->joints[i].screen_y;
+			lcm_skeleton.joints[i].x = bodyJoint.x;
+			lcm_skeleton.joints[i].y = bodyJoint.y;
+			lcm_skeleton.joints[i].z = bodyJoint.z;
+			lcm_skeleton.joints[i].screen_x = bodyJoint.screen_x;
+			lcm_skeleton.joints[i].screen_y = bodyJoint.screen_y;
 		}
 
 		skeleton_joint_list_t_publish(state->lcm, "KA_SKELETON", &lcm_skeleton);
 		free(lcm_skeleton.joints);
+
+		gripper_lcm_t lcm_gripper;
+		if (state->close_left_gripper) {
+			lcm_gripper.left_closed = 1;
+		} else {
+			lcm_gripper.left_closed = 0;
+		}
+		if (state->close_right_gripper) {
+			lcm_gripper.right_closed = 1;
+		} else {
+			lcm_gripper.right_closed = 0;
+		}
+		gripper_lcm_t_publish(state->lcm, "GRIPPER", &lcm_gripper);
 	}
 }
 

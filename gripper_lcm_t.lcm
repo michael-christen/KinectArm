@@ -1,4 +1,5 @@
 struct gripper_lcm_t
 {
-	int8_t closed;
+	int8_t left_closed;
+	int8_t right_closed;
 }

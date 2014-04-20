@@ -31,6 +31,7 @@
 #include "arm_gui.h"
 #include "arm_state.h"
 #include "eecs467_util.h"
+#include "body_utility.h"
 
 int displayCount;
 
@@ -57,9 +58,9 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     } else if (!strcmp("s5", name)) {
     	state->gui_servo_angles[5] = pg_gd(pg, name);
     } else if (!strcmp("s6", name)) {
-    	state->body->ds->setDSF(pg_gd(pg, name));
+    	state->ds->setDSF(pg_gd(pg, name));
     } else if (!strcmp("s7", name)) {
-    	state->body->ds->setTSF(pg_gd(pg, name));
+    	state->ds->setTSF(pg_gd(pg, name));
     } else if (!strcmp("but1", name)) {
     	updateServoAngles = 1;
     } else if (!strcmp("but2", name)) {
@@ -96,7 +97,9 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
     } else if (!strcmp("cb1", name)) {
         state->update_arm_cont = pg_gb(pg, name);
     } else if (!strcmp("cb2", name)) {
-        state->close_gripper = pg_gb(pg, name);
+        state->close_right_gripper = pg_gb(pg, name);
+    } else if (!strcmp("cb3", name)) {
+    	state->interpolate_angles = pg_gb(pg, name);
     }
 
     /*if (state->update_arm_cont || updateServoAngles) {
@@ -204,8 +207,8 @@ int renderArmsLayer(state_t *state, layer_data_t *layerData) {
 
 	//Draw Arms
 	vx_buffer_t *armBuff = vx_world_get_buffer(layerData->world, "arm");
-	state->arm->drawTargetState(armBuff, vx_yellow);
-	state->arm->drawCurState(armBuff, vx_blue);
+	state->arm->drawTargetState(armBuff, vx_yellow, state->FSM_state);
+	state->arm->drawCurState(armBuff, vx_blue, state->FSM_state);
 	
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
@@ -248,12 +251,13 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	verts = vx_resc_copyf(posAxes, 6);
 	vx_buffer_add_back(gridBuff, vxo_lines(verts, 2, GL_LINES, vxo_points_style(vx_green, 2.0f)));
 	
-	//Draw Skeleton
-	vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
-	state->body->draw(skeletonBuff, vx_blue, vx_yellow);
-
 	//Draw Control Boxes
 	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
+
+	//Draw Skeleton
+	//vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
+	body_draw(state->body, cbBuff);
+
 	
 	const float* color;
 	
@@ -268,8 +272,8 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
-	vx_buffer_swap(skeletonBuff);
 	vx_buffer_swap(cbBuff);
+	//vx_buffer_swap(skeletonBuff);
 	return 1;
 }
 
@@ -363,9 +367,11 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
-    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont, "cb2", "Close Gripper", state->close_gripper, NULL);
-    pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->body->ds->getDSF());
-    pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->body->ds->getTSF());
+    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont,
+    						"cb2", "Close Gripper", state->close_right_gripper,
+    						"cb3", "Interpolate Arm Angles", state->interpolate_angles, NULL);
+    pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->ds->getDSF());
+    pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
     pg_add_buttons(pg, "butcb", "Set Control Boxes", NULL);
 

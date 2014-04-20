@@ -10,6 +10,7 @@
 #include "lcmtypes/dynamixel_status_t.h"
 #include "skeleton_joint_t.h"
 #include "skeleton_joint_list_t.h"
+#include "gripper_lcm_t.h"
 
 
 // Local Includes
@@ -17,6 +18,7 @@
 #include "eecs467_util.h"
 #include "arm_gui.h"
 #include "body.h"
+#include "body_utility.h"
 #include "joint.h"
 #include "config_space.h"
 #include "rexarm.h"
@@ -69,11 +71,11 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
                            const skeleton_joint_list_t *msg,
                            void *user) {
 	state_t *state = (state_t*) user;
-	state->body->processMsg(msg);
+	body_processMsg(state->body, msg, state->ds);
 
-	for (int i = 0; i < msg->len; i++) {
+	/*for (int i = 0; i < msg->len; i++) {
 		printf("%d - %d, %d, %d\n", i, msg->joints[i].x, msg->joints[i].y, msg->joints[i].z);
-	}
+	}*/
 
 	joint_t lwrist = state->body->getJoint(LWRIST);
 	joint_t rshoulder = state->body->getJoint(RSHOULDER);
@@ -81,48 +83,75 @@ static void skeleton_data_handler( const lcm_recv_buf_t *rbuf,
 	double adjY = (lwrist.z - rshoulder.z)/20;
 	double adjZ = (-lwrist.y - rshoulder.y)/20;
 
+	bool left_gripper_changed = state->past_close_left_gripper ^ state->close_left_gripper;
+	bool right_gripper_changed = state->past_close_right_gripper ^ state->close_right_gripper;
 
 	if (state->set_cbs) {
-		double zOffset = CB_DEPTH;
-		state->set_cbs = false;
-		state->controlBoxes[GRIPPER]->setPosition(adjX, adjY, adjZ + 3*zOffset/2);
-		state->controlBoxes[WRIST]->setPosition(adjX, adjY, adjZ + zOffset/2);
-		state->controlBoxes[ARM]->setPosition(adjX, adjY, adjZ - zOffset/2);
-		state->controlBoxes[ROTATE]->setPosition(adjX, adjY, adjZ - 3*zOffset/2);
+		if (left_gripper_changed && state->close_left_gripper) {
+			double zOffset = CB_DEPTH;
+			double yOffset = 5;
+			double xOffset = 30;
+			state->set_cbs = false;
+			state->controlBoxes[GRIPPER]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + 3*zOffset/2);
+			state->controlBoxes[WRIST]->setPosition(adjX + xOffset, adjY + yOffset, adjZ + zOffset/2);
+			state->controlBoxes[ARM]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - zOffset/2);
+			state->controlBoxes[ROTATE]->setPosition(adjX + xOffset, adjY + yOffset, adjZ - 3*zOffset/2);
+		}
 	}
 
 	int activeBox = -1;
 
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
-		if (state->controlBoxes[i]->pointWithinBox(adjX, adjY, adjZ)) {
-			state->controlBoxSelected[i] = true;
-			activeBox = i;
+		ControlBoxes cbi = (ControlBoxes) i;
+		if (state->controlBoxes[cbi]->pointWithinBox(adjX, adjY, adjZ)) {
+			state->controlBoxSelected[cbi] = true;
+			activeBox = cbi;
 		} else {
-			state->controlBoxSelected[i] = false;
+			state->controlBoxSelected[cbi] = false;
 		}
 	}
 
-	pthread_mutex_lock(&state->fsm_mutex);
-	switch(activeBox) {
-		case GRIPPER:
-			state->FSM_next_state = FSM_GRIP;
-		break;
-		case WRIST:
-			state->FSM_next_state = FSM_WRIST;
-		break;
-		case ROTATE:
-			state->FSM_next_state = FSM_ROTATE;
-		break;
-		case ARM:
-			state->FSM_next_state = FSM_ARM;
-		break;
-		default:
-			state->FSM_next_state = FSM_NONE;
-		break;
+	if (left_gripper_changed && state->close_left_gripper) {
+		pthread_mutex_lock(&state->fsm_mutex);
+		switch(activeBox) {
+			case GRIPPER:
+				state->FSM_next_state = FSM_GRIP;
+			break;
+			case WRIST:
+				state->FSM_next_state = FSM_WRIST;
+			break;
+			case ROTATE:
+				state->FSM_next_state = FSM_ROTATE;
+			break;
+			case ARM:
+				state->FSM_next_state = FSM_ARM;
+			break;
+			default:
+				state->FSM_next_state = FSM_NONE;
+			break;
+		}		
+		pthread_mutex_unlock(&state->fsm_mutex);
 	}
-	
-	pthread_mutex_unlock(&state->fsm_mutex);
 
+}
+
+static void gripper_handler( const lcm_recv_buf_t *rbuf,
+                           const char *channel,
+                           const gripper_lcm_t *msg,
+                           void *user) {
+	state_t *state = (state_t*) user;
+	state->past_close_left_gripper = state->close_left_gripper;
+	state->past_close_right_gripper = state->close_right_gripper;
+	if (msg->left_closed == 1) {
+		state->close_left_gripper = true;
+	} else {
+		state->close_left_gripper = false;
+	}
+	if (msg->right_closed == 1) {
+		state->close_right_gripper = true;
+	} else {
+		state->close_right_gripper = false;
+	}
 }
 
 void* lcm_handle_loop(void *data) {
@@ -139,6 +168,11 @@ void* lcm_handle_loop(void *data) {
                                       skeleton_data_handler,
                                       state);
 
+	gripper_lcm_t_subscription_t *gripper_sub = gripper_lcm_t_subscribe(state->lcm,
+                                      GRIPPER_CHANNEL,
+                                      gripper_handler,
+                                      state);
+
 	while (state->running) {
 		// Set up the LCM file descriptor for waiting. This lets us monitor it
 		// until somethign is "ready" to happen. In this case, we are ready to
@@ -150,13 +184,13 @@ void* lcm_handle_loop(void *data) {
 	// ..._unsubscribe(...)
 	dynamixel_status_list_t_unsubscribe(state->lcm, arm_sub);
 	skeleton_joint_list_t_unsubscribe(state->lcm, skeleton_sub);
+	gripper_lcm_t_unsubscribe(state->lcm, gripper_sub);
 
 	return NULL;
 }
 
 void* arm_commander(void *data) {
 	int hz = 30;
-	int valid_angles;
 	state_t *state = (state_t*) data;
 	double angles[NUM_SERVOS];
 	double speed;
@@ -166,19 +200,44 @@ void* arm_commander(void *data) {
     cmds.commands = (dynamixel_command_t*) malloc(sizeof(dynamixel_command_t)*NUM_SERVOS);
 
     while (state->running) {
-    	if (state->update_arm_cont) {
-    		state->arm->getTargetAngles(angles);
-			state->arm->getTargetSpeed(speed);
-			for (int id = 0; id < NUM_SERVOS; id++) {
-				cmds.commands[id].utime = utime_now();
-				cmds.commands[id].position_radians = angles[id];
-				cmds.commands[id].speed = speed;
-				cmds.commands[id].max_torque = 0.7;
-		    }
+        if(!state->interpolate_angles) {
 
-	    	pthread_mutex_lock(&state->lcm_mutex);
-		    dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
-		    pthread_mutex_unlock(&state->lcm_mutex);
+            if (state->update_arm_cont) {
+                state->arm->getTargetAngles(angles);
+                state->arm->getTargetSpeed(speed);
+                for (int id = 0; id < NUM_SERVOS; id++) {
+                    cmds.commands[id].utime = utime_now();
+                    cmds.commands[id].position_radians = angles[id];
+                    cmds.commands[id].speed = speed;
+                    cmds.commands[id].max_torque = 0.7;
+                }
+
+                pthread_mutex_lock(&state->lcm_mutex);
+                dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
+                pthread_mutex_unlock(&state->lcm_mutex);
+            } else {
+                if (state->update_arm_cont) {
+                    double old_angles[NUM_SERVOS];
+                    memcpy(old_angles, angles, sizeof(angles));
+                    state->arm->getTargetAngles(angles);
+                    state->arm->getTargetSpeed(speed);
+                    const int steps = 5;
+
+                    for(int i = 1; i <= steps; ++i) {
+                        for(int id = 0; id < NUM_SERVOS; ++id) {
+                            cmds.commands[id].utime = utime_now();
+                            cmds.commands[id].position_radians = old_angles[id] + (i * (angles[id] - old_angles[id])) / steps;
+                            cmds.commands[id].speed = speed;
+                            cmds.commands[id].max_torque = 0.7;
+                        }
+                        usleep(100000);
+                    }
+                    
+                }
+                pthread_mutex_lock(&state->lcm_mutex);
+                dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
+                pthread_mutex_unlock(&state->lcm_mutex);
+            }
 		}
 		   
     	usleep(1000000/hz);
@@ -209,6 +268,7 @@ int main(int argc, char ** argv)
 	state->update_arm = 0;
 	state->arm = new RexArm();
 	state->body = new Body();
+	state->ds = new DataSmoother(0.4, 0.3, 0, 0);
 	state->running = 1;
 	state->set_cbs = 0;
 
@@ -265,6 +325,7 @@ int main(int argc, char ** argv)
 	// clean up
 	delete state->arm;
 	delete state->body;
+	delete state->ds;
 	for (int i = 0; i < NUM_CONTROL_BOXES; i++) {
 		delete state->controlBoxes[i];
 	}
