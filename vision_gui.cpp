@@ -149,8 +149,9 @@ int displayInitKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 
 void render_pts(vx_buffer_t *vb, state_t *state) {
 	for(size_t i = 0; i < state->pts.size(); ++i) {
-		add_circle_to_buffer(vb, state->im.getX(state->pts[i]),
-				480-state->im.getY(state->pts[i]));
+        int curpoint = state->pts[i] < 0 ? 0 : state->pts[i];
+		add_circle_to_buffer(vb, state->im.getX(curpoint),
+				480-state->im.getY(curpoint));
 	}
 	for(size_t i = 0; i < NUM_JOINTS; ++i) {
 		const float * color;
