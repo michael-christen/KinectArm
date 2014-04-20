@@ -98,6 +98,8 @@ void my_param_changed(parameter_listener_t *pl, parameter_gui_t *pg, const char 
         state->update_arm_cont = pg_gb(pg, name);
     } else if (!strcmp("cb2", name)) {
         state->close_right_gripper = pg_gb(pg, name);
+    } else if (!strcmp("cb3", name)) {
+    	state->interpolate_angles = pg_gb(pg, name);
     }
 
     /*if (state->update_arm_cont || updateServoAngles) {
@@ -253,8 +255,8 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	vx_buffer_t *cbBuff = vx_world_get_buffer(layerData->world, "cb");
 
 	//Draw Skeleton
-	vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
-	body_draw(state->body, skeletonBuff);
+	//vx_buffer_t *skeletonBuff = vx_world_get_buffer(layerData->world, "skeleton");
+	body_draw(state->body, cbBuff);
 
 	
 	const float* color;
@@ -271,7 +273,7 @@ int renderSkeletonLayer(state_t *state, layer_data_t *layerData) {
 	//Swap buffers
 	vx_buffer_swap(gridBuff);
 	vx_buffer_swap(cbBuff);
-	vx_buffer_swap(skeletonBuff);
+	//vx_buffer_swap(skeletonBuff);
 	return 1;
 }
 
@@ -365,7 +367,9 @@ void gui_create(state_t *state) {
     pg_add_double_slider(pg, "s3", "S3 (Wrist Bend)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s4", "S4 (Wrist Rotation)", -M_PI, M_PI, 0);
     pg_add_double_slider(pg, "s5", "S5 (Gripper)", -M_PI, M_PI, 0);*/
-    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont, "cb2", "Close Gripper", state->close_right_gripper, NULL);
+    pg_add_check_boxes(pg, "cb1", "Send Arm Commands", state->update_arm_cont,
+    						"cb2", "Close Gripper", state->close_right_gripper,
+    						"cb3", "Interpolate Arm Angles", state->interpolate_angles, NULL);
     pg_add_double_slider(pg, "s6", "DSF", 0, 1, state->ds->getDSF());
     pg_add_double_slider(pg, "s7", "TSF", 0, 1, state->ds->getTSF());
     //pg_add_buttons(pg, "but1", "Update Arm", "but2", "Go To Home", NULL);
