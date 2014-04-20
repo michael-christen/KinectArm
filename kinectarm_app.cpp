@@ -223,13 +223,13 @@ void* arm_commander(void *data) {
                             cmds.commands[id].speed = speed;
                             cmds.commands[id].max_torque = 0.7;
                         }
+                        pthread_mutex_lock(&state->lcm_mutex);
+                        dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
+                        pthread_mutex_unlock(&state->lcm_mutex);
                         usleep(100000);
                     }
                     
                 }
-                pthread_mutex_lock(&state->lcm_mutex);
-                dynamixel_command_list_t_publish(state->lcm, ARM_COMMAND_CHANNEL, &cmds);
-                pthread_mutex_unlock(&state->lcm_mutex);
             }
 		}
 		   
