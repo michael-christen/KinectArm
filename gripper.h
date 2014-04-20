@@ -1,5 +1,7 @@
 #ifndef GRIPPER_H
 #define GRIPPER_H
+#include "Image.h"
+#include "filter.h"
 
 #define DEPTH_THRESHOLD 20 //assuming mm, but not sure
 #define XY_THRESHOLD 50 //defines bounding box of (XY_THRESHOLD*2)^2
@@ -24,5 +26,7 @@ reduced_width and reduced_height: dimensions of depth image
 */
 Hand_t handPixels(int x, int y, int *reduced_buffer,
 	 int reduced_width, int reduced_height);
+
+Hand_t altHandPx(int start, Image<uint16_t> dp);
 
 #endif

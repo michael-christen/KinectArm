@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Wed 16 Apr 2014 06:25:20 PM EDT
+	* Last Modified : Sun 20 Apr 2014 10:28:30 AM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -57,7 +57,7 @@ void filter_front(Image<uint16_t> & im) {
 	blob_merging(im, min_id);
 }
 
-void blob_merging(Image<uint16_t> &im, int start) {
+std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
 	int id;
 	uint32_t px;
 	std::queue<int> search;
@@ -108,6 +108,7 @@ void blob_merging(Image<uint16_t> &im, int start) {
 			im.invalidate(i);
 		}
 	}
+	return passed;
 }
 
 

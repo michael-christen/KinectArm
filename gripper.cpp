@@ -110,3 +110,26 @@ Hand_t handPixels(int x, int y, int *reduced_buffer,
 
 	return hand;
 }
+
+Hand_t altHandPx(int start, Image<uint16_t> dp) {
+	std::vector<int> passed = 
+		blob_merging(dp,start);
+	int num_px = passed.size();
+	int avgX = 0;
+	int avgY = 0;
+	for(int i = 0; i < passed.size(); ++i) {
+		int id = passed[i];
+		int x  = dp.getX(id);
+		int y  = dp.getY(id);
+		avgX += x; 
+		avgY += y;
+	}
+	avgX /= num_px;
+	avgY /= num_px;
+	int origX = dp.getX(start);
+	int origY = dp.getY(start);
+	double theta = 
+		atan2(origY-avgY, origX-avgX);
+	Hand_t hand = {num_px, theta};
+	return hand;
+}
