@@ -3,6 +3,7 @@
 #include "math.h"
 #include <queue>
 #include <vector>
+#include <cstdio>
 
 bool gripperClosed(int x, int y, int *reduced_buffer,
 	int reduced_width, int reduced_height){
@@ -11,6 +12,7 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 	int cornery = y - XY_THRESHOLD;
 	int boxsize = XY_THRESHOLD * 2;
 	int tempx, tempy;
+	int centerx, centery;
 	if(cornerx < 0){
 		cornerx = 0;
 	}
@@ -24,6 +26,7 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 	}else if(cornery + boxsize >= reduced_height){
 		boxsize = reduced_height - cornery;
 	}
+    centerx = centery = boxsize / 2;
 		
 	//Create a map of the pixels around the hand
 	std::vector<std::vector<Pixel>> map;
@@ -43,12 +46,13 @@ bool gripperClosed(int x, int y, int *reduced_buffer,
 			map.at(i).at(k).visited = false;
 		}
 	}
-	map.at(x-cornerx).at(y-cornery).visited = true;
+	map.at(centerx).at(centery).visited = true;
+	printf("Thinks hand is: x: %d, y: %d\n", centerx, centery);
 	
 	int hand_pixels = 1;
 
 	std::queue<Pixel> q;
-	q.push(map.at(x-cornerx).at(y-cornery));
+	q.push(map.at(centerx).at(centery));
 
 	Pixel *next;
 	while(!q.empty()){
