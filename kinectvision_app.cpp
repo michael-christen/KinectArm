@@ -302,9 +302,11 @@ void kinect_process(state_t* state){
 			//printf("GRAPH SIZE: %d\n",graph.size());
 			getBodyPoints(state, d_transf, graph);
 
+			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);
 			}
+			*/
 			gCurTime = utime_now()/1000000.0;
 			processTime = gCurTime - gPrevTime;
 			/*
@@ -392,8 +394,10 @@ void kinect_process(state_t* state){
 			}*/
 		}
 		cur_time = utime_now()/1000000.0;
-		/*printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
-				setupTime, processTime, cur_time - prev_time);*/
+		/*
+		printf("setup:%f\nprocess:%f\ntotal:%f\n\n",
+				setupTime, processTime, cur_time - prev_time);
+				*/
 	}
 	pthread_mutex_unlock(&state->kinect_mutex);
 
