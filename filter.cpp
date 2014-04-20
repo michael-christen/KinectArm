@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sun 20 Apr 2014 11:13:26 AM EDT
+	* Last Modified : Sun 20 Apr 2014 01:08:12 PM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -90,11 +90,13 @@ std::vector<int> blob_merging_base(
 		visited[cur_id] = true;
 		int x = im.getX(cur_id);
 		int y = im.getY(cur_id);
+
 		if(x < l_x || x > r_x || y < b_y || y > t_y) {
 			continue;
 		}
+
 		std::vector<int> neighbors = im.getNeighborIds(x, y,
-				neighbor_search, px_close_enough);
+				neighbor_search, close);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
 			id = neighbors[i];
 			px = im.get(id);
