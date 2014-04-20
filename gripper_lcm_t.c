@@ -22,7 +22,8 @@ int64_t __gripper_lcm_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__gripper_lcm_t_get_hash;
     (void) cp;
 
-    int64_t hash = 0xf676354d177128deLL
+    int64_t hash = 0x38fc580a6162a246LL
+         + __int8_t_hash_recursive(&cp)
          + __int8_t_hash_recursive(&cp)
         ;
 
@@ -45,7 +46,10 @@ int __gripper_lcm_t_encode_array(void *buf, int offset, int maxlen, const grippe
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].closed), 1);
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].left_closed), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].right_closed), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -71,7 +75,9 @@ int __gripper_lcm_t_encoded_array_size(const gripper_lcm_t *p, int elements)
     int size = 0, element;
     for (element = 0; element < elements; element++) {
 
-        size += __int8_t_encoded_array_size(&(p[element].closed), 1);
+        size += __int8_t_encoded_array_size(&(p[element].left_closed), 1);
+
+        size += __int8_t_encoded_array_size(&(p[element].right_closed), 1);
 
     }
     return size;
@@ -88,7 +94,10 @@ int __gripper_lcm_t_decode_array(const void *buf, int offset, int maxlen, grippe
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].closed), 1);
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].left_closed), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].right_closed), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -100,7 +109,9 @@ int __gripper_lcm_t_decode_array_cleanup(gripper_lcm_t *p, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int8_t_decode_array_cleanup(&(p[element].closed), 1);
+        __int8_t_decode_array_cleanup(&(p[element].left_closed), 1);
+
+        __int8_t_decode_array_cleanup(&(p[element].right_closed), 1);
 
     }
     return 0;
@@ -132,7 +143,9 @@ int __gripper_lcm_t_clone_array(const gripper_lcm_t *p, gripper_lcm_t *q, int el
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int8_t_clone_array(&(p[element].closed), &(q[element].closed), 1);
+        __int8_t_clone_array(&(p[element].left_closed), &(q[element].left_closed), 1);
+
+        __int8_t_clone_array(&(p[element].right_closed), &(q[element].right_closed), 1);
 
     }
     return 0;

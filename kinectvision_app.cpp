@@ -20,6 +20,7 @@
 #include "blob_detection.h"
 #include "Graph.h"
 #include "joint.h"
+#include "gripper.h"
 
 //Kinect
 #include <libfreenect.hpp>
@@ -304,6 +305,17 @@ void kinect_process(state_t* state){
 			//printf("GRAPH SIZE: %d\n",graph.size());
 			getBodyPoints(state, d_transf, graph);
 
+			joint_t lwrist = state->body.getJoint(LWRIST);
+			Hand_t lhand = altHandPx(
+					state->im.id(lwrist.screen_x,
+						lwrist.screen_y),
+					state->depth);
+			int num_pxs = lhand.hand_pixels;
+			printf("Hand pxs: %d, x:%d, y:%d\n",
+					num_pxs, lwrist.screen_x,
+					lwrist.screen_y);
+			bool open = num_pxs > 400;
+			state->close_left_gripper = !open;
 			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);

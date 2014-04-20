@@ -193,6 +193,11 @@ void render_pts(vx_buffer_t *vb, state_t *state) {
 		add_circle_to_buffer(vb, joint.screen_x,
 				480-joint.screen_y, color);
 	}
+	joint_t joint = state->body.getJoint(LWRIST);
+	const float * color = state->close_left_gripper ? 
+		vx_green : vx_red;
+	add_square_to_buffer(vb, joint.screen_x,
+			480-joint.screen_y, color);
 }
 
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
@@ -243,6 +248,17 @@ line_t normalize_line(line_t line) {
 	line.ll.y = normalize_y(line.ll.y);
 	line.ru.y = normalize_y(line.ru.y);
 	return line;
+}
+
+void add_square_to_buffer(vx_buffer_t *vb, int x, int y, const float *
+		color) {
+	double scale = 50;
+	vx_object_t * vo = vxo_chain(
+			vxo_mat_translate3(x,y,0),
+			vxo_mat_scale3(scale,scale,scale),
+			vxo_rect(
+				vxo_lines_style(color,2)));
+	vx_buffer_add_back(vb,vo);
 }
 
 void add_circle_to_buffer(vx_buffer_t *vb, int x, int y,

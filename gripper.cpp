@@ -112,7 +112,8 @@ Hand_t handPixels(int x, int y, int *reduced_buffer,
 }
 
 bool isClose(uint16_t a, uint16_t b) {
-	return abs(a - b) < DEPTH_THRESHOLD;
+	//return abs(a - b) < DEPTH_THRESHOLD;
+	return abs(a - b) < 20;
 }
 
 Hand_t altHandPx(int start, Image<uint16_t> dp) {
@@ -127,10 +128,16 @@ Hand_t altHandPx(int start, Image<uint16_t> dp) {
 	if(cornery < 0){
 		cornery = 0;
 	}
+	/*
+	printf("MINX %d, MAXX %d\nMINY %d, MAXY %d\n",
+			cornerx, cornerx + boxsize,
+			cornery, cornery + boxsize);
+			*/
 	std::vector<int> passed = 
 		blob_merging_base(dp,start,isClose, false,
 				cornerx, cornerx + boxsize,
-				cornery, cornery + boxsize);
+				cornery + boxsize, cornery);
+	printf("NUM_PASSED: %d\n",passed.size());
 	int num_px = passed.size();
 	int avgX = 0;
 	int avgY = 0;
