@@ -113,10 +113,11 @@ Hand_t handPixels(int x, int y, int *reduced_buffer,
 
 bool isClose(uint16_t a, uint16_t b) {
 	//return abs(a - b) < DEPTH_THRESHOLD;
-	return abs(a - b) < 20;
+	return abs(a - b) < 50;
 }
 
-Hand_t altHandPx(int start, Image<uint16_t> dp) {
+Hand_t altHandPx(int start, Image<uint16_t> dp, 
+	Image<uint32_t> & im) {
 	int origX = dp.getX(start);
 	int origY = dp.getY(start);
 	int cornerx = origX - XY_THRESHOLD;
@@ -143,6 +144,7 @@ Hand_t altHandPx(int start, Image<uint16_t> dp) {
 	int avgY = 0;
 	for(int i = 0; i < passed.size(); ++i) {
 		int id = passed[i];
+		im.set(id, 0xff00ff00); 
 		int x  = dp.getX(id);
 		int y  = dp.getY(id);
 		avgX += x; 

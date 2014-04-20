@@ -4,7 +4,7 @@
 #include "filter.h"
 
 #define DEPTH_THRESHOLD 20 //assuming mm, but not sure
-#define XY_THRESHOLD 50 //defines bounding box of (XY_THRESHOLD*2)^2
+#define XY_THRESHOLD 40 //defines bounding box of (XY_THRESHOLD*2)^2
 #define DELTA_THRESHOLD 300 //used to classify open/closed
 #define CHANGE_SAMPLES 10
 
@@ -27,6 +27,6 @@ reduced_width and reduced_height: dimensions of depth image
 Hand_t handPixels(int x, int y, int *reduced_buffer,
 	 int reduced_width, int reduced_height);
 
-Hand_t altHandPx(int start, Image<uint16_t> dp);
+Hand_t altHandPx(int start, Image<uint16_t> dp, Image<uint32_t> & im);
 
 #endif

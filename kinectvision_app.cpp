@@ -21,7 +21,8 @@
 #include "Graph.h"
 #include "joint.h"
 #include "gripper.h"
-
+#include "LP_Filter.h"
+#include<queue>
 //Kinect
 #include <libfreenect.hpp>
 
@@ -34,6 +35,9 @@ pthread_mutex_t gl_backbuf_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t gl_frame_cond = PTHREAD_COND_INITIALIZER;
 uint8_t *depth_mid, *depth_front;
 uint8_t *rgb_back, *rgb_mid, *rgb_front;
+#define HLP_SIZE 5 
+LP_Filter lhand_lp(HLP_SIZE);
+LP_Filter rhand_lp(HLP_SIZE);
 
 static void nodestroy (vx_event_handler_t * vh)
 {
@@ -149,7 +153,7 @@ void kinect_init(state_t* state) {
 	rgb_front = (uint8_t*)malloc(640*480*3);
 
 
-	freenect_set_tilt_degs(state->f_dev,15);
+	freenect_set_tilt_degs(state->f_dev,7);
 	freenect_set_led(state->f_dev,LED_RED);
 	printf("setting up\n");
 	freenect_set_depth_callback(state->f_dev, depth_cb);
@@ -309,13 +313,27 @@ void kinect_process(state_t* state){
 			Hand_t lhand = altHandPx(
 					state->im.id(lwrist.screen_x,
 						lwrist.screen_y),
-					state->depth);
+					state->depth, state->im);
 			int num_pxs = lhand.hand_pixels;
+			int old_val = lhand_lp.get();
+			num_pxs = lhand_lp.getVal(num_pxs);
 			printf("Hand pxs: %d, x:%d, y:%d\n",
 					num_pxs, lwrist.screen_x,
 					lwrist.screen_y);
-			bool open = num_pxs > 400;
+			bool open = num_pxs > 2200;
 			state->close_left_gripper = !open;
+			joint_t rwrist = state->body.getJoint(RWRIST);
+			Hand_t rhand = altHandPx(
+					state->im.id(rwrist.screen_x,
+						rwrist.screen_y),
+					state->depth, state->im);
+			num_pxs = rhand.hand_pixels;
+			num_pxs = rhand_lp.getVal(num_pxs);
+			printf("Hand pxs: %d, x:%d, y:%d\n",
+					num_pxs, rwrist.screen_x,
+					rwrist.screen_y);
+			open = num_pxs > 2200;
+			state->close_right_gripper = !open;
 			/*
 			for (int i = 0; i < 7; i++) {
 				printf("%d - %f, %f, %f\n", i, state->joints[i].x, state->joints[i].y, state->joints[i].z);

@@ -6,7 +6,7 @@
 
  * Creation Date : 15-04-2014
 
- * Last Modified : Sun 20 Apr 2014 09:05:30 AM EDT
+ * Last Modified : Sun 20 Apr 2014 04:28:35 PM EDT
 
  * Created By : Michael Christen
 
@@ -137,14 +137,17 @@ void getBodyFromEndPoints(state_t * state,
 			points.push_back(parent);
 		}
 		int left_elbow, left_shoulder;
+		int left_fake_wrist;
 		left_elbow    = points[points.size()/3];
 		left_shoulder = points[5*points.size()/8];
+		left_fake_wrist = points[1];
 		state->pts = points;
 		//state->pts = points;
 		//Assign
 		state->body.setJoint(MIDPOINT, getReal(state->depth,midpoint));
 		state->body.setJoint(HEAD, getReal(state->depth,head));
 		state->body.setJoint(LWRIST, getReal(state->depth,right_wrist));
+		//state->body.setJoint(LWRIST, getReal(state->depth,left_fake_wrist));
 		//state->body.setJoint(LELBOW, getReal(state->depth,points[5]));
 		//state->body.setJoint(LSHOULDER, getReal(state->depth,points[5]));
 		state->body.setJoint(RWRIST, getReal(state->depth,left_wrist));

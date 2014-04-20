@@ -193,11 +193,17 @@ void render_pts(vx_buffer_t *vb, state_t *state) {
 		add_circle_to_buffer(vb, joint.screen_x,
 				480-joint.screen_y, color);
 	}
-	joint_t joint = state->body.getJoint(LWRIST);
+	joint_t ljoint = state->body.getJoint(LWRIST);
 	const float * color = state->close_left_gripper ? 
 		vx_green : vx_red;
-	add_square_to_buffer(vb, joint.screen_x,
-			480-joint.screen_y, color);
+	add_square_to_buffer(vb, ljoint.screen_x,
+			480-ljoint.screen_y, color);
+
+	joint_t rjoint = state->body.getJoint(RWRIST);
+	color = state->close_right_gripper ? 
+		vx_green : vx_red;
+	add_square_to_buffer(vb, rjoint.screen_x,
+			480-rjoint.screen_y, color);
 }
 
 int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
