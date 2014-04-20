@@ -3,7 +3,7 @@
 	* File Name : filter.cpp
 	* Purpose :
 	* Creation Date : 29-03-2014
-	* Last Modified : Sun 20 Apr 2014 10:28:30 AM EDT
+	* Last Modified : Sun 20 Apr 2014 11:13:26 AM EDT
 	* Created By : Michael Christen
 
 _._._._._._._._._._._._._._._._._._._._._.*/
@@ -57,7 +57,12 @@ void filter_front(Image<uint16_t> & im) {
 	blob_merging(im, min_id);
 }
 
-std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
+std::vector<int> blob_merging_base(
+		Image<uint16_t> &im, 
+		int start_id,
+		bool(*close)(uint16_t,uint16_t), 
+		bool validate,
+	    int l_x, int r_x, int t_y, int b_y) {
 	int id;
 	uint32_t px;
 	std::queue<int> search;
@@ -68,7 +73,7 @@ std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
 		std::vector<bool>(im.h()*im.w(), false);
 	static std::vector<bool> neighbor_search =
 		std::vector<bool>(8,true);
-	search.push(start);
+	search.push(start_id);
 	while(!search.empty()) {
 		//printf("passed_size: %d\n",passed.size());
 		size_t cur_id = search.front();
@@ -83,15 +88,18 @@ std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
 		passed.push_back(cur_id);
 		pass_vect[cur_id] = true;
 		visited[cur_id] = true;
-		int x = cur_id % im.w();
-		int y = cur_id / im.w();
+		int x = im.getX(cur_id);
+		int y = im.getY(cur_id);
+		if(x < l_x || x > r_x || y < b_y || y > t_y) {
+			continue;
+		}
 		std::vector<int> neighbors = im.getNeighborIds(x, y,
 				neighbor_search, px_close_enough);
 		for(size_t i = 0; i < neighbors.size(); ++i) {
 			id = neighbors[i];
 			px = im.get(id);
 			if(!visited[id] && 
-					px_close_enough(px, im.get(cur_id)) &&
+					close(px, im.get(cur_id)) &&
 					px >= MIN_ALLOWED_DEPTH) {
 				search.push(id);
 			}
@@ -103,12 +111,18 @@ std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
 	//	im->buf[id] = 0xff00ff00;
 	//}
 	//Filter out everything else
-	for(size_t i = 0; i < im.size(); ++i) {
-		if(!pass_vect[i]) {
-			im.invalidate(i);
+	if(validate) {
+		for(size_t i = 0; i < im.size(); ++i) {
+			if(!pass_vect[i]) {
+				im.invalidate(i);
+			}
 		}
 	}
 	return passed;
+}
+std::vector<int> blob_merging(Image<uint16_t> &im, int start) {
+	return blob_merging_base(im,start,px_close_enough,
+			true, 0, im.w()-1,im.h()-1,0);
 }
 
 

@@ -19,6 +19,14 @@ void filter_front(Image<uint16_t> & im);
 //BFS to merge stuff into an object, if close, from 
 std::vector<int> blob_merging(Image<uint16_t> &im, int start_id);
 
+std::vector<int> blob_merging_base(
+		Image<uint16_t> &im, 
+		int start_id,
+		bool(*close)(uint16_t,uint16_t), 
+		bool validate,
+	    int l_x, int r_x, int t_y, int b_y);	
+
+
 //returns true if depth_0 is close enough to depth_1
 bool px_close_enough(uint16_t depth_0, uint16_t depth_1);
 

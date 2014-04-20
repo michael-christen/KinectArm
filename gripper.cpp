@@ -111,9 +111,26 @@ Hand_t handPixels(int x, int y, int *reduced_buffer,
 	return hand;
 }
 
+bool isClose(uint16_t a, uint16_t b) {
+	return abs(a - b) < DEPTH_THRESHOLD;
+}
+
 Hand_t altHandPx(int start, Image<uint16_t> dp) {
+	int origX = dp.getX(start);
+	int origY = dp.getY(start);
+	int cornerx = origX - XY_THRESHOLD;
+	int cornery = origY - XY_THRESHOLD;
+	int boxsize = XY_THRESHOLD * 2;
+	if(cornerx < 0){
+		cornerx = 0;
+	}
+	if(cornery < 0){
+		cornery = 0;
+	}
 	std::vector<int> passed = 
-		blob_merging(dp,start);
+		blob_merging_base(dp,start,isClose, false,
+				cornerx, cornerx + boxsize,
+				cornery, cornery + boxsize);
 	int num_px = passed.size();
 	int avgX = 0;
 	int avgY = 0;
@@ -126,8 +143,6 @@ Hand_t altHandPx(int start, Image<uint16_t> dp) {
 	}
 	avgX /= num_px;
 	avgY /= num_px;
-	int origX = dp.getX(start);
-	int origY = dp.getY(start);
 	double theta = 
 		atan2(origY-avgY, origX-avgX);
 	Hand_t hand = {num_px, theta};
