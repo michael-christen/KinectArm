@@ -221,12 +221,12 @@ int renderKinectImageLayer(state_t *state, layer_data_t *layerData) {
 		if (state->getopt_options.use_markers) {
 			vo = vxo_image_from_u32(
 				state->im.getImage(videoToImMarkers), 
-				VXO_IMAGE_FLIPY,
+				VXO_IMAGE_FLIPY | VXO_IMAGE_FLIPX,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		} else {
 			vo = vxo_image_from_u32(
 				state->im.getImage(videoToIm), 
-				VXO_IMAGE_FLIPY,
+				VXO_IMAGE_FLIPY | VXO_IMAGE_FLIPX,
 				VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		}
 			
@@ -256,9 +256,15 @@ int normalize_y(int y) {
 	//return y < 480/2 ? 480 - y : y - 480/2;
 }
 
+int normalize_x(int x) {
+	return 640 - x;
+}
+
 line_t normalize_line(line_t line) {
 	line.ll.y = normalize_y(line.ll.y);
 	line.ru.y = normalize_y(line.ru.y);
+	line.ll.x = normalize_x(line.ll.x);
+	line.ru.x = normalize_x(line.ru.x);
 	return line;
 }
 
@@ -266,7 +272,7 @@ void add_square_to_buffer(vx_buffer_t *vb, int x, int y, const float *
 		color) {
 	double scale = 50;
 	vx_object_t * vo = vxo_chain(
-			vxo_mat_translate3(x,y,0),
+			vxo_mat_translate3(640-x,y,0),
 			vxo_mat_scale3(scale,scale,scale),
 			vxo_rect(
 				vxo_lines_style(color,2)));
@@ -276,7 +282,7 @@ void add_square_to_buffer(vx_buffer_t *vb, int x, int y, const float *
 void add_circle_to_buffer(vx_buffer_t *vb, int x, int y,
 		const float * color) {
 	vx_object_t * vo = vxo_chain(
-			vxo_mat_translate3(x,y,0),
+			vxo_mat_translate3(640-x,y,0),
 			vxo_mat_scale3(5,5,5),
 			vxo_circle(vxo_lines_style(color, 3))
 			);
@@ -314,11 +320,11 @@ int renderKinectDepthLayer(state_t *state, layer_data_t *layerData) {
 		if (state->getopt_options.use_markers) {
 			vo = vxo_image_from_u32(
 				state->depth.getImage(depthToImMarkers),
-			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+			   	VXO_IMAGE_FLIPY | VXO_IMAGE_FLIPX, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		} else { 
 			vo = vxo_image_from_u32(
 				state->depth.getImage(depthToIm),
-			   	VXO_IMAGE_FLIPY, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+			   	VXO_IMAGE_FLIPY | VXO_IMAGE_FLIPX, VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
 		}
 		 
 		vx_buffer_t *vb = vx_world_get_buffer(layerData->world, "depth-image");
